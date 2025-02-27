@@ -28,15 +28,6 @@ class CadastroActivity : AppCompatActivity() {
         incializarToolbar()
     }
 
-    /*private fun inicializarToolbar() {
-        val toolbar = binding.includeToolbar.tbPrincipal
-        setSupportActionBar( toolbar )
-        supportActionBar?.apply {
-            title = "Faça seu Cadastro"
-            setDisplayHomeAsUpEnabled(true)
-        }
-    }*/
-
     private fun incializarToolbar() {
         val toolbar = binding.includeToolbar.tbPrincipal
         setSupportActionBar( toolbar )

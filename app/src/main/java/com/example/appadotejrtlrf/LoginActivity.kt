@@ -28,6 +28,16 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
         */
+        incializarToolbar()
+    }
+
+    private fun incializarToolbar() {
+        val toolbar = binding.includeToolbar.tbPrincipal
+        setSupportActionBar( toolbar )
+        supportActionBar?.apply {
+            title = "Login"
+            setDisplayHomeAsUpEnabled(true)
+        }
     }
 
     private fun inicializarEventosClique() {
