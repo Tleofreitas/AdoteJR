@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="primaria">#FB8500</color>
+    <color name="destaque">#FFB703</color>
+
+<!--    FB8500 laranja-->
+<!--    FFB703 amarelo-->
+<!--    023047 azul escuro-->
+<!--    219EBC azul claro-->
+<!--    8ECAE6 azul mais calro-->
 </resources>
