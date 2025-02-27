@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "55247976439",
+    "project_id": "adotejr-b95f3",
+    "storage_bucket": "adotejr-b95f3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:55247976439:android:01e1ed06b970393ae260f2",
+        "android_client_info": {
+          "package_name": "com.example.appadotejrtlrf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCelvdioV0lWjSCUQA8Afp2TCzMguFVseE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
