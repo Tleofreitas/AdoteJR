@@ -13,6 +13,10 @@
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
         <activity
+            android:name=".ChecarAcessoActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+        <activity
             android:name=".CadastroCriancasActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
