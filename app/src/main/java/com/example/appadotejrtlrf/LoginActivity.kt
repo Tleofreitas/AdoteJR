@@ -43,7 +43,7 @@ class LoginActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.textCadastro.setOnClickListener {
             startActivity(
-                Intent(this, CadastroActivity::class.java)
+                Intent(this, ChecarAcessoActivity::class.java)
             )
         }
 

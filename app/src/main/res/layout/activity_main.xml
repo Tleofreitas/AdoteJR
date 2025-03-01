@@ -22,18 +22,18 @@
         app:srcCompat="@drawable/logo_completo_cima_laranja" />
 
     <ImageView
-        android:id="@+id/imgBtnPesquisar"
+        android:id="@+id/imgBtnCadastrar"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginEnd="76dp"
         android:contentDescription="Cadastrar"
-        app:layout_constraintBottom_toBottomOf="@+id/imgBtnCadastrar"
+        app:layout_constraintBottom_toBottomOf="@+id/imgBtnPesquisar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/imgBtnCadastrar"
+        app:layout_constraintTop_toTopOf="@+id/imgBtnPesquisar"
         app:srcCompat="@drawable/ic_cadastro" />
 
     <ImageView
-        android:id="@+id/imgBtnCadastrar"
+        android:id="@+id/imgBtnPesquisar"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginStart="76dp"
@@ -50,9 +50,9 @@
         android:textColor="@color/black"
         android:textSize="16sp"
         android:textStyle="normal"
-        app:layout_constraintEnd_toEndOf="@+id/imgBtnCadastrar"
-        app:layout_constraintStart_toStartOf="@+id/imgBtnCadastrar"
-        app:layout_constraintTop_toBottomOf="@+id/imgBtnCadastrar" />
+        app:layout_constraintEnd_toEndOf="@+id/imgBtnPesquisar"
+        app:layout_constraintStart_toStartOf="@+id/imgBtnPesquisar"
+        app:layout_constraintTop_toBottomOf="@+id/imgBtnPesquisar" />
 
     <TextView
         android:id="@+id/textView3"
@@ -62,8 +62,8 @@
         android:textColor="@color/black"
         android:textSize="16sp"
         android:textStyle="normal"
-        app:layout_constraintEnd_toEndOf="@+id/imgBtnPesquisar"
-        app:layout_constraintStart_toStartOf="@+id/imgBtnPesquisar"
-        app:layout_constraintTop_toBottomOf="@+id/imgBtnPesquisar" />
+        app:layout_constraintEnd_toEndOf="@+id/imgBtnCadastrar"
+        app:layout_constraintStart_toStartOf="@+id/imgBtnCadastrar"
+        app:layout_constraintTop_toBottomOf="@+id/imgBtnCadastrar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

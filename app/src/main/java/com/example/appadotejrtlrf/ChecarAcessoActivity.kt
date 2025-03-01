@@ -1,18 +1,25 @@
 package com.example.appadotejrtlrf
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.appadotejrtlrf.databinding.ActivityCadastroCriancasBinding
 import com.example.appadotejrtlrf.databinding.ActivityChecarAcessoBinding
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ChecarAcessoActivity : AppCompatActivity() {
 
     private val binding by lazy {
         ActivityChecarAcessoBinding.inflate(layoutInflater)
     }
+
+    private lateinit var senha: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +33,7 @@ class ChecarAcessoActivity : AppCompatActivity() {
         }
         */
         incializarToolbar()
+        inicializarEventosClique()
     }
 
     private fun incializarToolbar() {
@@ -34,6 +42,37 @@ class ChecarAcessoActivity : AppCompatActivity() {
         supportActionBar?.apply {
             title = "Checagem de acesso"
             setDisplayHomeAsUpEnabled(true)
+        }
+    }
+
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("MMyyyy")
+    val mesAno = currentDate.format(formatter)
+    private val senhaAcesso = "@dote$mesAno";
+
+    private fun inicializarEventosClique() {
+        binding.btnChecarSenhaInterna.setOnClickListener {
+            if( validarSenhaFoiDigitada() ){
+                if(senha == senhaAcesso) {
+                    startActivity(
+                        Intent(this, CadastroActivity::class.java)
+                    )
+                } else {
+                    Toast.makeText(this, "Senha INCORRETA! $senhaAcesso", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun validarSenhaFoiDigitada(): Boolean {
+        senha = binding.editSenhaInterna.text.toString()
+
+        if(senha.isNotEmpty()){
+            binding.textInputSenhaInterna.error = null
+            return true
+        } else {
+            binding.textInputSenhaInterna.error = "Preencha a senha"
+            return false
         }
     }
 }
