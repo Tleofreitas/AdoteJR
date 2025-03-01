@@ -1,4 +1,4 @@
-package com.example.appadotejrtlrf
+package com.example.adotejr
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

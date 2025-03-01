@@ -1,17 +1,13 @@
-package com.example.appadotejrtlrf
+package com.example.adotejr
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.appadotejrtlrf.databinding.ActivityCadastroBinding
-import com.example.appadotejrtlrf.databinding.ActivityRedefinirSenhaBinding
+import com.example.adotejr.databinding.ActivityCadastroCriancasBinding
 
-class RedefinirSenhaActivity : AppCompatActivity() {
+class CadastroCriancasActivity : AppCompatActivity() {
 
     private val binding by lazy {
-        ActivityRedefinirSenhaBinding.inflate(layoutInflater)
+        ActivityCadastroCriancasBinding.inflate(layoutInflater)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,8 +19,8 @@ class RedefinirSenhaActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
-        }*/
-
+        }
+         */
         incializarToolbar()
     }
 
@@ -32,7 +28,7 @@ class RedefinirSenhaActivity : AppCompatActivity() {
         val toolbar = binding.includeToolbar.tbPrincipal
         setSupportActionBar( toolbar )
         supportActionBar?.apply {
-            title = "Redefinição de Senha"
+            title = "Cadastro de criança"
             setDisplayHomeAsUpEnabled(true)
         }
     }

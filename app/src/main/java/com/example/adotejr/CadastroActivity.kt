@@ -1,4 +1,4 @@
-package com.example.appadotejrtlrf
+package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.appadotejrtlrf.databinding.ActivityCadastroBinding
+import com.example.adotejr.databinding.ActivityCadastroBinding
 
 class CadastroActivity : AppCompatActivity() {
 

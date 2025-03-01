@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.appadotejrtlrf"
+    namespace = "com.example.adotejr"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.appadotejrtlrf"
+        applicationId = "com.example.adotejr"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

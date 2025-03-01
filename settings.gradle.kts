@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AppAdoteJrTLRF"
+rootProject.name = "AdoteJR"
 include(":app")

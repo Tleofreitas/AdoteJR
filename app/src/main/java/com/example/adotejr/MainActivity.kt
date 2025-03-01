@@ -1,13 +1,9 @@
-package com.example.appadotejrtlrf
+package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.appadotejrtlrf.databinding.ActivityLoginBinding
-import com.example.appadotejrtlrf.databinding.ActivityMainBinding
+import com.example.adotejr.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 

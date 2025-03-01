@@ -1,4 +1,4 @@
-package com.example.appadotejrtlrf
+package com.example.adotejr
 
 import org.junit.Test
 
