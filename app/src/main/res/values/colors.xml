@@ -5,6 +5,9 @@
 
     <color name="primaria">#FB8500</color>
     <color name="destaque">#FFB703</color>
+    <color name="azulEscuro">#023047</color>
+    <color name="azulClaro">#219EBC</color>
+    <color name="azulMaisClaro">#8ECAE6</color>
 
 <!--    FB8500 laranja-->
 <!--    FFB703 amarelo-->
