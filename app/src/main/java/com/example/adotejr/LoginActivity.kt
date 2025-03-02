@@ -4,6 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityLoginBinding
+import com.example.adotejr.utils.exibirMensagem
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 
 class LoginActivity : AppCompatActivity() {
 
@@ -11,12 +15,19 @@ class LoginActivity : AppCompatActivity() {
         ActivityLoginBinding.inflate(layoutInflater)
     }
 
+    private lateinit var email: String
+    private lateinit var senha: String
+
+    // Autenticação
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // enableEdgeToEdge()
         setContentView(binding.root)
 
-        inicializarEventosClique()
         /*
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -25,6 +36,22 @@ class LoginActivity : AppCompatActivity() {
         }
         */
         incializarToolbar()
+        inicializarEventosClique()
+        // firebaseAuth.signOut()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        verificarUsuarioLogado()
+    }
+
+    private fun verificarUsuarioLogado() {
+        val usuarioAtual = firebaseAuth.currentUser
+        if (usuarioAtual != null){
+            startActivity(
+                Intent(this, CadastroCriancasActivity::class.java)
+            )
+        }
     }
 
     private fun incializarToolbar() {
@@ -37,6 +64,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun inicializarEventosClique() {
+        binding.btnLogarUsuario.setOnClickListener {
+            if( validarCamposLogin() ){
+                logarUsuario()
+            }
+        }
+
         binding.textCadastro.setOnClickListener {
             startActivity(
                 Intent(this, ChecarAcessoActivity::class.java)
@@ -47,6 +80,51 @@ class LoginActivity : AppCompatActivity() {
             startActivity(
                 Intent(this, RedefinirSenhaActivity::class.java)
             )
+        }
+    }
+
+    private fun logarUsuario() {
+        firebaseAuth.signInWithEmailAndPassword(
+            email, senha
+        ).addOnSuccessListener {
+            exibirMensagem("Login realizado com sucesso")
+            startActivity(
+                Intent(applicationContext, CadastroCriancasActivity::class.java)
+            )
+        }.addOnFailureListener { erro ->
+            try {
+                throw erro
+
+            // testar E-mail cadastrado
+            } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
+                erroEmailInvalido.printStackTrace()
+                exibirMensagem("E-mail não cadastrado")
+
+            // Testar E-mail e senha
+            } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                erroCredenciaisInvalidas.printStackTrace()
+                exibirMensagem("E-mail ou Senha estão incorretos!")
+            }
+        }
+    }
+
+    private fun validarCamposLogin(): Boolean {
+        email = binding.editLoginEmail.text.toString()
+        senha = binding.editLoginSenha.text.toString()
+
+        if(email.isNotEmpty()){
+            binding.textInputEmailLogin.error = null
+
+            if(senha.isNotEmpty()){
+                binding.textInputSenhaLogin.error = null
+                return  true
+            } else {
+                binding.textInputSenhaLogin.error = "Preencha a Senha"
+                return false
+            }
+        }else{
+            binding.textInputEmailLogin.error = "Preencha o E-mail"
+            return false
         }
     }
 }

@@ -2,14 +2,15 @@ package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityCadastroBinding
+import com.example.adotejr.model.Usuario
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.firestore.FirebaseFirestore
 
 class CadastroActivity : AppCompatActivity() {
 
@@ -21,8 +22,14 @@ class CadastroActivity : AppCompatActivity() {
     private lateinit var email: String
     private lateinit var senha: String
 
+    // Autenticação
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
+    }
+
+    // Banco de dados Firestore
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,10 +70,14 @@ class CadastroActivity : AppCompatActivity() {
             email, senha
         ).addOnCompleteListener{ resultado ->
             if( resultado.isSuccessful ) {
-                exibirMensagem("Cadastro realizado com sucesso!")
-                startActivity(
-                    Intent(applicationContext, CadastroCriancasActivity::class.java)
-                )
+                // Salvar dados dos usuários no banco de dados do firebase (Firestore)
+                val idUsuario = resultado.result.user?.uid
+                if ( idUsuario != null ){
+                    val usuario = Usuario(
+                        idUsuario, nome, email
+                    )
+                    salvarUsuarioFirestore( usuario )
+                }
             }
         }.addOnFailureListener { erro ->
             try {
@@ -89,6 +100,20 @@ class CadastroActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    private fun salvarUsuarioFirestore(usuario: Usuario) {
+        firestore.collection("Usuarios")
+            .document(usuario.id)
+            .set(usuario)
+            .addOnSuccessListener {
+                exibirMensagem("Cadastro realizado com sucesso")
+                startActivity(
+                    Intent(applicationContext, CadastroCriancasActivity::class.java)
+                )
+            }.addOnFailureListener {
+                exibirMensagem("Erro ao realizar cadastro")
+            }
     }
 
     private fun validarCamposCadastroUsuario(): Boolean {
