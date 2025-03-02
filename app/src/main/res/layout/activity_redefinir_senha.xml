@@ -32,7 +32,7 @@
         app:srcCompat="@drawable/logo_completo_cima_laranja" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputEmailLogin"
+        android:id="@+id/textInputEmailRedefinir"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -44,6 +44,7 @@
         app:layout_constraintTop_toBottomOf="@+id/imageView">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editEmailRedefinir"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Digite seu e-mail..."
@@ -51,7 +52,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputSenhaInterna"
+        android:id="@+id/textInputSenhaNova"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -61,9 +62,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textInputEmailLogin">
+        app:layout_constraintTop_toBottomOf="@+id/textInputEmailRedefinir">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editSenhaRedefinir"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Digite uma senha forte..."
@@ -71,7 +73,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputNome"
+        android:id="@+id/textInputSenhaNovaConfirmar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -80,16 +82,17 @@
         app:endIconMode="password_toggle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textInputSenhaInterna">
+        app:layout_constraintTop_toBottomOf="@+id/textInputSenhaNova">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editSenhaConfirmar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Confirme sua senha..." />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
-        android:id="@+id/btnChecarSenhaInterna"
+        android:id="@+id/btnChecarSenhas"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -100,6 +103,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textInputNome" />
+        app:layout_constraintTop_toBottomOf="@+id/textInputSenhaNovaConfirmar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

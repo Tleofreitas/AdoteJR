@@ -1,13 +1,37 @@
 package com.example.adotejr
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityRedefinirSenhaBinding
+import com.example.adotejr.model.Usuario
+import com.example.adotejr.utils.exibirMensagem
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 
 class RedefinirSenhaActivity : AppCompatActivity() {
 
     private val binding by lazy {
         ActivityRedefinirSenhaBinding.inflate(layoutInflater)
+    }
+
+    private lateinit var email: String
+    private lateinit var senha: String
+    private lateinit var senhaConfirmacao: String
+
+    // Autenticação
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
+    // Banco de dados Firestore
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,6 +46,7 @@ class RedefinirSenhaActivity : AppCompatActivity() {
         }*/
 
         incializarToolbar()
+        inicializarEventosClique()
     }
 
     private fun incializarToolbar() {
@@ -31,5 +56,80 @@ class RedefinirSenhaActivity : AppCompatActivity() {
             title = "Redefinição de Senha"
             setDisplayHomeAsUpEnabled(true)
         }
+    }
+
+    private fun inicializarEventosClique() {
+        binding.btnChecarSenhas.setOnClickListener {
+            if( validarCamposCadastroUsuario() ){
+                redefinirSenhaUsuarioVoluntario(email, senhaConfirmacao)
+            }
+        }
+    }
+
+    private fun validarCamposCadastroUsuario(): Boolean {
+        email = binding.editEmailRedefinir.text.toString()
+        senha = binding.editSenhaRedefinir.text.toString()
+        senhaConfirmacao = binding.editSenhaConfirmar.text.toString()
+
+        if(email.isNotEmpty()){
+            binding.textInputEmailRedefinir.error = null
+
+            if(senha.isNotEmpty() && senhaConfirmacao.isNotEmpty()){
+                binding.textInputSenhaNova.error = null
+                binding.textInputSenhaNovaConfirmar.error = null
+
+                if(senha == senhaConfirmacao){
+                    binding.textInputSenhaNova.error = null
+                    binding.textInputSenhaNovaConfirmar.error = null
+                    return  true
+                }else{
+                    exibirMensagem("As senhas não conferem, tentar novamente!")
+                    return false
+                }
+            }else{
+                exibirMensagem("As senhas não conferem, tentar novamente!")
+                return false
+            }
+        }else{
+            binding.textInputEmailRedefinir.error = "Preencha o E-mail!"
+            return false
+        }
+    }
+
+    private fun redefinirSenhaUsuarioVoluntario(email: String, senhaConfirmacao: String) {
+        val user: FirebaseUser? = firebaseAuth.currentUser
+        user?.updatePassword(senhaConfirmacao)
+            ?.addOnCompleteListener{ resultado ->
+                if( resultado.isSuccessful ) {
+                    // Salvar dados dos usuários no banco de dados do firebase (Firestore)
+                    if (resultado.isSuccessful) {
+                        exibirMensagem("Senha atualizada com sucesso!")
+                        startActivity(
+                            Intent(applicationContext, CadastroCriancasActivity::class.java)
+                        )
+                    } else {
+                        exibirMensagem("Erro ao atualizar a senha.")
+                    }
+                }
+            }?.addOnFailureListener { erro ->
+                try {
+                    throw erro
+
+                    // Testar se o e-mail é válido
+                } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                    erroCredenciaisInvalidas.printStackTrace()
+                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+
+                    // testar E-mail cadastrado
+                } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
+                    erroEmailInvalido.printStackTrace()
+                    exibirMensagem("E-mail não cadastrado")
+
+                    // Testar senha forte
+                } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException) {
+                    erroSenhaFraca.printStackTrace()
+                    exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
+                }
+            }
     }
 }

@@ -99,7 +99,6 @@ class CadastroActivity : AppCompatActivity() {
                 exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
             }
         }
-
     }
 
     private fun salvarUsuarioFirestore(usuario: Usuario) {
