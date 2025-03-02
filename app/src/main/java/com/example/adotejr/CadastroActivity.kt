@@ -3,11 +3,13 @@ package com.example.adotejr
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.adotejr.databinding.ActivityCadastroBinding
+import com.example.adotejr.utils.exibirMensagem
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
 class CadastroActivity : AppCompatActivity() {
 
@@ -18,6 +20,10 @@ class CadastroActivity : AppCompatActivity() {
     private lateinit var nome: String
     private lateinit var email: String
     private lateinit var senha: String
+
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,20 +53,42 @@ class CadastroActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnCadastrar.setOnClickListener {
             if( validarCamposCadastroUsuario() ){
-
-
-                /*
-                if(senha == senhaAcesso) {
-                    startActivity(
-                        Intent(this, CadastroActivity::class.java)
-                    )
-                } else {
-                    Toast.makeText(this, "Senha INCORRETA! $senhaAcesso", Toast.LENGTH_LONG).show()
-                }
-
-                 */
+                cadastrarUsuarioVoluntario(nome, email, senha)
             }
         }
+    }
+
+    private fun cadastrarUsuarioVoluntario(nome: String, email: String, senha: String) {
+        firebaseAuth.createUserWithEmailAndPassword(
+            email, senha
+        ).addOnCompleteListener{ resultado ->
+            if( resultado.isSuccessful ) {
+                exibirMensagem("Cadastro realizado com sucesso!")
+                startActivity(
+                    Intent(applicationContext, CadastroCriancasActivity::class.java)
+                )
+            }
+        }.addOnFailureListener { erro ->
+            try {
+                throw erro
+
+            // Testar senha forte
+            } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException ) {
+                erroSenhaFraca.printStackTrace()
+                exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
+
+            // Testar se o e-mail já está cadastrado
+            } catch ( erroEmailExistente: FirebaseAuthUserCollisionException ) {
+                erroEmailExistente.printStackTrace()
+                exibirMensagem("E-mail já cadastrado, use outro e-mail ou redefina a senha!")
+
+            // Testar se o e-mail é válido
+            } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException ) {
+                erroCredenciaisInvalidas.printStackTrace()
+                exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+            }
+        }
+
     }
 
     private fun validarCamposCadastroUsuario(): Boolean {

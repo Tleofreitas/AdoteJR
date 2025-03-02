@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityChecarAcessoBinding
+import com.example.adotejr.utils.exibirMensagem
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -53,7 +54,7 @@ class ChecarAcessoActivity : AppCompatActivity() {
                         Intent(this, CadastroActivity::class.java)
                     )
                 } else {
-                    Toast.makeText(this, "Senha INCORRETA! $senhaAcesso", Toast.LENGTH_LONG).show()
+                    exibirMensagem("Senha INCORRETA!")
                 }
             }
         }
