@@ -97,39 +97,48 @@ class RedefinirSenhaActivity : AppCompatActivity() {
     }
 
     private fun redefinirSenhaUsuarioVoluntario(email: String, senhaConfirmacao: String) {
-        val user: FirebaseUser? = firebaseAuth.currentUser
-        user?.updatePassword(senhaConfirmacao)
-            ?.addOnCompleteListener{ resultado ->
-                if( resultado.isSuccessful ) {
-                    // Salvar dados dos usuários no banco de dados do firebase (Firestore)
+        // Opção de reset em que o usuário precisa estar logado
+        val user = firebaseAuth.currentUser
+        user?.let {
+            it.updatePassword(senhaConfirmacao)
+                .addOnCompleteListener { resultado ->
                     if (resultado.isSuccessful) {
-                        exibirMensagem("Senha atualizada com sucesso!")
-                        startActivity(
-                            Intent(applicationContext, CadastroCriancasActivity::class.java)
-                        )
+                        exibirMensagem("Senha alterada com sucesso!")
                     } else {
-                        exibirMensagem("Erro ao atualizar a senha.")
+                        val errorMessage = resultado.exception?.message
+                        exibirMensagem("Erro: $errorMessage")
+                    }
+                }.addOnFailureListener { erro ->
+                    try {
+                        throw erro
+
+                        // Testar se o e-mail é válido
+                    } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                        erroCredenciaisInvalidas.printStackTrace()
+                        exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+
+                        // testar E-mail cadastrado
+                    } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
+                        erroEmailInvalido.printStackTrace()
+                        exibirMensagem("E-mail não cadastrado")
+
+                        // Testar senha forte
+                    } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException) {
+                        erroSenhaFraca.printStackTrace()
+                        exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
                     }
                 }
-            }?.addOnFailureListener { erro ->
-                try {
-                    throw erro
-
-                    // Testar se o e-mail é válido
-                } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
-                    erroCredenciaisInvalidas.printStackTrace()
-                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
-
-                    // testar E-mail cadastrado
-                } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
-                    erroEmailInvalido.printStackTrace()
-                    exibirMensagem("E-mail não cadastrado")
-
-                    // Testar senha forte
-                } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException) {
-                    erroSenhaFraca.printStackTrace()
-                    exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
+        }
+    }
+    /*
+    firebaseAuth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { resultado ->
+                if (resultado.isSuccessful) {
+                    exibirMensagem("E-mail de redefinição de senha enviado!");
+                } else {
+                    val errorMessage = resultado.exception?.message
+                    exibirMensagem("Erro: $errorMessage");
                 }
             }
-    }
+     */
 }

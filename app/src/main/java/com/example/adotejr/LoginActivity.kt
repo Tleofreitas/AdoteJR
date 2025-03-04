@@ -37,7 +37,7 @@ class LoginActivity : AppCompatActivity() {
         */
         incializarToolbar()
         inicializarEventosClique()
-        firebaseAuth.signOut()
+        // firebaseAuth.signOut()
     }
 
     override fun onStart() {
