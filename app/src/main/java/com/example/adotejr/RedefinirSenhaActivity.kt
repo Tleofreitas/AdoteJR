@@ -1,17 +1,13 @@
 package com.example.adotejr
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityRedefinirSenhaBinding
-import com.example.adotejr.model.Usuario
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 
 class RedefinirSenhaActivity : AppCompatActivity() {

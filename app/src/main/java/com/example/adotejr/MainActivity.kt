@@ -4,11 +4,17 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityMainBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
+    }
+
+    // Autenticação
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         }
         */
 
+        firebaseAuth.signOut()
         inicializarEventosClique()
     }
 

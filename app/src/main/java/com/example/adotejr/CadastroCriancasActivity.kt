@@ -1,14 +1,14 @@
 package com.example.adotejr
 
 import android.os.Bundle
-import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.forEach
 import com.example.adotejr.databinding.ActivityCadastroCriancasBinding
-import com.google.android.material.appbar.MaterialToolbar
+import com.example.adotejr.utils.SessionManager
+import java.util.concurrent.TimeUnit
 
 class CadastroCriancasActivity : AppCompatActivity() {
+    private lateinit var sessionManager: SessionManager
 
     private val binding by lazy {
         ActivityCadastroCriancasBinding.inflate(layoutInflater)
@@ -29,6 +29,16 @@ class CadastroCriancasActivity : AppCompatActivity() {
             insets
         }
          */
+
+        sessionManager = SessionManager(this)
+        sessionManager.storeLoginTime()
+
+        // Verificar expiração a cada 1 minuto (ajustado para teste)
+        sessionManager.startSessionExpirationCheck(
+            interval = 1,
+            expirationTime = TimeUnit.HOURS.toMillis(3) // 3 HORAS
+        )
+
         incializarToolbar()
 
         imgPesquisar = binding.includeToolbarInferior.tbPesquisar
@@ -46,6 +56,13 @@ class CadastroCriancasActivity : AppCompatActivity() {
                 icon.isSelected = true
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sessionManager.checkSessionExpiration(
+            TimeUnit.HOURS.toMillis(3) // 3 HORAS
+        )
     }
 
     private fun incializarToolbar() {

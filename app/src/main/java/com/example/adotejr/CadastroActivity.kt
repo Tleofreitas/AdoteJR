@@ -12,6 +12,13 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.firestore.FirebaseFirestore
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
 class CadastroActivity : AppCompatActivity() {
 
     private val binding by lazy {

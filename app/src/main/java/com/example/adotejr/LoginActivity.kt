@@ -15,13 +15,13 @@ class LoginActivity : AppCompatActivity() {
         ActivityLoginBinding.inflate(layoutInflater)
     }
 
-    private lateinit var email: String
-    private lateinit var senha: String
-
     // Autenticação
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
     }
+
+    private lateinit var email: String
+    private lateinit var senha: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +37,6 @@ class LoginActivity : AppCompatActivity() {
         */
         incializarToolbar()
         inicializarEventosClique()
-        // firebaseAuth.signOut()
     }
 
     override fun onStart() {
