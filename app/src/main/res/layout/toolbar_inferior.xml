@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -17,43 +18,6 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
-<!--    <ImageView-->
-<!--        android:id="@+id/tbPesquisar"-->
-<!--        android:layout_width="40dp"-->
-<!--        android:layout_height="40dp"-->
-<!--        android:background="@drawable/icon_background"-->
-<!--        app:layout_constraintBottom_toBottomOf="@+id/tbInferior"-->
-<!--        app:layout_constraintEnd_toStartOf="@+id/tbCadastrar"-->
-<!--        app:layout_constraintHorizontal_bias="0.5"-->
-<!--        app:layout_constraintHorizontal_chainStyle="spread"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="@+id/tbInferior"-->
-<!--        app:srcCompat="@drawable/ic_pesquisar_branco" />-->
-
-<!--    <ImageView-->
-<!--        android:id="@+id/tbCadastrar"-->
-<!--        android:layout_width="40dp"-->
-<!--        android:layout_height="40dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="@+id/tbPesquisar"-->
-<!--        app:layout_constraintEnd_toStartOf="@+id/tbPerfil"-->
-<!--        app:layout_constraintHorizontal_bias="0.5"-->
-<!--        app:layout_constraintStart_toEndOf="@+id/tbPesquisar"-->
-<!--        app:layout_constraintTop_toTopOf="@+id/tbPesquisar"-->
-<!--        app:srcCompat="@drawable/ic_cadastro_branco"-->
-<!--        android:background="@drawable/icon_background" />-->
-
-<!--    <ImageView-->
-<!--        android:id="@+id/tbPerfil"-->
-<!--        android:layout_width="40dp"-->
-<!--        android:layout_height="40dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="@+id/tbCadastrar"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.5"-->
-<!--        app:layout_constraintStart_toEndOf="@+id/tbCadastrar"-->
-<!--        app:layout_constraintTop_toTopOf="@+id/tbCadastrar"-->
-<!--        app:srcCompat="@drawable/ic_perfil"-->
-<!--        android:background="@drawable/icon_background" />-->
-
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -64,29 +28,98 @@
         app:layout_constraintStart_toStartOf="@+id/tbInferior"
         app:layout_constraintTop_toTopOf="@+id/tbInferior">
 
-        <ImageView
-            android:id="@+id/tbPesquisar"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:background="@drawable/icon_background"
-            android:padding="10dp"
-            android:src="@drawable/ic_pesquisar_branco" />
+        <!-- Primeiro ícone e título -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/tbCadastrar"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:background="@drawable/icon_background"
-            android:padding="10dp"
-            android:src="@drawable/ic_cadastro_branco" />
+            <ImageView
+                android:id="@+id/tbHome"
+                android:layout_width="100dp"
+                android:layout_height="35dp"
+                android:background="@drawable/icon_background"
+                android:duplicateParentState="false"
+                android:src="@drawable/ic_home_branco" />
 
-        <ImageView
-            android:id="@+id/tbPerfil"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:background="@drawable/icon_background"
-            android:padding="10dp"
-            android:src="@drawable/ic_perfil" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Home"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <!-- Segundo ícone e título -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/tbListagem"
+                android:layout_width="100dp"
+                android:layout_height="35dp"
+                android:background="@drawable/icon_background"
+                android:src="@drawable/ic_listagem_numerada" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Listagem"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <!-- Terceiro ícone e título -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/tbCadastrar"
+                android:layout_width="100dp"
+                android:layout_height="35dp"
+                android:background="@drawable/icon_background"
+                android:src="@drawable/ic_cadastro_branco" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Cadastrar"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <!-- Quarto ícone e título -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/tbPerfil"
+                android:layout_width="100dp"
+                android:layout_height="35dp"
+                android:background="@drawable/icon_background"
+                android:src="@drawable/ic_perfil" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Perfil"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
 
     </LinearLayout>
 

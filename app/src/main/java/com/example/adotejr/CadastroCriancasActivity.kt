@@ -14,7 +14,8 @@ class CadastroCriancasActivity : AppCompatActivity() {
         ActivityCadastroCriancasBinding.inflate(layoutInflater)
     }
 
-    private lateinit var imgPesquisar: ImageView
+    private lateinit var imgHome: ImageView
+    private lateinit var imgListagem: ImageView
     private lateinit var imgCadastrar: ImageView
     private lateinit var imgPerfil: ImageView
 
@@ -39,13 +40,14 @@ class CadastroCriancasActivity : AppCompatActivity() {
             expirationTime = TimeUnit.HOURS.toMillis(3) // 3 HORAS
         )
 
-        incializarToolbar()
+        // incializarToolbar()
 
-        imgPesquisar = binding.includeToolbarInferior.tbPesquisar
+        imgHome = binding.includeToolbarInferior.tbHome
+        imgListagem = binding.includeToolbarInferior.tbListagem
         imgCadastrar = binding.includeToolbarInferior.tbCadastrar
         imgPerfil = binding.includeToolbarInferior.tbPerfil
 
-        val icons = listOf(imgPesquisar, imgCadastrar, imgPerfil)
+        val icons = listOf(imgListagem, imgCadastrar, imgPerfil)
         imgCadastrar.isSelected = true
 
         icons.forEach { icon ->
@@ -64,13 +66,12 @@ class CadastroCriancasActivity : AppCompatActivity() {
             TimeUnit.HOURS.toMillis(3) // 3 HORAS
         )
     }
-
+    /*
     private fun incializarToolbar() {
-        val toolbar = binding.includeToolbar.tbPrincipal
+        val toolbar = binding.includeToolbarA.tbAdote
         setSupportActionBar( toolbar )
         supportActionBar?.apply {
-            title = "Cadastro de criança"
             setDisplayHomeAsUpEnabled(true)
         }
-    }
+    }*/
 }
