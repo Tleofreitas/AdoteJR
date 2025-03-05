@@ -34,14 +34,13 @@ class CadastroCriancasActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         sessionManager.storeLoginTime()
 
-        // Verificar expiração a cada 1 minuto (ajustado para teste)
         sessionManager.startSessionExpirationCheck(
             interval = 1,
             expirationTime = TimeUnit.HOURS.toMillis(3) // 3 HORAS
         )
 
-        // incializarToolbar()
 
+        // Seleção do ícone ao clicar
         imgHome = binding.includeToolbarInferior.tbHome
         imgListagem = binding.includeToolbarInferior.tbListagem
         imgCadastrar = binding.includeToolbarInferior.tbCadastrar
@@ -66,12 +65,4 @@ class CadastroCriancasActivity : AppCompatActivity() {
             TimeUnit.HOURS.toMillis(3) // 3 HORAS
         )
     }
-    /*
-    private fun incializarToolbar() {
-        val toolbar = binding.includeToolbarA.tbAdote
-        setSupportActionBar( toolbar )
-        supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(true)
-        }
-    }*/
 }
