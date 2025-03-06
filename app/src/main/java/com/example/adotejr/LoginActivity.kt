@@ -48,7 +48,7 @@ class LoginActivity : AppCompatActivity() {
         val usuarioAtual = firebaseAuth.currentUser
         if (usuarioAtual != null){
             startActivity(
-                Intent(this, CadastroCriancasActivity::class.java)
+                Intent(this, GerenciamentoActivity::class.java)
             )
         }
     }
@@ -88,7 +88,7 @@ class LoginActivity : AppCompatActivity() {
         ).addOnSuccessListener {
             exibirMensagem("Login realizado com sucesso")
             startActivity(
-                Intent(applicationContext, CadastroCriancasActivity::class.java)
+                Intent(applicationContext, GerenciamentoActivity::class.java)
             )
         }.addOnFailureListener { erro ->
             try {

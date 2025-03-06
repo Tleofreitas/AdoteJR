@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CadastroCriancasActivity">
+    tools:context=".GerenciamentoActivity">
 
     <include
         android:id="@+id/includeToolbarA"
@@ -17,26 +17,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPagerPrincipal"
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="667dp"
-        app:layout_constraintBottom_toBottomOf="@id/includeToolbarInferior"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/includeToolbarA" />
 
-    <include
-        android:id="@+id/includeToolbarInferior"
-        layout="@layout/toolbar_inferior"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5" />
+        app:menu="@menu/bottom_navigation_menu"
+        app:labelVisibilityMode="labeled"
+        app:itemTextColor="@color/selector_item_text_color"
+        app:itemIconTint="@color/selector_item_icon_color" />
 </androidx.constraintlayout.widget.ConstraintLayout>

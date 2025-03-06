@@ -17,7 +17,7 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
         <activity
-            android:name=".CadastroCriancasActivity"
+            android:name=".GerenciamentoActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
         <activity

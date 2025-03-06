@@ -48,6 +48,8 @@ dependencies {
     implementation("com.google.firebase:firebase-storage") // Armazenamento de Imagens
     // -- Fim Dependencias Firebase --
 
+    implementation("com.google.android.material:material:1.3.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

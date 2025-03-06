@@ -3,16 +3,21 @@ package com.example.adotejr
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.adotejr.databinding.ActivityCadastroCriancasBinding
+import androidx.fragment.app.Fragment
+import com.example.adotejr.databinding.ActivityGerenciamentoBinding
 import com.example.adotejr.utils.SessionManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.util.concurrent.TimeUnit
 
-class CadastroCriancasActivity : AppCompatActivity() {
+
+class GerenciamentoActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
 
     private val binding by lazy {
-        ActivityCadastroCriancasBinding.inflate(layoutInflater)
+        ActivityGerenciamentoBinding.inflate(layoutInflater)
     }
+
+    private lateinit var bottomNavigationView: BottomNavigationView
 
     private lateinit var imgHome: ImageView
     private lateinit var imgListagem: ImageView
@@ -39,7 +44,29 @@ class CadastroCriancasActivity : AppCompatActivity() {
             expirationTime = TimeUnit.HOURS.toMillis(3) // 3 HORAS
         )
 
+        bottomNavigationView = binding.bottomNavigation
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            var selectedFragment: Fragment? = null
 
+            when (item.itemId) {
+                R.id.navigation_listagem -> selectedFragment = ListagemFragment()
+                R.id.navigation_cadastrar -> selectedFragment = CadastrarFragment()
+                R.id.navigation_perfil -> selectedFragment = ContaFragment()
+            }
+
+            if (selectedFragment != null) {
+                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, selectedFragment).commit()
+            }
+            true
+        }
+
+        // Definir o fragmento inicial
+        if (savedInstanceState == null) {
+            bottomNavigationView.selectedItemId = R.id.navigation_cadastrar
+        }
+
+
+        /*
         // Seleção do ícone ao clicar
         imgHome = binding.includeToolbarInferior.tbHome
         imgListagem = binding.includeToolbarInferior.tbListagem
@@ -57,6 +84,7 @@ class CadastroCriancasActivity : AppCompatActivity() {
                 icon.isSelected = true
             }
         }
+         */
     }
 
     override fun onResume() {

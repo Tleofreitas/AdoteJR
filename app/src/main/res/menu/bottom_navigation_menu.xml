@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/ic_home_branco"
+        android:title="Home" />
+    <item
+        android:id="@+id/navigation_listagem"
+        android:icon="@drawable/ic_listagem_numerada"
+        android:title="Listagem" />
+    <item
+        android:id="@+id/navigation_cadastrar"
+        android:icon="@drawable/ic_cadastro_branco"
+        android:title="Cadastrar" />
+    <item
+        android:id="@+id/navigation_perfil"
+        android:icon="@drawable/ic_perfil"
+        android:title="Conta" />
+</menu>
