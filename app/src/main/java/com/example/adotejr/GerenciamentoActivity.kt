@@ -1,5 +1,6 @@
 package com.example.adotejr
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -18,11 +19,6 @@ class GerenciamentoActivity : AppCompatActivity() {
     }
 
     private lateinit var bottomNavigationView: BottomNavigationView
-
-    private lateinit var imgHome: ImageView
-    private lateinit var imgListagem: ImageView
-    private lateinit var imgCadastrar: ImageView
-    private lateinit var imgPerfil: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +45,18 @@ class GerenciamentoActivity : AppCompatActivity() {
             var selectedFragment: Fragment? = null
 
             when (item.itemId) {
+                R.id.navigation_home -> {
+                    // Abrir a Home
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                    /*
+                    Destacar o item home e depois redirecionar
+                    , interrompe a execução do listener e garante que o código
+                    restante não será executado
+                     */
+                    return@setOnItemSelectedListener true
+                }
+
                 R.id.navigation_listagem -> selectedFragment = ListagemFragment()
                 R.id.navigation_cadastrar -> selectedFragment = CadastrarFragment()
                 R.id.navigation_perfil -> selectedFragment = ContaFragment()
@@ -64,27 +72,6 @@ class GerenciamentoActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             bottomNavigationView.selectedItemId = R.id.navigation_cadastrar
         }
-
-
-        /*
-        // Seleção do ícone ao clicar
-        imgHome = binding.includeToolbarInferior.tbHome
-        imgListagem = binding.includeToolbarInferior.tbListagem
-        imgCadastrar = binding.includeToolbarInferior.tbCadastrar
-        imgPerfil = binding.includeToolbarInferior.tbPerfil
-
-        val icons = listOf(imgListagem, imgCadastrar, imgPerfil)
-        imgCadastrar.isSelected = true
-
-        icons.forEach { icon ->
-            icon.setOnClickListener {
-                // Redefine o estado selecionado para todos os ícones
-                icons.forEach { it.isSelected = false }
-                // Define o estado selecionado para o ícone clicado
-                icon.isSelected = true
-            }
-        }
-         */
     }
 
     override fun onResume() {
