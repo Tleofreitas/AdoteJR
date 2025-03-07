@@ -66,4 +66,99 @@
         app:layout_constraintStart_toStartOf="@+id/imgBtnCadastrar"
         app:layout_constraintTop_toBottomOf="@+id/imgBtnCadastrar" />
 
+<!--    <RelativeLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:background="@color/white"-->
+<!--        tools:context=".MainActivity">-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/menu_container"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_centerInParent="true"-->
+<!--            android:orientation="vertical"-->
+<!--            android:gravity="center_horizontal"-->
+<!--            android:padding="16dp">-->
+
+<!--            &lt;!&ndash; Linha 1 &ndash;&gt;-->
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:gravity="center"-->
+<!--                android:padding="8dp">-->
+
+<!--                &lt;!&ndash; Gerenciar Usuários Button &ndash;&gt;-->
+<!--                <Button-->
+<!--                    android:id="@+id/button_manage_users"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:layout_marginEnd="8dp"-->
+<!--                    android:drawableTop="@drawable/ic_manage_users"-->
+<!--                    android:text="Gerenciar Usuários"-->
+<!--                    android:background="@drawable/button_background"-->
+<!--                    android:padding="16dp"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:gravity="center"-->
+<!--                    android:drawablePadding="8dp"/>-->
+
+<!--                &lt;!&ndash; Relatórios Button &ndash;&gt;-->
+<!--                <Button-->
+<!--                    android:id="@+id/button_reports"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:layout_marginStart="8dp"-->
+<!--                    android:drawableTop="@drawable/ic_reports"-->
+<!--                    android:text="Relatórios"-->
+<!--                    android:background="@drawable/button_background"-->
+<!--                    android:padding="16dp"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:gravity="center"-->
+<!--                    android:drawablePadding="8dp"/>-->
+<!--            </LinearLayout>-->
+
+<!--            &lt;!&ndash; Linha 2 &ndash;&gt;-->
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:gravity="center"-->
+<!--                android:padding="8dp">-->
+
+<!--                &lt;!&ndash; Pesquisar Button &ndash;&gt;-->
+<!--                <Button-->
+<!--                    android:id="@+id/button_search"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:layout_marginEnd="8dp"-->
+<!--                    android:drawableTop="@drawable/ic_pesquisar_branco"-->
+<!--                    android:text="Pesquisar"-->
+<!--                    android:background="@drawable/button_background"-->
+<!--                    android:padding="16dp"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:gravity="center"-->
+<!--                    android:drawablePadding="8dp"/>-->
+
+<!--                &lt;!&ndash; Cadastrar Button &ndash;&gt;-->
+<!--                <Button-->
+<!--                    android:id="@+id/BtnCadastrar"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:layout_marginStart="8dp"-->
+<!--                    android:drawableTop="@drawable/ic_cadastro_branco"-->
+<!--                    android:text="Cadastrar"-->
+<!--                    android:background="@drawable/button_background"-->
+<!--                    android:padding="16dp"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:gravity="center"-->
+<!--                    android:drawablePadding="8dp"/>-->
+<!--            </LinearLayout>-->
+<!--        </LinearLayout>-->
+<!--    </RelativeLayout>-->
+
 </androidx.constraintlayout.widget.ConstraintLayout>
