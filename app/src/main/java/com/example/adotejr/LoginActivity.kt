@@ -102,7 +102,7 @@ class LoginActivity : AppCompatActivity() {
             // Testar E-mail e senha
             } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
                 erroCredenciaisInvalidas.printStackTrace()
-                exibirMensagem("E-mail ou Senha estão incorretos!")
+                exibirMensagem("E-mail não cadastrado OU E-mail/Senha estão incorretos!")
             }
         }
     }
