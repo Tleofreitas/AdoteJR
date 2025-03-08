@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityRedefinirSenhaDeslogadoBinding
+import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -48,27 +49,31 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnSolicitar.setOnClickListener {
             if( validarCamposCadastroUsuario() ){
-                firebaseAuth.sendPasswordResetEmail(email)
-                    .addOnCompleteListener { resultado ->
-                        if (resultado.isSuccessful) {
-                            exibirMensagem("E-mail enviado! Redefina a senha e faça login =)");
-                            startActivity(
-                                Intent(this, LoginActivity::class.java)
-                            )
-                        } else {
-                            val errorMessage = resultado.exception?.message
-                            exibirMensagem("Erro: $errorMessage");
+                if (NetworkUtils.conectadoInternet(this)) {
+                    firebaseAuth.sendPasswordResetEmail(email)
+                        .addOnCompleteListener { resultado ->
+                            if (resultado.isSuccessful) {
+                                exibirMensagem("E-mail enviado! Redefina a senha e faça login =)");
+                                startActivity(
+                                    Intent(this, LoginActivity::class.java)
+                                )
+                            } else {
+                                val errorMessage = resultado.exception?.message
+                                exibirMensagem("Erro: $errorMessage");
+                            }
                         }
-                    }
-                .addOnFailureListener { erro ->
-                    try {
-                        throw erro
+                        .addOnFailureListener { erro ->
+                            try {
+                                throw erro
 
-                    // Testar se o e-mail é válido
-                    } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
-                        erroCredenciaisInvalidas.printStackTrace()
-                        exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
-                    }
+                                // Testar se o e-mail é válido
+                            } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                                erroCredenciaisInvalidas.printStackTrace()
+                                exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+                            }
+                        }
+                } else {
+                    exibirMensagem("Verifique a conexão com a internet e tente novamente!")
                 }
             }
         }

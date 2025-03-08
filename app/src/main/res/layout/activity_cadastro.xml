@@ -42,7 +42,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView2"
-        app:startIconDrawable="@drawable/ic_perfil">
+        app:startIconDrawable="@drawable/ic_perfil_24">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editNome"

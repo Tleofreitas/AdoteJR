@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityLoginBinding
+import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -65,7 +66,11 @@ class LoginActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnLogarUsuario.setOnClickListener {
             if( validarCamposLogin() ){
-                logarUsuario()
+                if (NetworkUtils.conectadoInternet(this)) {
+                    logarUsuario()
+                } else {
+                    exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                }
             }
         }
 

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityCadastroBinding
 import com.example.adotejr.model.Usuario
+import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -60,7 +61,11 @@ class CadastroActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnCadastrar.setOnClickListener {
             if( validarCamposCadastroUsuario() ){
-                cadastrarUsuarioVoluntario(nome, email, senha)
+                if (NetworkUtils.conectadoInternet(this)) {
+                    cadastrarUsuarioVoluntario(nome, email, senha)
+                } else {
+                    exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                }
             }
         }
     }

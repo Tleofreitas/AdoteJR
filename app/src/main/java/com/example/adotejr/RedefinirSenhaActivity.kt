@@ -3,6 +3,7 @@ package com.example.adotejr
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityRedefinirSenhaBinding
+import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -57,7 +58,11 @@ class RedefinirSenhaActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnChecarSenhas.setOnClickListener {
             if( validarCamposCadastroUsuario() ){
-                redefinirSenhaUsuarioVoluntario(email, senhaConfirmacao)
+                if (NetworkUtils.conectadoInternet(this)) {
+                    redefinirSenhaUsuarioVoluntario(email, senhaConfirmacao)
+                } else {
+                    exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                }
             }
         }
     }
