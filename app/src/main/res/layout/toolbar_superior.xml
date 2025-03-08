@@ -19,4 +19,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5" />
+
+    <ImageView
+        android:id="@+id/imageView7"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/tbPrincipal"
+        app:layout_constraintEnd_toEndOf="@+id/tbPrincipal"
+        app:layout_constraintTop_toTopOf="@+id/tbPrincipal"
+        app:srcCompat="@drawable/logo_adva_redondo" />
 </androidx.constraintlayout.widget.ConstraintLayout>
