@@ -77,7 +77,7 @@ class LoginActivity : AppCompatActivity() {
 
         binding.textRedefinir.setOnClickListener {
             startActivity(
-                Intent(this, RedefinirSenhaActivity::class.java)
+                Intent(this, RedefinirSenhaDeslogadoActivity::class.java)
             )
         }
     }

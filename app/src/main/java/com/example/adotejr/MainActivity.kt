@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun inicializarEventosClique() {
-        binding.imgBtnCadastrar.setOnClickListener {
+        binding.BtnCadastrar.setOnClickListener {
             startActivity(
                 Intent(this, LoginActivity::class.java)
             )

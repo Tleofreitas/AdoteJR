@@ -21,144 +21,137 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/logo_completo_cima_laranja" />
 
-    <ImageView
-        android:id="@+id/imgBtnCadastrar"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginEnd="76dp"
-        android:contentDescription="Cadastrar"
-        app:layout_constraintBottom_toBottomOf="@+id/imgBtnPesquisar"
+    <!--    <ImageView-->
+    <!--        android:id="@+id/BtnCadastrar"-->
+    <!--        android:layout_width="100dp"-->
+    <!--        android:layout_height="100dp"-->
+    <!--        android:layout_marginEnd="76dp"-->
+    <!--        android:contentDescription="Cadastrar"-->
+    <!--        app:layout_constraintBottom_toBottomOf="@+id/imgBtnPesquisar"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="@+id/imgBtnPesquisar"-->
+    <!--        app:srcCompat="@drawable/ic_cadastro" />-->
+
+    <!--    <ImageView-->
+    <!--        android:id="@+id/imgBtnPesquisar"-->
+    <!--        android:layout_width="100dp"-->
+    <!--        android:layout_height="100dp"-->
+    <!--        android:layout_marginStart="76dp"-->
+    <!--        android:layout_marginTop="64dp"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/imageView3"-->
+    <!--        app:srcCompat="@drawable/ic_pesquisar" />-->
+
+    <!--    <TextView-->
+    <!--        android:id="@+id/textView2"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Pesquisar"-->
+    <!--        android:textColor="@color/black"-->
+    <!--        android:textSize="16sp"-->
+    <!--        android:textStyle="normal"-->
+    <!--        app:layout_constraintEnd_toEndOf="@+id/imgBtnPesquisar"-->
+    <!--        app:layout_constraintStart_toStartOf="@+id/imgBtnPesquisar"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/imgBtnPesquisar" />-->
+
+    <!--    <TextView-->
+    <!--        android:id="@+id/textView3"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="Cadastrar"-->
+    <!--        android:textColor="@color/black"-->
+    <!--        android:textSize="16sp"-->
+    <!--        android:textStyle="normal"-->
+    <!--        app:layout_constraintEnd_toEndOf="@+id/BtnCadastrar"-->
+    <!--        app:layout_constraintStart_toStartOf="@+id/BtnCadastrar"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/BtnCadastrar" />-->
+
+    <LinearLayout
+        android:id="@+id/menu_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/imgBtnPesquisar"
-        app:srcCompat="@drawable/ic_cadastro" />
-
-    <ImageView
-        android:id="@+id/imgBtnPesquisar"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginStart="76dp"
-        android:layout_marginTop="64dp"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView3"
-        app:srcCompat="@drawable/ic_pesquisar" />
+        app:layout_constraintTop_toBottomOf="@+id/imageView3">
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pesquisar"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        android:textStyle="normal"
-        app:layout_constraintEnd_toEndOf="@+id/imgBtnPesquisar"
-        app:layout_constraintStart_toStartOf="@+id/imgBtnPesquisar"
-        app:layout_constraintTop_toBottomOf="@+id/imgBtnPesquisar" />
+        <!-- Linha 1 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cadastrar"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        android:textStyle="normal"
-        app:layout_constraintEnd_toEndOf="@+id/imgBtnCadastrar"
-        app:layout_constraintStart_toStartOf="@+id/imgBtnCadastrar"
-        app:layout_constraintTop_toBottomOf="@+id/imgBtnCadastrar" />
+            <!-- Gerenciar Usuários Button -->
+            <Button
+                android:id="@+id/button_manage_users"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/ic_manage_users"
+                android:drawablePadding="8dp"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="Gerenciar Usuários"
+                android:textColor="@color/white" />
 
-<!--    <RelativeLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:background="@color/white"-->
-<!--        tools:context=".MainActivity">-->
+            <!-- Relatórios Button -->
+            <Button
+                android:id="@+id/button_reports"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/ic_reports"
+                android:drawablePadding="8dp"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="Relatórios"
+                android:textColor="@color/white" />
+        </LinearLayout>
 
-<!--        <LinearLayout-->
-<!--            android:id="@+id/menu_container"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_centerInParent="true"-->
-<!--            android:orientation="vertical"-->
-<!--            android:gravity="center_horizontal"-->
-<!--            android:padding="16dp">-->
+        <!-- Linha 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-<!--            &lt;!&ndash; Linha 1 &ndash;&gt;-->
-<!--            <LinearLayout-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:orientation="horizontal"-->
-<!--                android:gravity="center"-->
-<!--                android:padding="8dp">-->
+            <!-- Pesquisar Button -->
+            <Button
+                android:id="@+id/button_search"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/ic_pesquisar_branco"
+                android:drawablePadding="8dp"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="Pesquisar"
+                android:textColor="@color/white" />
 
-<!--                &lt;!&ndash; Gerenciar Usuários Button &ndash;&gt;-->
-<!--                <Button-->
-<!--                    android:id="@+id/button_manage_users"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:layout_marginEnd="8dp"-->
-<!--                    android:drawableTop="@drawable/ic_manage_users"-->
-<!--                    android:text="Gerenciar Usuários"-->
-<!--                    android:background="@drawable/button_background"-->
-<!--                    android:padding="16dp"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:gravity="center"-->
-<!--                    android:drawablePadding="8dp"/>-->
-
-<!--                &lt;!&ndash; Relatórios Button &ndash;&gt;-->
-<!--                <Button-->
-<!--                    android:id="@+id/button_reports"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:layout_marginStart="8dp"-->
-<!--                    android:drawableTop="@drawable/ic_reports"-->
-<!--                    android:text="Relatórios"-->
-<!--                    android:background="@drawable/button_background"-->
-<!--                    android:padding="16dp"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:gravity="center"-->
-<!--                    android:drawablePadding="8dp"/>-->
-<!--            </LinearLayout>-->
-
-<!--            &lt;!&ndash; Linha 2 &ndash;&gt;-->
-<!--            <LinearLayout-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:orientation="horizontal"-->
-<!--                android:gravity="center"-->
-<!--                android:padding="8dp">-->
-
-<!--                &lt;!&ndash; Pesquisar Button &ndash;&gt;-->
-<!--                <Button-->
-<!--                    android:id="@+id/button_search"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:layout_marginEnd="8dp"-->
-<!--                    android:drawableTop="@drawable/ic_pesquisar_branco"-->
-<!--                    android:text="Pesquisar"-->
-<!--                    android:background="@drawable/button_background"-->
-<!--                    android:padding="16dp"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:gravity="center"-->
-<!--                    android:drawablePadding="8dp"/>-->
-
-<!--                &lt;!&ndash; Cadastrar Button &ndash;&gt;-->
-<!--                <Button-->
-<!--                    android:id="@+id/BtnCadastrar"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:layout_marginStart="8dp"-->
-<!--                    android:drawableTop="@drawable/ic_cadastro_branco"-->
-<!--                    android:text="Cadastrar"-->
-<!--                    android:background="@drawable/button_background"-->
-<!--                    android:padding="16dp"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:gravity="center"-->
-<!--                    android:drawablePadding="8dp"/>-->
-<!--            </LinearLayout>-->
-<!--        </LinearLayout>-->
-<!--    </RelativeLayout>-->
+            <!-- Cadastrar Button -->
+            <Button
+                android:id="@+id/BtnCadastrar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/ic_cadastro_branco"
+                android:drawablePadding="8dp"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="Cadastrar"
+                android:textColor="@color/white" />
+        </LinearLayout>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -126,15 +126,4 @@ class RedefinirSenhaActivity : AppCompatActivity() {
                 }
         }
     }
-    /*
-    firebaseAuth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { resultado ->
-                if (resultado.isSuccessful) {
-                    exibirMensagem("E-mail de redefinição de senha enviado!");
-                } else {
-                    val errorMessage = resultado.exception?.message
-                    exibirMensagem("Erro: $errorMessage");
-                }
-            }
-     */
 }

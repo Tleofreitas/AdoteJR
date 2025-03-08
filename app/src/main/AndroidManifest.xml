@@ -13,13 +13,16 @@
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
         <activity
+            android:name=".RedefinirSenhaDeslogadoActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+        <activity
             android:name=".ChecarAcessoActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".GerenciamentoActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:exported="false" />
         <activity
             android:name=".RedefinirSenhaActivity"
             android:exported="false"
