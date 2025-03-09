@@ -6,5 +6,10 @@
         <item name="colorPrimary">@color/primaria</item>
     </style>
 
+    <!--  Arredondam de imagens -->
+    <style name="Circulo">
+        <item name="cornerSize">50%</item>
+    </style>
+
     <style name="Theme.AppAdoteJrTLRF" parent="Base.Theme.AppAdoteJrTLRF" />
 </resources>

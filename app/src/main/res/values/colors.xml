@@ -9,6 +9,10 @@
     <color name="azulClaro">#219EBC</color>
     <color name="azulMaisClaro">#8ECAE6</color>
 
+    <color name="vermelhoEscuro">#8B0000</color>
+    <color name="vermelhoCarmim">#DC143C</color>
+    <!-- <color name="vermelhoTomate">#FF6347</color> -->
+
 <!--    FB8500 laranja-->
 <!--    FFB703 amarelo-->
 <!--    023047 azul escuro-->
