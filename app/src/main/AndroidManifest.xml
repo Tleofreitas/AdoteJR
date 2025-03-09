@@ -2,8 +2,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissão de acesso à rede-->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
+    <!-- Permissão de acesso a verificar o estado das conexões de rede -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Permitir que o aplicativo acesse a internet -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Permissão de acesso à Camera -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Permissão de acesso as fotos -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- Permissão de acesso as fotos -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
 
     <application
         android:allowBackup="true"
