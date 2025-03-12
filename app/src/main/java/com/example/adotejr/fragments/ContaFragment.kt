@@ -1,8 +1,13 @@
 package com.example.adotejr.fragments
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
+import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +20,7 @@ import com.example.adotejr.databinding.FragmentContaBinding
 import com.example.adotejr.util.PermissionUtil
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
+import java.io.ByteArrayOutputStream
 
 class ContaFragment : Fragment() {
 
@@ -133,9 +139,7 @@ class ContaFragment : Fragment() {
                 .child(idUsuario)
                 .child("perfil.jpg")
                 .putFile( uri )
-                .addOnSuccessListener { task ->
-
-
+                .addOnSuccessListener {
                     Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                 }.addOnFailureListener{
                     Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
@@ -145,6 +149,50 @@ class ContaFragment : Fragment() {
 
     private fun abrirCamera() {
         // Código para abrir a câmera
-        Toast.makeText(requireContext(), "Abrindo CAMERA", Toast.LENGTH_LONG).show()
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        gerenciadorCamera.launch(intent)
+    }
+
+    private  var bitmapImagemSelecionada: Bitmap? = null
+    private val gerenciadorCamera = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { resultadoActivity ->
+        if ( resultadoActivity.resultCode == RESULT_OK ) {
+            bitmapImagemSelecionada = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                resultadoActivity.data?.extras?.getParcelable("data", Bitmap::class.java)
+            } else {
+                resultadoActivity.data?.extras?.getParcelable("data")
+            }
+            binding.imagePerfil.setImageBitmap( bitmapImagemSelecionada )
+            uploadImegemCameraStorage( bitmapImagemSelecionada )
+        } else {
+            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun uploadImegemCameraStorage(bitmapImagemSelecionada: Bitmap?) {
+
+        val outputStream = ByteArrayOutputStream()
+        bitmapImagemSelecionada?.compress(
+            Bitmap.CompressFormat.JPEG,
+            100,
+            outputStream
+        )
+
+        // foto -> usuarios -> idUsuario -> perfil.jpg
+
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if ( idUsuario != null ) {
+            storage.getReference("fotos")
+                .child("usuarios")
+                .child(idUsuario)
+                .child("perfil.jpg")
+                .putBytes( outputStream.toByteArray() )
+                .addOnSuccessListener {
+                    Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                }.addOnFailureListener{
+                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                }
+        }
     }
 }
