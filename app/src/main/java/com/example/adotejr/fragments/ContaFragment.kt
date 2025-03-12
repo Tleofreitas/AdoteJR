@@ -1,22 +1,35 @@
 package com.example.adotejr.fragments
 
 import android.Manifest
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentContaBinding
 import com.example.adotejr.util.PermissionUtil
-import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 
 class ContaFragment : Fragment() {
 
     private var _binding: FragmentContaBinding? = null
     private val binding get() = _binding!!
+
+    // Autenticação
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
+    // Banco de dados Firestore
+    private val storage by lazy {
+        FirebaseStorage.getInstance()
+    }
 
     // Gerenciador de permissões
     private val gerenciadorPermissoes = registerForActivityResult(
@@ -94,13 +107,44 @@ class ContaFragment : Fragment() {
         }
     }
 
-    private fun abrirCamera() {
-        // Código para abrir a câmera
-        Toast.makeText(requireContext(), "Abrindo câmera", Toast.LENGTH_LONG).show()
+    private fun abrirArmazenamento() {
+        // Código para abrir o armazenamento
+        gerenciadorGaleria.launch("image/*")
     }
 
-    private fun abrirArmazenamento() {
+    private val gerenciadorGaleria = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if ( uri != null ) {
+            binding.imagePerfil.setImageURI( uri )
+            uploadImegemStorage( uri )
+        } else {
+            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun uploadImegemStorage(uri: Uri) {
+        // foto -> usuarios -> idUsuario -> perfil.jpg
+
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if ( idUsuario != null ) {
+            storage.getReference("fotos")
+                .child("usuarios")
+                .child(idUsuario)
+                .child("perfil.jpg")
+                .putFile( uri )
+                .addOnSuccessListener { task ->
+
+
+                    Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                }.addOnFailureListener{
+                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                }
+        }
+    }
+
+    private fun abrirCamera() {
         // Código para abrir a câmera
-        Toast.makeText(requireContext(), "Abrindo ARMAZENAMENTO", Toast.LENGTH_LONG).show()
+        Toast.makeText(requireContext(), "Abrindo CAMERA", Toast.LENGTH_LONG).show()
     }
 }
