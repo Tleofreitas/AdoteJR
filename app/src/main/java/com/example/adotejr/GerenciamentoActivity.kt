@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
+import com.example.adotejr.fragments.ContaFragment
 import com.example.adotejr.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.util.concurrent.TimeUnit

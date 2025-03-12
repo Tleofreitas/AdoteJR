@@ -42,7 +42,7 @@
         app:layout_constraintStart_toEndOf="@+id/imageView6"
         app:layout_constraintTop_toTopOf="@+id/imageView6" />
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageView5"
         android:layout_width="45dp"
         android:layout_height="45dp"
@@ -50,6 +50,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/tbAdote"
         app:layout_constraintEnd_toEndOf="@+id/tbAdote"
         app:layout_constraintTop_toTopOf="@+id/tbAdote"
-        app:srcCompat="@drawable/logo_adva_redondo" />
+        app:srcCompat="@drawable/logo_adva_vermelho"
+        app:shapeAppearanceOverlay="@style/Circulo" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
