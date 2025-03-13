@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,7 @@ import com.example.adotejr.util.PermissionUtil
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
 
 class ContaFragment : Fragment() {
@@ -74,6 +76,38 @@ class ContaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         inicializarEventosClique()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        recuperarDadosIniciaisUsuario()
+    }
+
+    private fun recuperarDadosIniciaisUsuario() {
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if (idUsuario != null){
+            firestore.collection("Usuarios")
+                .document( idUsuario )
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val dadosUsuario = documentSnapshot.data
+                    if ( dadosUsuario != null ){
+                        val nome = dadosUsuario["nome"] as String
+                        val foto = dadosUsuario["foto"] as String
+
+                        if (foto.isNotEmpty()) {
+                            Picasso.get()
+                                .load( foto )
+                                .into( binding.imagePerfil )
+                        }
+
+                        binding.editNomePerfil.setText( nome )
+                        binding.editEmailPerfil.setText( firebaseAuth.currentUser?.email)
+                    }
+                } .addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error getting documents: ", exception)
+                }
+        }
     }
 
     private fun inicializarEventosClique() {
