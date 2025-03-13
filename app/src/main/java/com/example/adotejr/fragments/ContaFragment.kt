@@ -19,6 +19,7 @@ import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentContaBinding
 import com.example.adotejr.util.PermissionUtil
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 
@@ -32,9 +33,14 @@ class ContaFragment : Fragment() {
         FirebaseAuth.getInstance()
     }
 
-    // Banco de dados Firestore
+    // Armazenamento Storage
     private val storage by lazy {
         FirebaseStorage.getInstance()
+    }
+
+    // Banco de dados Firestore
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     // Gerenciador de permissões
@@ -67,8 +73,27 @@ class ContaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        inicializarEventosClique()
+    }
+
+    private fun inicializarEventosClique() {
         binding.fabSelecionar.setOnClickListener {
             mostrarDialogoEscolherImagem()
+        }
+
+        binding.btnAtualizarPerfil.setOnClickListener {
+            val nomeUsuario = binding.editNomePerfil.text.toString()
+            if ( nomeUsuario.isNotEmpty() ) {
+                val idUsuario = firebaseAuth.currentUser?.uid
+                if ( idUsuario != null ) {
+                    val dados = mapOf(
+                        "nome" to nomeUsuario
+                    )
+                    atualizarDadosPerfil( idUsuario, dados )
+                }
+            } else {
+                Toast.makeText(requireContext(), "Preencha o nome para atualizar", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -139,12 +164,33 @@ class ContaFragment : Fragment() {
                 .child(idUsuario)
                 .child("perfil.jpg")
                 .putFile( uri )
-                .addOnSuccessListener {
+                .addOnSuccessListener { url ->
                     Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                    url.metadata
+                        ?.reference
+                        ?.downloadUrl
+                        ?.addOnSuccessListener {
+                            val dados = mapOf(
+                                "foto" to url.toString()
+                            )
+                            atualizarDadosPerfil( idUsuario, dados )
+                        }
                 }.addOnFailureListener{
                     Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
                 }
         }
+    }
+
+    private fun atualizarDadosPerfil(idUsuario: String, dados: Map<String, String>) {
+        firestore.collection("Usuarios")
+            .document( idUsuario )
+            .update( dados )
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Sucesso ao atualizar perfil.", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Erro ao atualizar perfil. Tente novamente.", Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun abrirCamera() {
@@ -180,7 +226,6 @@ class ContaFragment : Fragment() {
         )
 
         // foto -> usuarios -> idUsuario -> perfil.jpg
-
         val idUsuario = firebaseAuth.currentUser?.uid
         if ( idUsuario != null ) {
             storage.getReference("fotos")
