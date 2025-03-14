@@ -2,6 +2,9 @@ package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Patterns
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityRedefinirSenhaDeslogadoBinding
 import com.example.adotejr.utils.NetworkUtils
@@ -42,9 +45,25 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
         if(bundle != null) {
             email = bundle.getString("email").toString()
             binding.editEmailSolicitar.setText( email )
+        } else {
+            email = "null"
         }
 
+        // Adicionar o listener ao campo de e-mail
+        adicionarListenerCampoEmail()
+
         inicializarEventosClique()
+    }
+
+    private fun adicionarListenerCampoEmail() {
+        binding.editEmailSolicitar.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                email = binding.editEmailSolicitar.text.toString().trim() // Atualiza a variável email
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
     }
 
     private fun incializarToolbar() {
@@ -59,54 +78,65 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnSolicitar.setOnClickListener {
             if( validarCamposCadastroUsuario() ){
-                if (NetworkUtils.conectadoInternet(this)) {
-                    firebaseAuth.sendPasswordResetEmail(email)
-                        .addOnCompleteListener { resultado ->
-                            if (resultado.isSuccessful) {
-                                exibirMensagem("E-mail enviado! Redefina a senha e faça login =)");
+                if( validarEmail(email) ){
+                    if (NetworkUtils.conectadoInternet(this)) {
+                        firebaseAuth.sendPasswordResetEmail(email)
+                            .addOnCompleteListener { resultado ->
+                                if (resultado.isSuccessful) {
+                                    exibirMensagem("E-mail enviado! Redefina a senha e faça login =)");
 
-                                val user = FirebaseAuth.getInstance().currentUser
-                                if (user != null) {
-                                    // Usuário está logado, deslogar
-                                    firebaseAuth.signOut()
+                                    val user = FirebaseAuth.getInstance().currentUser
+                                    if (user != null) {
+                                        // Usuário está logado, deslogar
+                                        firebaseAuth.signOut()
+                                    }
+
+                                    startActivity(
+                                        Intent(this, LoginActivity::class.java)
+                                    )
+                                } else {
+                                    val errorMessage = resultado.exception?.message
+                                    exibirMensagem("Erro: $errorMessage");
                                 }
-
-                                startActivity(
-                                    Intent(this, LoginActivity::class.java)
-                                )
-                            } else {
-                                val errorMessage = resultado.exception?.message
-                                exibirMensagem("Erro: $errorMessage");
                             }
-                        }
-                        .addOnFailureListener { erro ->
-                            try {
-                                throw erro
+                            .addOnFailureListener { erro ->
+                                try {
+                                    throw erro
 
-                                // Testar se o e-mail é válido
-                            } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
-                                erroCredenciaisInvalidas.printStackTrace()
-                                exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+                                    // Testar se o e-mail é válido
+                                } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                                    erroCredenciaisInvalidas.printStackTrace()
+                                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+                                }
                             }
-                        }
+                    } else {
+                        exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                    }
                 } else {
-                    exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
                 }
             }
         }
     }
 
-    private fun validarCamposCadastroUsuario(): Boolean {
-        if (email==null) {
-            email = binding.editEmailSolicitar.text.toString()
-        }
+    private fun validarEmail(email: String): Boolean {
+        // Verifica se o e-mail não está vazio e se corresponde ao padrão de e-mail
+        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
 
-        if(email.isNotEmpty()){
-            binding.textInputEmailSolicitar.error = null
+    private fun validarCamposCadastroUsuario(): Boolean {
+        if (email=="null") {
+            email = binding.editEmailSolicitar.text.toString()
+
+            if(!email.isNullOrEmpty()){
+                binding.textInputEmailSolicitar.error = null
+                return true
+            }else{
+                binding.textInputEmailSolicitar.error = "Preencha o E-mail!"
+                return false
+            }
+        } else {
             return true
-        }else{
-            binding.textInputEmailSolicitar.error = "Preencha o E-mail!"
-            return false
         }
     }
 }
