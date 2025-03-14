@@ -198,14 +198,14 @@ class ContaFragment : Fragment() {
                 .child(idUsuario)
                 .child("perfil.jpg")
                 .putFile( uri )
-                .addOnSuccessListener { url ->
+                .addOnSuccessListener { taskSnapshot ->
                     Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                    url.metadata
+                    taskSnapshot.metadata
                         ?.reference
                         ?.downloadUrl
-                        ?.addOnSuccessListener {
+                        ?.addOnSuccessListener { uriDownload ->
                             val dados = mapOf(
-                                "foto" to url.toString()
+                                "foto" to uriDownload.toString()
                             )
                             atualizarDadosPerfil( idUsuario, dados )
                         }
@@ -220,6 +220,7 @@ class ContaFragment : Fragment() {
             .document( idUsuario )
             .update( dados )
             .addOnSuccessListener {
+                onStart()
                 Toast.makeText(requireContext(), "Sucesso ao atualizar perfil.", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener {
