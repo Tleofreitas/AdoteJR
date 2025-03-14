@@ -34,6 +34,16 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
         }
          */
         incializarToolbar()
+
+        // Pegar E-mail passado
+        val bundle = intent.extras
+
+        // val filmes = bundle?.getString("filme")
+        if(bundle != null) {
+            email = bundle.getString("email").toString()
+            binding.editEmailSolicitar.setText( email )
+        }
+
         inicializarEventosClique()
     }
 
@@ -54,6 +64,13 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
                         .addOnCompleteListener { resultado ->
                             if (resultado.isSuccessful) {
                                 exibirMensagem("E-mail enviado! Redefina a senha e faça login =)");
+
+                                val user = FirebaseAuth.getInstance().currentUser
+                                if (user != null) {
+                                    // Usuário está logado, deslogar
+                                    firebaseAuth.signOut()
+                                }
+
                                 startActivity(
                                     Intent(this, LoginActivity::class.java)
                                 )
@@ -80,13 +97,15 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
     }
 
     private fun validarCamposCadastroUsuario(): Boolean {
-        email = binding.editEmailRedefinir.text.toString()
+        if (email==null) {
+            email = binding.editEmailSolicitar.text.toString()
+        }
 
         if(email.isNotEmpty()){
-            binding.textInputEmailRedefinir.error = null
+            binding.textInputEmailSolicitar.error = null
             return true
         }else{
-            binding.textInputEmailRedefinir.error = "Preencha o E-mail!"
+            binding.textInputEmailSolicitar.error = "Preencha o E-mail!"
             return false
         }
     }

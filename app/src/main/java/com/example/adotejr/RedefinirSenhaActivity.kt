@@ -43,6 +43,16 @@ class RedefinirSenhaActivity : AppCompatActivity() {
         }*/
 
         incializarToolbar()
+
+        // Pegar E-mail passado
+        val bundle = intent.extras
+
+        // val filmes = bundle?.getString("filme")
+        if(bundle != null) {
+            email = bundle.getString("email").toString()
+            binding.editEmailRedefinir.setText( email )
+        }
+
         inicializarEventosClique()
     }
 
@@ -68,31 +78,30 @@ class RedefinirSenhaActivity : AppCompatActivity() {
     }
 
     private fun validarCamposCadastroUsuario(): Boolean {
-        email = binding.editEmailRedefinir.text.toString()
+        // email = binding.editEmailRedefinir.text.toString()
         senha = binding.editSenhaRedefinir.text.toString()
         senhaConfirmacao = binding.editSenhaConfirmar.text.toString()
 
-        if(email.isNotEmpty()){
-            binding.textInputEmailRedefinir.error = null
-
-            if(senha.isNotEmpty() && senhaConfirmacao.isNotEmpty()){
+        if(senha.isNotEmpty() || senhaConfirmacao.isNotEmpty()){
+            if(senha.isEmpty()) {
+                binding.textInputSenhaNova.error = "Preencha a senha!"
+                return false
+            } else if(senhaConfirmacao.isEmpty()){
+                binding.textInputSenhaNovaConfirmar.error = "Preencha a senha!"
+                return false
+            } else {
                 binding.textInputSenhaNova.error = null
                 binding.textInputSenhaNovaConfirmar.error = null
 
                 if(senha == senhaConfirmacao){
-                    binding.textInputSenhaNova.error = null
-                    binding.textInputSenhaNovaConfirmar.error = null
                     return  true
                 }else{
                     exibirMensagem("As senhas não conferem, tentar novamente!")
                     return false
                 }
-            }else{
-                exibirMensagem("As senhas não conferem, tentar novamente!")
-                return false
             }
         }else{
-            binding.textInputEmailRedefinir.error = "Preencha o E-mail!"
+            exibirMensagem("Insira a nova senha desejada para poder prosseguir!")
             return false
         }
     }
@@ -100,6 +109,35 @@ class RedefinirSenhaActivity : AppCompatActivity() {
     private fun redefinirSenhaUsuarioVoluntario(email: String, senhaConfirmacao: String) {
         // Opção de reset em que o usuário precisa estar logado
         val user = firebaseAuth.currentUser
+        val newPassword = senhaConfirmacao
+
+        user!!.updatePassword(newPassword)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    exibirMensagem("Senha alterada com sucesso!")
+                }
+            }.addOnFailureListener { erro ->
+                try {
+                    throw erro
+
+                    // Testar se o e-mail é válido
+                } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
+                    erroCredenciaisInvalidas.printStackTrace()
+                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+
+                    // testar E-mail cadastrado
+                } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
+                    erroEmailInvalido.printStackTrace()
+                    exibirMensagem("E-mail não cadastrado")
+
+                    // Testar senha forte
+                } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException) {
+                    erroSenhaFraca.printStackTrace()
+                    exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
+                }
+            }
+
+        /*
         user?.let {
             it.updatePassword(senhaConfirmacao)
                 .addOnCompleteListener { resultado ->
@@ -129,6 +167,6 @@ class RedefinirSenhaActivity : AppCompatActivity() {
                         exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
                     }
                 }
-        }
+        }*/
     }
 }

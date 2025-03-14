@@ -2,6 +2,7 @@ package com.example.adotejr.fragments
 
 import android.Manifest
 import android.app.Activity.RESULT_OK
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -16,7 +17,10 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.example.adotejr.LoginActivity
+import com.example.adotejr.MainActivity
 import com.example.adotejr.R
+import com.example.adotejr.RedefinirSenhaDeslogadoActivity
 import com.example.adotejr.databinding.FragmentContaBinding
 import com.example.adotejr.util.PermissionUtil
 import com.google.firebase.auth.FirebaseAuth
@@ -83,6 +87,7 @@ class ContaFragment : Fragment() {
     }
 
     // Recuperar dados do user no firebase
+    private var emailLogado: String? = null
     private fun recuperarDadosIniciaisUsuario() {
         val idUsuario = firebaseAuth.currentUser?.uid
         if (idUsuario != null){
@@ -102,7 +107,8 @@ class ContaFragment : Fragment() {
                         }
 
                         binding.editNomePerfil.setText( nome )
-                        binding.editEmailPerfil.setText( firebaseAuth.currentUser?.email)
+                        emailLogado = firebaseAuth.currentUser?.email
+                        binding.editEmailPerfil.setText( emailLogado )
                     }
                 } .addOnFailureListener { exception ->
                     Log.e("Firestore", "Error getting documents: ", exception)
@@ -113,7 +119,6 @@ class ContaFragment : Fragment() {
     private fun inicializarEventosClique() {
         binding.fabSelecionar.setOnClickListener {
             verificarPermissoes()
-            // mostrarDialogoEscolherImagem()
         }
 
         binding.btnAtualizarPerfil.setOnClickListener {
@@ -130,6 +135,33 @@ class ContaFragment : Fragment() {
                 Toast.makeText(requireContext(), "Preencha o nome para atualizar", Toast.LENGTH_LONG).show()
             }
         }
+
+        binding.btnAlterarSenhaPerfil.setOnClickListener {
+            val intent = Intent(activity, RedefinirSenhaDeslogadoActivity::class.java)
+            intent.putExtra("email", emailLogado)
+            startActivity(intent)
+        }
+
+        binding.btnSair.setOnClickListener {
+            confirmarLogout()
+        }
+    }
+
+    private fun confirmarLogout() {
+        val alertBuilder = AlertDialog.Builder(context)
+
+        alertBuilder.setTitle("Logout")
+        alertBuilder.setMessage("Deseja realmente se deslogar e sair?")
+
+        alertBuilder.setPositiveButton("Sim"){_, _ ->
+            firebaseAuth.signOut()
+            Toast.makeText(requireContext(), "Deus abençoe e até breve =D", Toast.LENGTH_LONG).show()
+            val intent = Intent(activity, MainActivity::class.java)
+            startActivity(intent)
+        }
+        alertBuilder.setNeutralButton("Não"){_, _ ->}
+
+        alertBuilder.create().show()
     }
 
     private fun verificarPermissoes() {

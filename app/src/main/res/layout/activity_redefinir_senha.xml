@@ -48,8 +48,8 @@
             android:id="@+id/editEmailRedefinir"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Digite seu e-mail..."
-            android:inputType="text|textEmailAddress" />
+            android:inputType="text|textEmailAddress"
+            android:enabled="false" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
