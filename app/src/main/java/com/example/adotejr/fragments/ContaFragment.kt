@@ -52,8 +52,8 @@ class ContaFragment : Fragment() {
         if (permissoes[Manifest.permission.CAMERA] == true) {
             abrirCamera()
         } else {
-            Toast.makeText(requireContext(), "Permissões necessárias não concedidas!\n" +
-                    "Para utilizar estes recursos libere as permissões!", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(),
+                "Para utilizar estes recursos libere as permissões!", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -64,7 +64,6 @@ class ContaFragment : Fragment() {
         // Inflate the layout using the binding
         _binding = FragmentContaBinding.inflate(inflater, container, false)
         return binding.root
-
     }
 
     override fun onDestroyView() {
@@ -83,6 +82,7 @@ class ContaFragment : Fragment() {
         recuperarDadosIniciaisUsuario()
     }
 
+    // Recuperar dados do user no firebase
     private fun recuperarDadosIniciaisUsuario() {
         val idUsuario = firebaseAuth.currentUser?.uid
         if (idUsuario != null){
@@ -112,7 +112,8 @@ class ContaFragment : Fragment() {
 
     private fun inicializarEventosClique() {
         binding.fabSelecionar.setOnClickListener {
-            mostrarDialogoEscolherImagem()
+            verificarPermissoes()
+            // mostrarDialogoEscolherImagem()
         }
 
         binding.btnAtualizarPerfil.setOnClickListener {
@@ -131,6 +132,16 @@ class ContaFragment : Fragment() {
         }
     }
 
+    private fun verificarPermissoes() {
+        // Verificar se a permissão da câmera já foi concedida
+        if (PermissionUtil.temPermissaoCamera(requireContext())) {
+            mostrarDialogoEscolherImagem()
+        } else {
+            // Solicitar permissão da câmera
+            PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
+        }
+    }
+
     private fun mostrarDialogoEscolherImagem() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
         val dialog = android.app.AlertDialog.Builder(requireContext())
@@ -138,48 +149,26 @@ class ContaFragment : Fragment() {
             .create()
 
         view.findViewById<Button>(R.id.button_camera).setOnClickListener {
-            // verificar permissão camera
-            verificarPermissaoCamera()
+            abrirCamera()
             dialog.dismiss()
         }
 
         view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
-            // verificar permissão armazenamento
-            verificarPermissaoArmazenamento()
+            abrirArmazenamento()
             dialog.dismiss()
         }
 
         dialog.show()
     }
 
-    private fun verificarPermissaoCamera() {
-        // Verificar se a permissão da câmera já foi concedida
-        if (PermissionUtil.temPermissaoCamera(requireContext())) {
-            abrirCamera()
-        } else {
-            // Solicitar permissão da câmera
-            PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
-        }
-    }
-
-    private fun verificarPermissaoArmazenamento() {
-        // Verificar se a permissão da câmera já foi concedida
-        if (PermissionUtil.temPermissaoCamera(requireContext())) {
-            abrirArmazenamento()
-        } else {
-            // Solicitar permissão da câmera
-            PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
-        }
-    }
-
+    // ---------- ARMAZENAMENTO ----------
     private fun abrirArmazenamento() {
         // Código para abrir o armazenamento
         gerenciadorGaleria.launch("image/*")
     }
 
-    private val gerenciadorGaleria = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri ->
+    // Armazenamento
+    private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
         if ( uri != null ) {
             binding.imagePerfil.setImageURI( uri )
             uploadImegemStorage( uri )
@@ -188,6 +177,7 @@ class ContaFragment : Fragment() {
         }
     }
 
+    // Salvar imagem do armazenamento no storage
     private fun uploadImegemStorage(uri: Uri) {
         // foto -> usuarios -> idUsuario -> perfil.jpg
 
@@ -215,19 +205,7 @@ class ContaFragment : Fragment() {
         }
     }
 
-    private fun atualizarDadosPerfil(idUsuario: String, dados: Map<String, String>) {
-        firestore.collection("Usuarios")
-            .document( idUsuario )
-            .update( dados )
-            .addOnSuccessListener {
-                onStart()
-                Toast.makeText(requireContext(), "Sucesso ao atualizar perfil.", Toast.LENGTH_LONG).show()
-            }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Erro ao atualizar perfil. Tente novamente.", Toast.LENGTH_LONG).show()
-            }
-    }
-
+    // ---------- CAMERA ----------
     private fun abrirCamera() {
         // Código para abrir a câmera
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -235,9 +213,7 @@ class ContaFragment : Fragment() {
     }
 
     private  var bitmapImagemSelecionada: Bitmap? = null
-    private val gerenciadorCamera = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { resultadoActivity ->
+    private val gerenciadorCamera = registerForActivityResult( ActivityResultContracts.StartActivityForResult() ) { resultadoActivity ->
         if ( resultadoActivity.resultCode == RESULT_OK ) {
             bitmapImagemSelecionada = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 resultadoActivity.data?.extras?.getParcelable("data", Bitmap::class.java)
@@ -251,8 +227,8 @@ class ContaFragment : Fragment() {
         }
     }
 
+    // Salvar imagem da camera no storage
     private fun uploadImegemCameraStorage(bitmapImagemSelecionada: Bitmap?) {
-
         val outputStream = ByteArrayOutputStream()
         bitmapImagemSelecionada?.compress(
             Bitmap.CompressFormat.JPEG,
@@ -268,11 +244,34 @@ class ContaFragment : Fragment() {
                 .child(idUsuario)
                 .child("perfil.jpg")
                 .putBytes( outputStream.toByteArray() )
-                .addOnSuccessListener {
+                .addOnSuccessListener { taskSnapshot ->
+                    taskSnapshot.metadata
+                        ?.reference
+                        ?.downloadUrl
+                        ?.addOnSuccessListener { uriDownload ->
+                            val dados = mapOf(
+                                "foto" to uriDownload.toString()
+                            )
+                            atualizarDadosPerfil( idUsuario, dados )
+                        }
                     Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                 }.addOnFailureListener{
                     Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
                 }
         }
+    }
+
+    // ---------- SALVAR A FOTO/IMAGEM ----------
+    private fun atualizarDadosPerfil(idUsuario: String, dados: Map<String, String>) {
+        firestore.collection("Usuarios")
+            .document( idUsuario )
+            .update( dados )
+            .addOnSuccessListener {
+                onStart()
+                Toast.makeText(requireContext(), "Sucesso ao atualizar perfil.", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Erro ao atualizar perfil. Tente novamente.", Toast.LENGTH_LONG).show()
+            }
     }
 }
