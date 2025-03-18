@@ -18,6 +18,10 @@
     <!-- Permissão de acesso as fotos -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
+    <!-- Permissão de Gravar arquivo antiga -->
+    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> -->
+    <!-- Permissão de Gravar arquivo nova -->
+
 
     <application
         android:allowBackup="true"
