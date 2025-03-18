@@ -74,13 +74,13 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        binding.textCadastro.setOnClickListener {
+        binding.btnCriarConta.setOnClickListener {
             startActivity(
                 Intent(this, ChecarAcessoActivity::class.java)
             )
         }
 
-        binding.textRedefinir.setOnClickListener {
+        binding.btnEsqueciSenha.setOnClickListener {
             startActivity(
                 Intent(this, RedefinirSenhaDeslogadoActivity::class.java)
             )

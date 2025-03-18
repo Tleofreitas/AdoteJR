@@ -74,43 +74,42 @@
             android:inputType="text|textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/btnCriarConta"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Não tem conta?"
-        app:layout_constraintEnd_toStartOf="@+id/textCadastro"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="@color/destaque"
+        android:text="Criar Conta"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        app:cornerRadius="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/btnEsqueciSenha"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textInputSenhaLogin" />
 
-    <TextView
-        android:id="@+id/textCadastro"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/btnEsqueciSenha"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
-        android:text="Cadastre-se"
-        android:textColor="@color/destaque"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/destaque"
+        android:text="Alterar senha"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/textView"
+        app:layout_constraintStart_toEndOf="@+id/btnCriarConta"
         app:layout_constraintTop_toBottomOf="@+id/textInputSenhaLogin" />
 
-    <TextView
-        android:id="@+id/textRedefinir"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Esqueci minha senha"
-        android:textColor="@color/destaque"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnLogarUsuario" />
-
+    <!-- Botão principal de Login -->
     <Button
         android:id="@+id/btnLogarUsuario"
         android:layout_width="0dp"
@@ -120,9 +119,12 @@
         android:layout_marginEnd="16dp"
         android:text="Logar"
         android:textSize="20sp"
+        android:backgroundTint="@color/primaria"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/btnCriarConta" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

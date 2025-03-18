@@ -36,7 +36,7 @@
         <activity
             android:name=".RedefinirSenhaDeslogadoActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".LoginActivity" />
         <activity
             android:name=".ChecarAcessoActivity"
             android:exported="false"
