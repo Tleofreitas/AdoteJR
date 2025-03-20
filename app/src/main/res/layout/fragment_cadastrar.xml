@@ -10,17 +10,41 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/btnCadastrarCrianca"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cadastrar"
-            app:layout_constraintBottom_toBottomOf="parent"
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imagePerfilCrianca"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="64dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/perfil"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.5"
-            app:cornerRadius="8dp" />
+            app:shapeAppearanceOverlay="@style/Circulo" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabSelImgCrianca"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:src="@drawable/ic_foto"
+            app:backgroundTint="@color/primaria"
+            app:layout_constraintBottom_toBottomOf="@+id/imagePerfilCrianca"
+            app:layout_constraintEnd_toEndOf="@+id/imagePerfilCrianca"
+            app:tint="@color/white" />
+
+        <Button
+            android:id="@+id/btnCadastrarCrianca"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:text="Cadastrar"
+            app:cornerRadius="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imagePerfilCrianca" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
