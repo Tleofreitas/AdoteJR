@@ -1,23 +1,22 @@
 package com.example.adotejr
 
+import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.FragmentListagemBinding
 import com.example.adotejr.model.Usuario
+import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import android.net.Uri
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.OutputStream
-import android.app.Activity.RESULT_OK
-import android.widget.Toast
-import com.example.adotejr.utils.NetworkUtils
-import com.example.adotejr.utils.exibirMensagem
 
 class ListagemFragment : Fragment() {
     private lateinit var binding: FragmentListagemBinding
