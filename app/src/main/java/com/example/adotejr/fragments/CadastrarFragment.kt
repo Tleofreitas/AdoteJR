@@ -69,8 +69,10 @@ class CadastrarFragment : Fragment() {
         binding = FragmentCadastrarBinding.inflate(
             inflater, container, false
         )
+
         return binding.root
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -133,21 +135,31 @@ class CadastrarFragment : Fragment() {
                 val tipo = identificarTipoImagem()
                 // ADICIONAR LISTENER PARA VERIFICAR ALTERAÇÕES NA IMAGEM DE CAMERA
                 if (tipo == "Tipo desconhecido"){
-                    // significa que é BITMAP
+                    // significa que é BITMAP (CAMERA)
                     Toast.makeText(requireContext(), "Imagem da Camera", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(requireContext(), "Imagem do Armazenamento", Toast.LENGTH_LONG).show()
-                }
-            }
 
-            /* val crianca = Crianca (
-                id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
-                sapato, especial, descricaoEspecial, gostosPessoais,
-                logradouro, numero, complemento, bairro, cidade,
-                uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
-                telefone2, ano, status, motivoStatus
-            )
-            salvarUsuarioFirestore( crianca ) */
+                } else {
+                    // ARMAZENAMENTO
+                    uploadImegemStorage(id) { sucesso ->
+                        if (sucesso) {
+                            Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+
+                    // Testar se uploadImegemStorage(id) deu sucesso, vincular a url a foto e salvarUsuarioFirestore( crianca )
+                }
+                /*
+                val crianca = Crianca (
+                    id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
+                    sapato, especial, descricaoEspecial, gostosPessoais,
+                    logradouro, numero, complemento, bairro, cidade,
+                    uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
+                    telefone2, ano, status, motivoStatus
+                )
+                salvarUsuarioFirestore( crianca ) */
+            }
         }
     }
 
@@ -213,6 +225,7 @@ class CadastrarFragment : Fragment() {
                 resultadoActivity.data?.extras?.getParcelable("data")
             }
             binding.imagePerfilCrianca.setImageBitmap( bitmapImagemSelecionada )
+            imagemSelecionadaUri = null
             // uploadImegemCameraStorage( bitmapImagemSelecionada )
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
@@ -260,20 +273,23 @@ class CadastrarFragment : Fragment() {
     }
 
     // Salvar imagem do armazenamento no storage
-    private fun uploadImegemStorage(uri: Uri) {
-        // foto -> usuarios -> idUsuario -> perfil.jpg
-        val idUsuario = firebaseAuth.currentUser?.uid
-        if ( idUsuario != null ) {
+    private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
+        var uri = imagemSelecionadaUri
+        // foto -> criancas -> id -> perfil.jpg
+        val idCrianca = id
+        if (uri != null) {
             storage.getReference("fotos")
-                .child("usuarios")
-                .child(idUsuario)
+                .child("criancas")
+                .child(idCrianca)
                 .child("perfil.jpg")
                 .putFile( uri )
                 .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                    callback(true) // Notifica sucesso
                 }.addOnFailureListener{
-                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                    callback(false) // Notifica falha
                 }
+        } else {
+            callback(false)
         }
     }
 
