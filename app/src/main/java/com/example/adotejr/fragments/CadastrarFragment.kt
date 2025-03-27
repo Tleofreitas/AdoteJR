@@ -50,8 +50,10 @@ class CadastrarFragment : Fragment() {
     // Variável para armazenar o URI da imagem
     var imagemSelecionadaUri: Uri? = null
 
+    // Variável para armazenar o Bitmap da imagem
+    var bitmapImagemSelecionada: Bitmap? = null
+
     // Variável MAP para armazenar id e link da imagem
-    // var dados: Map<String, String>? = null
     var foto = ""
 
     // Gerenciador de permissões
@@ -138,8 +140,21 @@ class CadastrarFragment : Fragment() {
                 // ADICIONAR LISTENER PARA VERIFICAR ALTERAÇÕES NA IMAGEM DE CAMERA
                 if (tipo == "Tipo desconhecido"){
                     // significa que é BITMAP (CAMERA)
-                    Toast.makeText(requireContext(), "Imagem da Camera", Toast.LENGTH_LONG).show()
-
+                    uploadImegemCameraStorage( bitmapImagemSelecionada, id ) {sucesso ->
+                        if (sucesso) {
+                            // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                            val crianca = Crianca (
+                                id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
+                                sapato, especial, descricaoEspecial, gostosPessoais,
+                                logradouro, numero, complemento, bairro, cidade,
+                                uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
+                                telefone2, ano, status, motivoStatus
+                            )
+                            salvarUsuarioFirestore( crianca )
+                        } else {
+                            Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 } else {
                     // ARMAZENAMENTO
                     uploadImegemStorage(id) { sucesso ->
@@ -215,7 +230,6 @@ class CadastrarFragment : Fragment() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         gerenciadorCamera.launch(intent)
     }
-    private  var bitmapImagemSelecionada: Bitmap? = null
     private val gerenciadorCamera = registerForActivityResult( ActivityResultContracts.StartActivityForResult() ) { resultadoActivity ->
         if ( resultadoActivity.resultCode == RESULT_OK ) {
             bitmapImagemSelecionada = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -225,13 +239,12 @@ class CadastrarFragment : Fragment() {
             }
             binding.imagePerfilCrianca.setImageBitmap( bitmapImagemSelecionada )
             imagemSelecionadaUri = null
-            // uploadImegemCameraStorage( bitmapImagemSelecionada )
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
         }
     }
     // Salvar imagem da camera no storage
-    private fun uploadImegemCameraStorage(bitmapImagemSelecionada: Bitmap?) {
+    private fun uploadImegemCameraStorage(bitmapImagemSelecionada: Bitmap?, id: String, callback: (Boolean) -> Unit) {
         val outputStream = ByteArrayOutputStream()
         bitmapImagemSelecionada?.compress(
             Bitmap.CompressFormat.JPEG,
@@ -239,20 +252,24 @@ class CadastrarFragment : Fragment() {
             outputStream
         )
 
-        // foto -> usuarios -> idUsuario -> perfil.jpg
-        val idUsuario = firebaseAuth.currentUser?.uid
-        if ( idUsuario != null ) {
-            storage.getReference("fotos")
-                .child("usuarios")
-                .child(idUsuario)
-                .child("perfil.jpg")
-                .putBytes( outputStream.toByteArray() )
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                }.addOnFailureListener{
-                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
-                }
-        }
+        // fotos -> criancas -> id -> perfil.jpg
+        val idCrianca = id
+        storage.getReference("fotos")
+            .child("criancas")
+            .child(idCrianca)
+            .child("perfil.jpg")
+            .putBytes( outputStream.toByteArray() )
+            .addOnSuccessListener { taskSnapshot ->
+                taskSnapshot.metadata
+                    ?.reference
+                    ?.downloadUrl
+                    ?.addOnSuccessListener { uriDownload ->
+                        foto = uriDownload.toString()
+                        callback(true) // Notifica sucesso
+                    }
+            }.addOnFailureListener{
+                callback(false) // Notifica falha
+            }
     }
     // ---------- ARMAZENAMENTO ----------
     private fun abrirArmazenamento() {
@@ -263,6 +280,7 @@ class CadastrarFragment : Fragment() {
     // Armazenamento
     private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
         if ( uri != null ) {
+            bitmapImagemSelecionada = null
             imagemSelecionadaUri = uri
             binding.imagePerfilCrianca.setImageURI( uri )
         } else {
