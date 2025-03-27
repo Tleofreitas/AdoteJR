@@ -50,6 +50,10 @@ class CadastrarFragment : Fragment() {
     // Variável para armazenar o URI da imagem
     var imagemSelecionadaUri: Uri? = null
 
+    // Variável MAP para armazenar id e link da imagem
+    // var dados: Map<String, String>? = null
+    var foto = ""
+
     // Gerenciador de permissões
     private val gerenciadorPermissoes = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -113,8 +117,6 @@ class CadastrarFragment : Fragment() {
             var uf = "SP"
             var cep = "09170-115"
 
-            var foto = ""
-
             var responsavel = "Elisangela"
             var vinculoResponsavel = "Mãe"
 
@@ -142,23 +144,20 @@ class CadastrarFragment : Fragment() {
                     // ARMAZENAMENTO
                     uploadImegemStorage(id) { sucesso ->
                         if (sucesso) {
-                            Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                            // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                            val crianca = Crianca (
+                                id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
+                                sapato, especial, descricaoEspecial, gostosPessoais,
+                                logradouro, numero, complemento, bairro, cidade,
+                                uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
+                                telefone2, ano, status, motivoStatus
+                            )
+                            salvarUsuarioFirestore( crianca )
                         } else {
                             Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
                         }
                     }
-
-                    // Testar se uploadImegemStorage(id) deu sucesso, vincular a url a foto e salvarUsuarioFirestore( crianca )
                 }
-                /*
-                val crianca = Crianca (
-                    id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
-                    sapato, especial, descricaoEspecial, gostosPessoais,
-                    logradouro, numero, complemento, bairro, cidade,
-                    uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
-                    telefone2, ano, status, motivoStatus
-                )
-                salvarUsuarioFirestore( crianca ) */
             }
         }
     }
@@ -266,7 +265,6 @@ class CadastrarFragment : Fragment() {
         if ( uri != null ) {
             imagemSelecionadaUri = uri
             binding.imagePerfilCrianca.setImageURI( uri )
-            // uploadImegemStorage( uri )
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
         }
@@ -283,8 +281,14 @@ class CadastrarFragment : Fragment() {
                 .child(idCrianca)
                 .child("perfil.jpg")
                 .putFile( uri )
-                .addOnSuccessListener {
-                    callback(true) // Notifica sucesso
+                .addOnSuccessListener { taskSnapshot ->
+                    taskSnapshot.metadata
+                        ?.reference
+                        ?.downloadUrl
+                        ?.addOnSuccessListener { uriDownload ->
+                            foto = uriDownload.toString()
+                            callback(true) // Notifica sucesso
+                        }
                 }.addOnFailureListener{
                     callback(false) // Notifica falha
                 }
@@ -317,7 +321,7 @@ class CadastrarFragment : Fragment() {
     private fun formatarTelefone(telefone: String): String {
         if (telefone.length < 10 || telefone.length > 11) {
             // throw IllegalArgumentException("O número de telefone deve ter 10 ou 11 dígitos.")
-            Toast.makeText(requireContext(), "O número de telefone deve ter 10 ou 11 dígitos.", Toast.LENGTH_LONG).show()
+            // Toast.makeText(requireContext(), "O número de telefone deve ter 10 ou 11 dígitos.", Toast.LENGTH_LONG).show()
             return telefone
         } else {
             val ddd = telefone.substring(0, 2) // Extrai o DDD
