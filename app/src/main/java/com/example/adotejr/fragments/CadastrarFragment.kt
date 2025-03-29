@@ -8,10 +8,13 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -82,6 +85,12 @@ class CadastrarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val editTextCpf = view.findViewById<EditText>(R.id.editTextCpf)
+        formatarCPF(editTextCpf)
+
+        val editTextDataNascimento = view.findViewById<EditText>(R.id.editTextDtNascimento)
+        formatarDataNascimento(editTextDataNascimento)
+
         inicializarEventosClique()
     }
 
@@ -90,10 +99,11 @@ class CadastrarFragment : Fragment() {
             verificarPermissoes()
         }
 
-        binding.btnCadastrarCrianca.setOnClickListener {
+        binding.
+        btnCadastrarCrianca.setOnClickListener {
             var ano = LocalDate.now().year
             var cpfOriginal = "44290378846"
-            var cpfFormatado = formatarCPF(cpfOriginal)
+            // var cpfFormatado = formatarCPF(cpfOriginal)
 
             var id =  ""+ano+""+cpfOriginal
             var nome = "Thiago Freitas"
@@ -144,7 +154,8 @@ class CadastrarFragment : Fragment() {
                         if (sucesso) {
                             // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                             val crianca = Crianca (
-                                id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
+                                id,
+                                cpfOriginal, nome, dataFormatada, idade, sexo, blusa, calca,
                                 sapato, especial, descricaoEspecial, gostosPessoais,
                                 logradouro, numero, complemento, bairro, cidade,
                                 uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
@@ -161,7 +172,8 @@ class CadastrarFragment : Fragment() {
                         if (sucesso) {
                             // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                             val crianca = Crianca (
-                                id, cpfFormatado, nome, dataFormatada, idade, sexo, blusa, calca,
+                                id,
+                                cpfOriginal, nome, dataFormatada, idade, sexo, blusa, calca,
                                 sapato, especial, descricaoEspecial, gostosPessoais,
                                 logradouro, numero, complemento, bairro, cidade,
                                 uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
@@ -317,14 +329,53 @@ class CadastrarFragment : Fragment() {
 
     // --- FORMATADORES ---
     // --- CPF
+    /* Remover abaixo após teste
     private fun formatarCPF(cpf: String): String {
         if (cpf.length != 11) {
             throw IllegalArgumentException("O CPF deve conter exatamente 11 dígitos.")
         }
         return "${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9, 11)}"
     }
+    */
+    private fun formatarCPF(editText: EditText) {
+        editText.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "###.###.###-##" // Máscara para CPF
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                val unmasked = s.toString().replace("[^\\d]".toRegex(), "") // Remove tudo que não for número
+                val masked = StringBuilder()
+
+                var i = 0
+                for (char in mask.toCharArray()) {
+                    if (char == '#' && i < unmasked.length) {
+                        masked.append(unmasked[i])
+                        i++
+                    } else if (char != '#' && i < unmasked.length) {
+                        masked.append(char)
+                    }
+                }
+
+                isUpdating = true
+                editText.setText(masked)
+                editText.setSelection(masked.length) // Move o cursor para o final
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+
 
     // --- DATA NASCIMENTO
+
     private fun transformarEmMilissegundos(dataString: String): Long {
         val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val data = formato.parse(dataString)
@@ -333,6 +384,40 @@ class CadastrarFragment : Fragment() {
     private fun formatarDataNascimento(data: Long): String {
         val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         return formato.format(data)
+    }
+    private fun formatarDataNascimento(editText: EditText) {
+        editText.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            private val mask = "##/##/####"
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                val unmasked = s.toString().replace("[^\\d]".toRegex(), "") // Remove tudo que não for número
+                val masked = StringBuilder()
+
+                var i = 0
+                for (char in mask.toCharArray()) {
+                    if (char == '#' && i < unmasked.length) {
+                        masked.append(unmasked[i])
+                        i++
+                    } else if (i < unmasked.length) {
+                        masked.append(char)
+                    }
+                }
+
+                isUpdating = true
+                editText.setText(masked)
+                editText.setSelection(masked.length) // Move o cursor para o final
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     // --- TELEFONE
