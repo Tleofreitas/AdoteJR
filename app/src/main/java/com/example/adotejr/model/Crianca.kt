@@ -14,6 +14,15 @@ data class Crianca (
     var especial: String = "", // S ou N
     var descricaoEspecial: String = "",
     var gostosPessoais: String = "",
+    var foto: String = "",
+
+    // DADOS DO RESPONSÁVEL
+    var responsavel: String = "",
+    var vinculoResponsavel: String = "",
+    var telefone1: String = "",
+    var telefone2: String = "",
+
+    // Endereço
     var logradouro: String = "",
     var numero: String = "",
     var complemento: String = "",
@@ -21,12 +30,7 @@ data class Crianca (
     var cidade: String = "",
     var uf: String = "",
     var cep: String = "",
-    var foto: String = "", // 
-    // DADOS DO RESPONSÁVEL
-    var responsavel: String = "",
-    var vinculoResponsavel: String = "",
-    var telefone1: String = "",
-    var telefone2: String = "",
+
     // ANO DO CADASTRO E STATUS
     var ano: Int = 0,
     var status: String = "", // ATIVO OU INATIVO

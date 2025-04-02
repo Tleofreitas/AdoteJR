@@ -99,8 +99,7 @@ class CadastrarFragment : Fragment() {
             verificarPermissoes()
         }
 
-        binding.
-        btnCadastrarCrianca.setOnClickListener {
+        binding.btnCadastrarCrianca.setOnClickListener {
             var ano = LocalDate.now().year
             var cpfOriginal = "44290378846"
             // var cpfFormatado = formatarCPF(cpfOriginal)
@@ -156,10 +155,10 @@ class CadastrarFragment : Fragment() {
                             val crianca = Crianca (
                                 id,
                                 cpfOriginal, nome, dataFormatada, idade, sexo, blusa, calca,
-                                sapato, especial, descricaoEspecial, gostosPessoais,
+                                sapato, especial, descricaoEspecial, gostosPessoais, foto,
+                                responsavel, vinculoResponsavel, telefone1, telefone2,
                                 logradouro, numero, complemento, bairro, cidade,
-                                uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
-                                telefone2, ano, status, motivoStatus
+                                uf, cep, ano, status, motivoStatus
                             )
                             salvarUsuarioFirestore( crianca )
                         } else {
