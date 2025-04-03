@@ -95,7 +95,7 @@ class CadastrarFragment : Fragment() {
     }
 
     private fun inicializarEventosClique() {
-        binding.fabSelImgCrianca.setOnClickListener {
+        binding.includeFotoCrianca.fabSelecionar.setOnClickListener {
             verificarPermissoes()
         }
 
@@ -139,7 +139,7 @@ class CadastrarFragment : Fragment() {
             var status = "ATIVO"
             var motivoStatus = ""
 
-            if (verificarImagemPadrao(binding.imagePerfilCrianca)) {
+            if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
                 Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
             } else {
                 // A imagem foi alterada e pode ser inserida no banco de dados
@@ -198,7 +198,7 @@ class CadastrarFragment : Fragment() {
 
     private fun verificarImagemPadrao(imagePerfilCrianca: ShapeableImageView): Boolean {
         // Obtém o ID do recurso da imagem atualmente configurada no ImageView
-        val imageView = binding.imagePerfilCrianca
+        val imageView = binding.includeFotoCrianca.imagePerfil
         val idImagemAtual = imageView.drawable.constantState
         val idImagemPadrao = imageView.context.getDrawable(R.drawable.perfil)?.constantState
 
@@ -248,7 +248,7 @@ class CadastrarFragment : Fragment() {
             } else {
                 resultadoActivity.data?.extras?.getParcelable("data")
             }
-            binding.imagePerfilCrianca.setImageBitmap( bitmapImagemSelecionada )
+            binding.includeFotoCrianca.imagePerfil.setImageBitmap( bitmapImagemSelecionada )
             imagemSelecionadaUri = null
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
@@ -293,7 +293,7 @@ class CadastrarFragment : Fragment() {
         if ( uri != null ) {
             bitmapImagemSelecionada = null
             imagemSelecionadaUri = uri
-            binding.imagePerfilCrianca.setImageURI( uri )
+            binding.includeFotoCrianca.imagePerfil.setImageURI( uri )
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
         }

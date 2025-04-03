@@ -102,7 +102,7 @@ class ContaFragment : Fragment() {
                         if (foto.isNotEmpty()) {
                             Picasso.get()
                                 .load( foto )
-                                .into( binding.imagePerfil )
+                                .into( binding.includeFotoPerfil.imagePerfil )
                         }
 
                         binding.editNomePerfil.setText( nome )
@@ -116,7 +116,7 @@ class ContaFragment : Fragment() {
     }
 
     private fun inicializarEventosClique() {
-        binding.fabSelecionar.setOnClickListener {
+        binding.includeFotoPerfil.fabSelecionar.setOnClickListener {
             verificarPermissoes()
         }
 
@@ -201,7 +201,7 @@ class ContaFragment : Fragment() {
     // Armazenamento
     private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
         if ( uri != null ) {
-            binding.imagePerfil.setImageURI( uri )
+            binding.includeFotoPerfil.imagePerfil.setImageURI( uri )
             uploadImegemStorage( uri )
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
@@ -251,7 +251,7 @@ class ContaFragment : Fragment() {
             } else {
                 resultadoActivity.data?.extras?.getParcelable("data")
             }
-            binding.imagePerfil.setImageBitmap( bitmapImagemSelecionada )
+            binding.includeFotoPerfil.imagePerfil.setImageBitmap( bitmapImagemSelecionada )
             uploadImegemCameraStorage( bitmapImagemSelecionada )
         } else {
             Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
