@@ -22,6 +22,7 @@ import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentCadastrarBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.util.PermissionUtil
+import com.example.adotejr.utils.FormatadorUtil
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -86,10 +87,16 @@ class CadastrarFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val editTextCpf = view.findViewById<EditText>(R.id.editTextCpf)
-        formatarCPF(editTextCpf)
+        FormatadorUtil.formatarCPF(editTextCpf)
 
         val editTextDataNascimento = view.findViewById<EditText>(R.id.editTextDtNascimento)
-        formatarDataNascimento(editTextDataNascimento)
+        FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
+
+        val editTextTelefonePrincipal = view.findViewById<EditText>(R.id.editTextTel1)
+        FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
+
+        val editTextTelefone2 = view.findViewById<EditText>(R.id.editTextTel2)
+        FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         inicializarEventosClique()
     }
@@ -139,6 +146,9 @@ class CadastrarFragment : Fragment() {
             var status = "ATIVO"
             var motivoStatus = ""
 
+            // COMEÇAR TESTES DE VALORES DIGITADOS
+
+            /*
             if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
                 Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
             } else {
@@ -185,6 +195,7 @@ class CadastrarFragment : Fragment() {
                     }
                 }
             }
+            */
         }
     }
 
@@ -336,42 +347,6 @@ class CadastrarFragment : Fragment() {
         return "${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9, 11)}"
     }
     */
-    private fun formatarCPF(editText: EditText) {
-        editText.addTextChangedListener(object : TextWatcher {
-            private var isUpdating = false
-            private val mask = "###.###.###-##" // Máscara para CPF
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (isUpdating) {
-                    isUpdating = false
-                    return
-                }
-
-                val unmasked = s.toString().replace("[^\\d]".toRegex(), "") // Remove tudo que não for número
-                val masked = StringBuilder()
-
-                var i = 0
-                for (char in mask.toCharArray()) {
-                    if (char == '#' && i < unmasked.length) {
-                        masked.append(unmasked[i])
-                        i++
-                    } else if (char != '#' && i < unmasked.length) {
-                        masked.append(char)
-                    }
-                }
-
-                isUpdating = true
-                editText.setText(masked)
-                editText.setSelection(masked.length) // Move o cursor para o final
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
-    }
-
-
 
     // --- DATA NASCIMENTO
 
@@ -383,40 +358,6 @@ class CadastrarFragment : Fragment() {
     private fun formatarDataNascimento(data: Long): String {
         val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         return formato.format(data)
-    }
-    private fun formatarDataNascimento(editText: EditText) {
-        editText.addTextChangedListener(object : TextWatcher {
-            private var isUpdating = false
-            private val mask = "##/##/####"
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (isUpdating) {
-                    isUpdating = false
-                    return
-                }
-
-                val unmasked = s.toString().replace("[^\\d]".toRegex(), "") // Remove tudo que não for número
-                val masked = StringBuilder()
-
-                var i = 0
-                for (char in mask.toCharArray()) {
-                    if (char == '#' && i < unmasked.length) {
-                        masked.append(unmasked[i])
-                        i++
-                    } else if (i < unmasked.length) {
-                        masked.append(char)
-                    }
-                }
-
-                isUpdating = true
-                editText.setText(masked)
-                editText.setSelection(masked.length) // Move o cursor para o final
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
     }
 
     // --- TELEFONE

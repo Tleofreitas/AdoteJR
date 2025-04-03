@@ -65,6 +65,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
@@ -77,26 +78,32 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            app:counterMaxLength="15">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextTel1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Telefone Principal" />
+                android:hint="Telefone Principal"
+                android:inputType="number"
+                android:maxLength="15" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/InputTel2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            app:counterMaxLength="15">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextTel2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Telefone 2" />
+                android:hint="Telefone 2"
+                android:inputType="number"
+                android:maxLength="15" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
