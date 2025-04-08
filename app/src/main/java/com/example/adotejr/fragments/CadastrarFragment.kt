@@ -51,15 +51,6 @@ class CadastrarFragment : Fragment() {
         FirebaseFirestore.getInstance()
     }
 
-    // Variável para armazenar o URI da imagem
-    var imagemSelecionadaUri: Uri? = null
-
-    // Variável para armazenar o Bitmap da imagem
-    var bitmapImagemSelecionada: Bitmap? = null
-
-    // Variável MAP para armazenar id e link da imagem
-    var foto = ""
-
     // Gerenciador de permissões
     private val gerenciadorPermissoes = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -71,6 +62,26 @@ class CadastrarFragment : Fragment() {
                 "Para utilizar estes recursos libere as permissões!", Toast.LENGTH_LONG).show()
         }
     }
+
+    // ---------- VARIÁVEIS ----------
+    // Armazenar o URI da imagem
+    var imagemSelecionadaUri: Uri? = null
+
+    // Armazenar o Bitmap da imagem
+    var bitmapImagemSelecionada: Bitmap? = null
+
+    // MAP para armazenar id e link da imagem
+    var foto = ""
+
+    private lateinit var editTextCpf: EditText
+    private lateinit var editTextNome: EditText
+    private lateinit var editTextDataNascimento: EditText
+    private lateinit var editTextBlusa: EditText
+    private lateinit var editTextCalca: EditText
+    private lateinit var editTextSapato: EditText
+    private var especial: String = "Não"
+    private lateinit var editTextPcd: EditText
+    private lateinit var editTextGostosPessoais: EditText
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -86,11 +97,50 @@ class CadastrarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val editTextCpf = view.findViewById<EditText>(R.id.editTextCpf)
+        editTextCpf = binding.editTextCpf
         FormatadorUtil.formatarCPF(editTextCpf)
 
-        val editTextDataNascimento = view.findViewById<EditText>(R.id.editTextDtNascimento)
+        editTextDataNascimento = binding.editTextDtNascimento
         FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
+
+        // Adiciona um TextWatcher para calcular idade automaticamente
+        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val dataNascimento = s.toString()
+
+                if (dataNascimento.isNotEmpty()) {
+                    try {
+                        val idade = calcularIdadeCompat(dataNascimento)
+                        binding.editTextIdade.setText(idade.toString()) // Atualiza o EditText de idade
+                    } catch (e: Exception) {
+                        e.printStackTrace() // Log do erro para depuração
+                    }
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        // Atualiza a variável "especial" sempre que o usuário mudar a seleção
+        binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+            especial = if (checkedId == binding.includeDadosCriancaSacola.
+                radioButtonPcdSim.id) "Sim" else "Não"
+        }
+
+        // Configurando o listener para mudanças no RadioGroup PCD
+        binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+            val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
+
+            // Habilita ou desabilita a descrição com base na seleção
+            binding.includeDadosCriancaSacola.InputDescricaoPcd.isEnabled = habilitarCampo
+            binding.includeDadosCriancaSacola.editTextPcd.isEnabled = habilitarCampo
+
+            // Se voltar para "Não", limpa o texto
+            if (!habilitarCampo) {
+                binding.includeDadosCriancaSacola.editTextPcd.setText("")
+            }
+        }
 
         val editTextTelefonePrincipal = view.findViewById<EditText>(R.id.editTextTel1)
         FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
@@ -108,24 +158,71 @@ class CadastrarFragment : Fragment() {
 
         binding.btnCadastrarCrianca.setOnClickListener {
             var ano = LocalDate.now().year
-            var cpfOriginal = "44290378846"
-            // var cpfFormatado = formatarCPF(cpfOriginal)
 
-            var id =  ""+ano+""+cpfOriginal
-            var nome = "Thiago Freitas"
+            // TESTES DE VALORES DIGITADOS
 
-            var dataNascimentoInicial = "16/07/1995"
-            var dataEmMilissegundos = transformarEmMilissegundos(dataNascimentoInicial)
-            var dataFormatada = formatarDataNascimento(dataEmMilissegundos)
+            // CPF
+            var cpfOriginal = editTextCpf.text.toString()
+            // Remove tudo que não for número para criar ID
+            var cpfLimpo = editTextCpf.text.toString().replace("\\D".toRegex(), "")
 
-            var idade = calcularIdadeCompat(dataNascimentoInicial)
-            var sexo = "M"
-            var blusa = "G"
-            var calca = "46"
-            var sapato = "43"
-            var especial = "N"
-            var descricaoEspecial = ""
-            var gostosPessoais = "Dragonball"
+            // ID ANO + CPF
+            var id =  ""+ano+""+cpfLimpo
+
+            // Nome
+            editTextNome = binding.editTextNome
+            var nome = editTextNome.text.toString()
+
+            // Idade
+            var dataNascimento = editTextDataNascimento.text.toString()
+            var idade = calcularIdadeCompat(dataNascimento)
+
+            // Sexo
+            var sexo = when {
+                binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked -> "Masculino"
+                binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked -> "Feminino"
+                else -> "Nenhum"
+            }
+
+            // Blusa
+            editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
+            var blusa = editTextBlusa.text.toString()
+
+            // Calça
+            editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
+            var calca = editTextCalca.text.toString()
+
+            // Sapato
+            editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
+            var sapato = editTextSapato.text.toString()
+
+            // Descrição de PCD se SIM
+            editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
+            var descricaoEspecial = editTextPcd.text.toString()
+
+            // Gostos Pessoais
+            editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
+            var gostosPessoais = editTextGostosPessoais.text.toString()
+
+            var teste = "$cpfOriginal , $dataNascimento" +
+                    " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
+                    ", $especial , $descricaoEspecial , $gostosPessoais"
+
+            Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show()
+
+            // Não deixar cadastrar sem os campos obrigatórios preenchidos ---
+
+            /*
+            val crianca = Crianca (
+                id,
+                cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
+                sapato, especial, descricaoEspecial, gostosPessoais, foto,
+                responsavel, vinculoResponsavel, telefone1, telefone2,
+                logradouro, numero, complemento, bairro, cidade,
+                uf, cep, ano, status, motivoStatus
+            ) */
+
+            /*
 
             var logradouro = "Rua Alvarenga Peixoto"
             var numero = "271"
@@ -146,7 +243,7 @@ class CadastrarFragment : Fragment() {
             var status = "ATIVO"
             var motivoStatus = ""
 
-            // COMEÇAR TESTES DE VALORES DIGITADOS
+            */
 
             /*
             if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
@@ -293,6 +390,7 @@ class CadastrarFragment : Fragment() {
                 callback(false) // Notifica falha
             }
     }
+
     // ---------- ARMAZENAMENTO ----------
     private fun abrirArmazenamento() {
         // Código para abrir o armazenamento
@@ -337,29 +435,6 @@ class CadastrarFragment : Fragment() {
         }
     }
 
-    // --- FORMATADORES ---
-    // --- CPF
-    /* Remover abaixo após teste
-    private fun formatarCPF(cpf: String): String {
-        if (cpf.length != 11) {
-            throw IllegalArgumentException("O CPF deve conter exatamente 11 dígitos.")
-        }
-        return "${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9, 11)}"
-    }
-    */
-
-    // --- DATA NASCIMENTO
-
-    private fun transformarEmMilissegundos(dataString: String): Long {
-        val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val data = formato.parse(dataString)
-        return data?.time ?: 0L
-    }
-    private fun formatarDataNascimento(data: Long): String {
-        val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return formato.format(data)
-    }
-
     // --- TELEFONE
     private fun formatarTelefone(telefone: String): String {
         if (telefone.length < 10 || telefone.length > 11) {
@@ -385,20 +460,25 @@ class CadastrarFragment : Fragment() {
 
     // --- CALCULO DE IDADE ---
     private fun calcularIdadeCompat(dataNascimentoString: String): Int {
-        val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val dataNascimento = formato.parse(dataNascimentoString) ?: return 0
+        return try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dataNascimento = formato.parse(dataNascimentoString) ?: return 0
 
-        val calendarioNascimento = Calendar.getInstance()
-        calendarioNascimento.time = dataNascimento
+            val calendarioNascimento = Calendar.getInstance()
+            calendarioNascimento.time = dataNascimento
 
-        val calendarioAtual = Calendar.getInstance()
+            val calendarioAtual = Calendar.getInstance()
 
-        var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
-        if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
-            idade--
+            var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
+            if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
+                idade--
+            }
+
+            idade // Retorna idade
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0 // Se der erro, retorna 0
         }
-
-        return idade
     }
 
     // --- SALVAR NO BANCO DE DADOS ---
