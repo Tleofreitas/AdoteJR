@@ -24,6 +24,7 @@ import com.example.adotejr.model.Crianca
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
 import com.google.android.material.imageview.ShapeableImageView
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -82,6 +83,16 @@ class CadastrarFragment : Fragment() {
     private var especial: String = "Não"
     private lateinit var editTextPcd: EditText
     private lateinit var editTextGostosPessoais: EditText
+    private lateinit var editTextNomeResponsavel: EditText
+    private lateinit var editTextVinculo: EditText
+    private lateinit var editTextTelefonePrincipal: EditText
+    private lateinit var editTextTelefone2: EditText
+    private lateinit var editTextCEP: EditText
+    private lateinit var editTextNumero: EditText
+    private lateinit var editTextRua: EditText
+    private lateinit var editTextComplemento: EditText
+    private lateinit var editTextBairro: EditText
+    private lateinit var editTextCidade: EditText
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -142,10 +153,10 @@ class CadastrarFragment : Fragment() {
             }
         }
 
-        val editTextTelefonePrincipal = view.findViewById<EditText>(R.id.editTextTel1)
+        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
         FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
 
-        val editTextTelefone2 = view.findViewById<EditText>(R.id.editTextTel2)
+        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
         FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         inicializarEventosClique()
@@ -157,9 +168,10 @@ class CadastrarFragment : Fragment() {
         }
 
         binding.btnCadastrarCrianca.setOnClickListener {
+            // Dados de registro
             var ano = LocalDate.now().year
-
-            // TESTES DE VALORES DIGITADOS
+            var status = "ATIVO"
+            var motivoStatus = "Apto para contemplação"
 
             // CPF
             var cpfOriginal = editTextCpf.text.toString()
@@ -204,46 +216,75 @@ class CadastrarFragment : Fragment() {
             editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
             var gostosPessoais = editTextGostosPessoais.text.toString()
 
-            var teste = "$cpfOriginal , $dataNascimento" +
-                    " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
-                    ", $especial , $descricaoEspecial , $gostosPessoais"
+            // Dados do Responsável
+            editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
+            var responsavel = editTextNomeResponsavel.text.toString()
 
-            Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show()
+            editTextVinculo = binding.includeDadosResponsavel.editTextVinculo
+            var vinculoResponsavel = editTextVinculo.text.toString()
 
-            // Não deixar cadastrar sem os campos obrigatórios preenchidos ---
+            var telefone1 = binding.includeDadosResponsavel.editTextTel1.text.toString()
+            var telefone2 = binding.includeDadosResponsavel.editTextTel2.text.toString()
 
-            /*
-            val crianca = Crianca (
-                id,
-                cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
-                sapato, especial, descricaoEspecial, gostosPessoais, foto,
-                responsavel, vinculoResponsavel, telefone1, telefone2,
-                logradouro, numero, complemento, bairro, cidade,
-                uf, cep, ano, status, motivoStatus
-            ) */
-
-            /*
-
-            var logradouro = "Rua Alvarenga Peixoto"
-            var numero = "271"
-            var complemento = "casa"
-            var bairro = "Vila Rica"
-            var cidade = "Santo André"
-            var uf = "SP"
+            // Endereço
             var cep = "09170-115"
 
-            var responsavel = "Elisangela"
-            var vinculoResponsavel = "Mãe"
+            editTextNumero = binding.includeEndereco.editTextNumero
+            var numero = editTextNumero.text.toString()
 
-            var telefoneOriginal1 = "11951221949"
-            var telefoneOriginal2 = ""
-            var telefone1 = formatarTelefone(telefoneOriginal1)
-            var telefone2 = formatarTelefone(telefoneOriginal2)
+            editTextRua = binding.includeEndereco.editTextRua
+            var logradouro = editTextRua.text.toString()
 
-            var status = "ATIVO"
-            var motivoStatus = ""
+            editTextComplemento = binding.includeEndereco.editTextComplemento
+            var complemento = editTextComplemento.text.toString()
 
-            */
+            editTextBairro = binding.includeEndereco.editTextBairro
+            var bairro = editTextBairro.text.toString()
+
+            editTextCidade = binding.includeEndereco.editTextCidade
+            var cidade = editTextCidade.text.toString()
+
+            var uf = "SP"
+
+            // Lista de valores obrigatórios a serem validados
+            val textInputs = listOf(
+                binding.InputCPF,
+                binding.InputNome,
+                binding.InputDtNascimento,
+                binding.includeDadosCriancaSacola.InputBlusa,
+                binding.includeDadosCriancaSacola.InputCalca,
+                binding.includeDadosCriancaSacola.InputSapato,
+                binding.includeDadosCriancaSacola.InputGostos,
+                binding.includeDadosResponsavel.InputNomeResponsavel,
+                binding.includeDadosResponsavel.InputVinculo,
+                binding.includeDadosResponsavel.InputTel1,
+                binding.includeEndereco.InputNumero,
+                binding.includeEndereco.InputRua,
+                binding.includeEndereco.InputBairro,
+                binding.includeEndereco.InputCidade
+            )
+
+            var camposValidos = true
+            for (textInput in textInputs) {
+                val editText = textInput.editText // Obtém o EditText associado
+                if (editText?.text.toString().trim().isEmpty()) {
+                    textInput.error = "Campo obrigatório"
+                    camposValidos = false
+                } else {
+                    textInput.error = null // Remove o erro caso o campo esteja preenchido
+                }
+            }
+
+            if (camposValidos) {
+                var teste = "$cpfOriginal , $dataNascimento" +
+                        " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
+                        ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
+                        ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $status , $motivoStatus " +
+                        ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep"
+
+                Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show()
+            }
+            // adicionar teste de data válida para o campo de data de nascimento, está calculando a idade errado com data exemplo 16/07/95
 
             /*
             if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
@@ -253,7 +294,7 @@ class CadastrarFragment : Fragment() {
 
                 // Identificar tipo de imagem
                 val tipo = identificarTipoImagem()
-                // ADICIONAR LISTENER PARA VERIFICAR ALTERAÇÕES NA IMAGEM DE CAMERA
+
                 if (tipo == "Tipo desconhecido"){
                     // significa que é BITMAP (CAMERA)
                     uploadImegemCameraStorage( bitmapImagemSelecionada, id ) {sucesso ->
@@ -261,7 +302,7 @@ class CadastrarFragment : Fragment() {
                             // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                             val crianca = Crianca (
                                 id,
-                                cpfOriginal, nome, dataFormatada, idade, sexo, blusa, calca,
+                                cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
                                 sapato, especial, descricaoEspecial, gostosPessoais, foto,
                                 responsavel, vinculoResponsavel, telefone1, telefone2,
                                 logradouro, numero, complemento, bairro, cidade,
@@ -279,7 +320,7 @@ class CadastrarFragment : Fragment() {
                             // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                             val crianca = Crianca (
                                 id,
-                                cpfOriginal, nome, dataFormatada, idade, sexo, blusa, calca,
+                                cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
                                 sapato, especial, descricaoEspecial, gostosPessoais,
                                 logradouro, numero, complemento, bairro, cidade,
                                 uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
@@ -432,29 +473,6 @@ class CadastrarFragment : Fragment() {
                 }
         } else {
             callback(false)
-        }
-    }
-
-    // --- TELEFONE
-    private fun formatarTelefone(telefone: String): String {
-        if (telefone.length < 10 || telefone.length > 11) {
-            // throw IllegalArgumentException("O número de telefone deve ter 10 ou 11 dígitos.")
-            // Toast.makeText(requireContext(), "O número de telefone deve ter 10 ou 11 dígitos.", Toast.LENGTH_LONG).show()
-            return telefone
-        } else {
-            val ddd = telefone.substring(0, 2) // Extrai o DDD
-
-            return if (telefone.length == 11) {
-                // Formato para celulares com 9 dígitos
-                val parte1 = telefone.substring(2, 7) // Primeiros 5 números após o DDD
-                val parte2 = telefone.substring(7) // Últimos 4 números
-                "($ddd)$parte1-$parte2"
-            } else {
-                // Formato para telefones fixos com 8 dígitos
-                val parte1 = telefone.substring(2, 6) // Primeiros 4 números após o DDD
-                val parte2 = telefone.substring(6) // Últimos 4 números
-                "($ddd)$parte1-$parte2"
-            }
         }
     }
 
