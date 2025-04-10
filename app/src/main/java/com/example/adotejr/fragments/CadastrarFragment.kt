@@ -119,13 +119,18 @@ class CadastrarFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {
                 val dataNascimento = s.toString()
 
-                if (dataNascimento.isNotEmpty()) {
-                    try {
+                if (dataNascimento.length == 10) { // Verifica se o formato está completo
+                    if (isDataValida(dataNascimento)) {
+                        binding.InputDtNascimento.error = null // Remove erro
                         val idade = calcularIdadeCompat(dataNascimento)
-                        binding.editTextIdade.setText(idade.toString()) // Atualiza o EditText de idade
-                    } catch (e: Exception) {
-                        e.printStackTrace() // Log do erro para depuração
+                        binding.editTextIdade.setText(idade.toString()) // Atualiza idade
+                    } else {
+                        binding.editTextIdade.setText("0") // Define idade como 0
+                        binding.InputDtNascimento.error = "Data inválida!" // Exibe mensagem de erro
                     }
+                } else {
+                    binding.editTextIdade.setText("") // Limpa o campo de idade
+                    binding.InputDtNascimento.error = "Data incompleta ou inválida." // Mensagem para formato incompleto
                 }
             }
 
@@ -133,14 +138,12 @@ class CadastrarFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        // Atualiza a variável "especial" sempre que o usuário mudar a seleção
-        binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
-            especial = if (checkedId == binding.includeDadosCriancaSacola.
-                radioButtonPcdSim.id) "Sim" else "Não"
-        }
-
         // Configurando o listener para mudanças no RadioGroup PCD
         binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+            // Atualiza a variável "especial"
+            especial = if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
+
+            // Verifica se o campo deve ser habilitado ou não
             val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
 
             // Habilita ou desabilita a descrição com base na seleção
@@ -187,7 +190,10 @@ class CadastrarFragment : Fragment() {
 
             // Idade
             var dataNascimento = editTextDataNascimento.text.toString()
-            var idade = calcularIdadeCompat(dataNascimento)
+            var idade = 0
+            if(dataNascimento.length == 10 ){
+                idade = calcularIdadeCompat(dataNascimento)
+            }
 
             // Sexo
             var sexo = when {
@@ -250,7 +256,6 @@ class CadastrarFragment : Fragment() {
             val textInputs = listOf(
                 binding.InputCPF,
                 binding.InputNome,
-                binding.InputDtNascimento,
                 binding.includeDadosCriancaSacola.InputBlusa,
                 binding.includeDadosCriancaSacola.InputCalca,
                 binding.includeDadosCriancaSacola.InputSapato,
@@ -276,64 +281,82 @@ class CadastrarFragment : Fragment() {
             }
 
             if (camposValidos) {
-                var teste = "$cpfOriginal , $dataNascimento" +
-                        " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
-                        ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
-                        ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $status , $motivoStatus " +
-                        ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep"
+                if(idade == 0){
+                    binding.InputDtNascimento.error = "Data inválida!"
+                    Toast.makeText(requireContext(), "Data de Nascimento inválida!", Toast.LENGTH_LONG).show()
 
-                Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show()
-            }
-            // adicionar teste de data válida para o campo de data de nascimento, está calculando a idade errado com data exemplo 16/07/95
+                // Testar se PCD está como SIM e se a descrição está vazia
+                } else if(especial == "Sim" && descricaoEspecial.isEmpty()){
+                    binding.includeDadosCriancaSacola.InputDescricaoPcd.error = "Descreva as condições especiais..."
+                    Toast.makeText(requireContext(), "Descreva as condições especiais...", Toast.LENGTH_LONG).show()
 
-            /*
-            if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
-                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
-            } else {
-                // A imagem foi alterada e pode ser inserida no banco de dados
-
-                // Identificar tipo de imagem
-                val tipo = identificarTipoImagem()
-
-                if (tipo == "Tipo desconhecido"){
-                    // significa que é BITMAP (CAMERA)
-                    uploadImegemCameraStorage( bitmapImagemSelecionada, id ) {sucesso ->
-                        if (sucesso) {
-                            // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                            val crianca = Crianca (
-                                id,
-                                cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
-                                sapato, especial, descricaoEspecial, gostosPessoais, foto,
-                                responsavel, vinculoResponsavel, telefone1, telefone2,
-                                logradouro, numero, complemento, bairro, cidade,
-                                uf, cep, ano, status, motivoStatus
-                            )
-                            salvarUsuarioFirestore( crianca )
-                        } else {
-                            Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
-                        }
-                    }
                 } else {
-                    // ARMAZENAMENTO
-                    uploadImegemStorage(id) { sucesso ->
-                        if (sucesso) {
-                            // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                            val crianca = Crianca (
-                                id,
-                                cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
-                                sapato, especial, descricaoEspecial, gostosPessoais,
-                                logradouro, numero, complemento, bairro, cidade,
-                                uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
-                                telefone2, ano, status, motivoStatus
-                            )
-                            salvarUsuarioFirestore( crianca )
+                    binding.InputDtNascimento.error = null
+                    binding.includeDadosCriancaSacola.InputDescricaoPcd.error = null
+
+                    /*
+                    var teste = "$cpfOriginal , $dataNascimento" +
+                            " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
+                            ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
+                            ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $status , $motivoStatus " +
+                            ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep"
+
+                    Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show()
+                    */
+
+                    if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
+                        Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+                    } else {
+                        // A imagem foi alterada e pode ser inserida no banco de dados
+
+
+                        // TESTAR ATÉ AQUI
+                        // Adicionar condição se tem internet antes de chmar processo abaixo
+                        /*
+                        // Identificar tipo de imagem
+                        val tipo = identificarTipoImagem()
+
+                        if (tipo == "Tipo desconhecido"){
+                            // significa que é BITMAP (CAMERA)
+                            uploadImegemCameraStorage( bitmapImagemSelecionada, id ) {sucesso ->
+                                if (sucesso) {
+                                    // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                                    val crianca = Crianca (
+                                        id,
+                                        cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
+                                        sapato, especial, descricaoEspecial, gostosPessoais, foto,
+                                        responsavel, vinculoResponsavel, telefone1, telefone2,
+                                        logradouro, numero, complemento, bairro, cidade,
+                                        uf, cep, ano, status, motivoStatus
+                                    )
+                                    salvarUsuarioFirestore( crianca )
+                                } else {
+                                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                                }
+                            }
                         } else {
-                            Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                            // ARMAZENAMENTO
+                            uploadImegemStorage(id) { sucesso ->
+                                if (sucesso) {
+                                    // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                                    val crianca = Crianca (
+                                        id,
+                                        cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
+                                        sapato, especial, descricaoEspecial, gostosPessoais,
+                                        logradouro, numero, complemento, bairro, cidade,
+                                        uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
+                                        telefone2, ano, status, motivoStatus
+                                    )
+                                    salvarUsuarioFirestore( crianca )
+                                } else {
+                                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                                }
+                            }
                         }
+                        */
                     }
                 }
             }
-            */
         }
     }
 
@@ -478,24 +501,42 @@ class CadastrarFragment : Fragment() {
 
     // --- CALCULO DE IDADE ---
     private fun calcularIdadeCompat(dataNascimentoString: String): Int {
+        return if (isDataValida(dataNascimentoString)) {
+            try {
+                val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val dataNascimento = formato.parse(dataNascimentoString) ?: return 0
+
+                val calendarioNascimento = Calendar.getInstance()
+                calendarioNascimento.time = dataNascimento
+
+                val calendarioAtual = Calendar.getInstance()
+
+                var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
+                if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
+                    idade--
+                }
+                idade // Retorna idade
+            } catch (e: Exception) {
+                e.printStackTrace()
+                0 // Retorna 0 em caso de erro
+            }
+        } else {
+            0 // Não calcula para datas inválidas
+        }
+    }
+
+    // VERIFICAR SE A DATA É VÁLIDA
+    private fun isDataValida(data: String): Boolean {
         return try {
             val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val dataNascimento = formato.parse(dataNascimentoString) ?: return 0
+            formato.isLenient = false // Validação rigorosa
+            val dataParseada = formato.parse(data) // Valida o formato
+            val dataAtual = Calendar.getInstance().time
 
-            val calendarioNascimento = Calendar.getInstance()
-            calendarioNascimento.time = dataNascimento
-
-            val calendarioAtual = Calendar.getInstance()
-
-            var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
-            if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
-                idade--
-            }
-
-            idade // Retorna idade
+            // Garantir que a data seja no passado
+            dataParseada.before(dataAtual)
         } catch (e: Exception) {
-            e.printStackTrace()
-            0 // Se der erro, retorna 0
+            false // Retorna falso se a data for inválida
         }
     }
 
