@@ -18,13 +18,14 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentCadastrarBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
+import com.example.adotejr.utils.NetworkUtils
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -59,8 +60,10 @@ class CadastrarFragment : Fragment() {
         if (permissoes[Manifest.permission.CAMERA] == true) {
             abrirCamera()
         } else {
-            Toast.makeText(requireContext(),
-                "Para utilizar estes recursos libere as permissões!", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                requireContext(),
+                "Para utilizar estes recursos libere as permissões!", Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -74,6 +77,7 @@ class CadastrarFragment : Fragment() {
     // MAP para armazenar id e link da imagem
     var foto = ""
 
+    private var idGerado: String = ""
     private lateinit var editTextCpf: EditText
     private lateinit var editTextNome: EditText
     private lateinit var editTextDataNascimento: EditText
@@ -130,7 +134,8 @@ class CadastrarFragment : Fragment() {
                     }
                 } else {
                     binding.editTextIdade.setText("") // Limpa o campo de idade
-                    binding.InputDtNascimento.error = "Data incompleta ou inválida." // Mensagem para formato incompleto
+                    binding.InputDtNascimento.error =
+                        "Data incompleta ou inválida." // Mensagem para formato incompleto
                 }
             }
 
@@ -141,7 +146,8 @@ class CadastrarFragment : Fragment() {
         // Configurando o listener para mudanças no RadioGroup PCD
         binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
             // Atualiza a variável "especial"
-            especial = if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
+            especial =
+                if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
 
             // Verifica se o campo deve ser habilitado ou não
             val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
@@ -182,7 +188,7 @@ class CadastrarFragment : Fragment() {
             var cpfLimpo = editTextCpf.text.toString().replace("\\D".toRegex(), "")
 
             // ID ANO + CPF
-            var id =  ""+ano+""+cpfLimpo
+            var id = "" + ano + "" + cpfLimpo
 
             // Nome
             editTextNome = binding.editTextNome
@@ -191,7 +197,7 @@ class CadastrarFragment : Fragment() {
             // Idade
             var dataNascimento = editTextDataNascimento.text.toString()
             var idade = 0
-            if(dataNascimento.length == 10 ){
+            if (dataNascimento.length == 10) {
                 idade = calcularIdadeCompat(dataNascimento)
             }
 
@@ -233,7 +239,8 @@ class CadastrarFragment : Fragment() {
             var telefone2 = binding.includeDadosResponsavel.editTextTel2.text.toString()
 
             // Endereço
-            var cep = "09170-115"
+            editTextCEP = binding.includeEndereco.editTextCep
+            var cep = editTextCEP.text.toString()
 
             editTextNumero = binding.includeEndereco.editTextNumero
             var numero = editTextNumero.text.toString()
@@ -281,79 +288,144 @@ class CadastrarFragment : Fragment() {
             }
 
             if (camposValidos) {
-                if(idade == 0){
+                if (idade == 0) {
                     binding.InputDtNascimento.error = "Data inválida!"
-                    Toast.makeText(requireContext(), "Data de Nascimento inválida!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Data de Nascimento inválida!",
+                        Toast.LENGTH_LONG
+                    ).show()
 
-                // Testar se PCD está como SIM e se a descrição está vazia
-                } else if(especial == "Sim" && descricaoEspecial.isEmpty()){
-                    binding.includeDadosCriancaSacola.InputDescricaoPcd.error = "Descreva as condições especiais..."
-                    Toast.makeText(requireContext(), "Descreva as condições especiais...", Toast.LENGTH_LONG).show()
+                    // Testar se PCD está como SIM e se a descrição está vazia
+                } else if (especial == "Sim" && descricaoEspecial.isEmpty()) {
+                    binding.includeDadosCriancaSacola.InputDescricaoPcd.error =
+                        "Descreva as condições especiais..."
+                    Toast.makeText(
+                        requireContext(),
+                        "Descreva as condições especiais...",
+                        Toast.LENGTH_LONG
+                    ).show()
 
                 } else {
                     binding.InputDtNascimento.error = null
                     binding.includeDadosCriancaSacola.InputDescricaoPcd.error = null
 
-                    /*
-                    var teste = "$cpfOriginal , $dataNascimento" +
-                            " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
-                            ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
-                            ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $status , $motivoStatus " +
-                            ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep"
-
-                    Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show()
-                    */
-
                     if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
-                        Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Nenhuma imegem selecionada",
+                            Toast.LENGTH_LONG
+                        ).show()
                     } else {
                         // A imagem foi alterada e pode ser inserida no banco de dados
 
+                        /* var teste = "$cpfOriginal , $dataNascimento" +
+                                " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
+                                ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
+                                ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $status , $motivoStatus " +
+                                ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep" */
 
-                        // TESTAR ATÉ AQUI
-                        // Adicionar condição se tem internet antes de chmar processo abaixo
-                        /*
-                        // Identificar tipo de imagem
-                        val tipo = identificarTipoImagem()
+                        if (NetworkUtils.conectadoInternet(requireContext())) {
+                            /*Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show() */
+                            idGerado = id
 
-                        if (tipo == "Tipo desconhecido"){
-                            // significa que é BITMAP (CAMERA)
-                            uploadImegemCameraStorage( bitmapImagemSelecionada, id ) {sucesso ->
-                                if (sucesso) {
-                                    // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                                    val crianca = Crianca (
-                                        id,
-                                        cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
-                                        sapato, especial, descricaoEspecial, gostosPessoais, foto,
-                                        responsavel, vinculoResponsavel, telefone1, telefone2,
-                                        logradouro, numero, complemento, bairro, cidade,
-                                        uf, cep, ano, status, motivoStatus
-                                    )
-                                    salvarUsuarioFirestore( crianca )
-                                } else {
-                                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
+                            // Identificar tipo de imagem
+                            val tipo = identificarTipoImagem()
+
+                            if (tipo == "Tipo desconhecido") {
+                                // significa que é BITMAP (CAMERA)
+                                uploadImegemCameraStorage(bitmapImagemSelecionada, id) { sucesso ->
+                                    if (sucesso) {
+                                        // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                                        val crianca = Crianca(
+                                            id,
+                                            cpfOriginal,
+                                            nome,
+                                            dataNascimento,
+                                            idade,
+                                            sexo,
+                                            blusa,
+                                            calca,
+                                            sapato,
+                                            especial,
+                                            descricaoEspecial,
+                                            gostosPessoais,
+                                            foto,
+                                            responsavel,
+                                            vinculoResponsavel,
+                                            telefone1,
+                                            telefone2,
+                                            logradouro,
+                                            numero,
+                                            complemento,
+                                            bairro,
+                                            cidade,
+                                            uf,
+                                            cep,
+                                            ano,
+                                            status,
+                                            motivoStatus
+                                        )
+                                        salvarUsuarioFirestore(crianca,idGerado)
+                                    } else {
+                                        Toast.makeText(
+                                            requireContext(),
+                                            "Erro ao salvar. Tente novamente.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                            } else {
+                                // ARMAZENAMENTO
+                                uploadImegemStorage(id) { sucesso ->
+                                    if (sucesso) {
+                                        // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
+                                        val crianca = Crianca(
+                                            id,
+                                            cpfOriginal,
+                                            nome,
+                                            dataNascimento,
+                                            idade,
+                                            sexo,
+                                            blusa,
+                                            calca,
+                                            sapato,
+                                            especial,
+                                            descricaoEspecial,
+                                            gostosPessoais,
+                                            logradouro,
+                                            numero,
+                                            complemento,
+                                            bairro,
+                                            cidade,
+                                            uf,
+                                            cep,
+                                            foto,
+                                            responsavel,
+                                            vinculoResponsavel,
+                                            telefone1,
+                                            telefone2,
+                                            ano,
+                                            status,
+                                            motivoStatus
+                                        )
+                                        salvarUsuarioFirestore(crianca, idGerado)
+                                    } else {
+                                        Toast.makeText(
+                                            requireContext(),
+                                            "Erro ao salvar. Tente novamente.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
                                 }
                             }
                         } else {
-                            // ARMAZENAMENTO
-                            uploadImegemStorage(id) { sucesso ->
-                                if (sucesso) {
-                                    // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                                    val crianca = Crianca (
-                                        id,
-                                        cpfOriginal, nome, dataNascimento, idade, sexo, blusa, calca,
-                                        sapato, especial, descricaoEspecial, gostosPessoais,
-                                        logradouro, numero, complemento, bairro, cidade,
-                                        uf, cep, foto, responsavel, vinculoResponsavel, telefone1,
-                                        telefone2, ano, status, motivoStatus
-                                    )
-                                    salvarUsuarioFirestore( crianca )
-                                } else {
-                                    Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
-                                }
-                            }
+                            Toast.makeText(
+                                requireContext(),
+                                "Verifique a conexão com a internet e tente novamente!",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
-                        */
                     }
                 }
             }
@@ -388,6 +460,7 @@ class CadastrarFragment : Fragment() {
             PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
         }
     }
+
     // --- DIALOG DE SELEÇÃO ---
     private fun mostrarDialogoEscolherImagem() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
@@ -407,27 +480,37 @@ class CadastrarFragment : Fragment() {
 
         dialog.show()
     }
+
     // --- CAMERA ---
     private fun abrirCamera() {
         // Código para abrir a câmera
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         gerenciadorCamera.launch(intent)
     }
-    private val gerenciadorCamera = registerForActivityResult( ActivityResultContracts.StartActivityForResult() ) { resultadoActivity ->
-        if ( resultadoActivity.resultCode == RESULT_OK ) {
-            bitmapImagemSelecionada = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                resultadoActivity.data?.extras?.getParcelable("data", Bitmap::class.java)
+
+    private val gerenciadorCamera =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultadoActivity ->
+            if (resultadoActivity.resultCode == RESULT_OK) {
+                bitmapImagemSelecionada =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        resultadoActivity.data?.extras?.getParcelable("data", Bitmap::class.java)
+                    } else {
+                        resultadoActivity.data?.extras?.getParcelable("data")
+                    }
+                binding.includeFotoCrianca.imagePerfil.setImageBitmap(bitmapImagemSelecionada)
+                imagemSelecionadaUri = null
             } else {
-                resultadoActivity.data?.extras?.getParcelable("data")
+                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
+                    .show()
             }
-            binding.includeFotoCrianca.imagePerfil.setImageBitmap( bitmapImagemSelecionada )
-            imagemSelecionadaUri = null
-        } else {
-            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
         }
-    }
+
     // Salvar imagem da camera no storage
-    private fun uploadImegemCameraStorage(bitmapImagemSelecionada: Bitmap?, id: String, callback: (Boolean) -> Unit) {
+    private fun uploadImegemCameraStorage(
+        bitmapImagemSelecionada: Bitmap?,
+        id: String,
+        callback: (Boolean) -> Unit
+    ) {
         val outputStream = ByteArrayOutputStream()
         bitmapImagemSelecionada?.compress(
             Bitmap.CompressFormat.JPEG,
@@ -441,7 +524,7 @@ class CadastrarFragment : Fragment() {
             .child("criancas")
             .child(idCrianca)
             .child("perfil.jpg")
-            .putBytes( outputStream.toByteArray() )
+            .putBytes(outputStream.toByteArray())
             .addOnSuccessListener { taskSnapshot ->
                 taskSnapshot.metadata
                     ?.reference
@@ -450,7 +533,7 @@ class CadastrarFragment : Fragment() {
                         foto = uriDownload.toString()
                         callback(true) // Notifica sucesso
                     }
-            }.addOnFailureListener{
+            }.addOnFailureListener {
                 callback(false) // Notifica falha
             }
     }
@@ -462,15 +545,17 @@ class CadastrarFragment : Fragment() {
     }
 
     // Armazenamento
-    private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
-        if ( uri != null ) {
-            bitmapImagemSelecionada = null
-            imagemSelecionadaUri = uri
-            binding.includeFotoCrianca.imagePerfil.setImageURI( uri )
-        } else {
-            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+    private val gerenciadorGaleria =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                bitmapImagemSelecionada = null
+                imagemSelecionadaUri = uri
+                binding.includeFotoCrianca.imagePerfil.setImageURI(uri)
+            } else {
+                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
+                    .show()
+            }
         }
-    }
 
     // Salvar imagem do armazenamento no storage
     private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
@@ -482,7 +567,7 @@ class CadastrarFragment : Fragment() {
                 .child("criancas")
                 .child(idCrianca)
                 .child("perfil.jpg")
-                .putFile( uri )
+                .putFile(uri)
                 .addOnSuccessListener { taskSnapshot ->
                     taskSnapshot.metadata
                         ?.reference
@@ -491,7 +576,7 @@ class CadastrarFragment : Fragment() {
                             foto = uriDownload.toString()
                             callback(true) // Notifica sucesso
                         }
-                }.addOnFailureListener{
+                }.addOnFailureListener {
                     callback(false) // Notifica falha
                 }
         } else {
@@ -511,7 +596,8 @@ class CadastrarFragment : Fragment() {
 
                 val calendarioAtual = Calendar.getInstance()
 
-                var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
+                var idade =
+                    calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
                 if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
                     idade--
                 }
@@ -541,14 +627,23 @@ class CadastrarFragment : Fragment() {
     }
 
     // --- SALVAR NO BANCO DE DADOS ---
-    private fun salvarUsuarioFirestore(crianca: Crianca) {
+    private fun salvarUsuarioFirestore(crianca: Crianca, idGerado: String) {
         firestore.collection("Criancas")
             .document(crianca.id)
             .set(crianca)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Cadastro realizado com sucesso", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Cadastro realizado com sucesso",
+                    Toast.LENGTH_LONG
+                ).show()
+                val intent = Intent(activity, DadosCriancaActivity::class.java)
+                intent.putExtra("id", idGerado)
+                startActivity(intent)
+
             }.addOnFailureListener {
-                Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG)
+                    .show()
             }
 
     }

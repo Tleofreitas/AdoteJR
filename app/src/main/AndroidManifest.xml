@@ -4,24 +4,12 @@
 
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="true" />
-
-    <!-- Permissão de acesso a verificar o estado das conexões de rede -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <!-- Permitir que o aplicativo acesse a internet -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-
-    <!-- Permissão de acesso à Camera -->
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <!-- Permissão de acesso as fotos -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <!-- Permissão de acesso as fotos -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-
-    <!-- Permissão de Gravar arquivo antiga -->
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> -->
-    <!-- Permissão de Gravar arquivo nova -->
-
+        android:required="true" /> <!-- Permissão de acesso a verificar o estado das conexões de rede -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Permitir que o aplicativo acesse a internet -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Permissão de acesso à Camera -->
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- Permissão de acesso as fotos -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- Permissão de acesso as fotos -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -33,6 +21,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
+        <activity
+            android:name=".DadosCriancaActivity"
+            android:exported="false"
+            android:parentActivityName=".GerenciamentoActivity"/>
         <activity
             android:name=".RedefinirSenhaDeslogadoActivity"
             android:exported="false"

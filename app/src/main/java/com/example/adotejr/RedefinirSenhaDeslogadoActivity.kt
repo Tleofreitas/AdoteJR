@@ -40,8 +40,6 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
 
         // Pegar E-mail passado
         val bundle = intent.extras
-
-        // val filmes = bundle?.getString("filme")
         if(bundle != null) {
             email = bundle.getString("email").toString()
             binding.editEmailSolicitar.setText( email )
