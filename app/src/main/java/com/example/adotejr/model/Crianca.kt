@@ -3,11 +3,11 @@ package com.example.adotejr.model
 data class Crianca (
     // DADOS DA CRIANÇA
     var id: String = "", // ANO + CPF - PARA NÃO CADASTRAR A MESMA CRIANÇA MAIS DE UMA VEZ
-    var cpf: String = "", // Adicionar mascara de formatação
+    var cpf: String = "",
     var nome: String = "",
-    var dataNascimento: String = "", // Verificar tipo
+    var dataNascimento: String = "",
     var idade: Int = 0, // SERÁ CÁLCULADO AO PASSAR O NASCIMENTO
-    var sexo: String = "", // F ou M
+    var sexo: String = "",
     var blusa: String = "",
     var calca: String = "",
     var sapato: String = "",
@@ -33,6 +33,17 @@ data class Crianca (
 
     // ANO DO CADASTRO E STATUS
     var ano: Int = 0,
-    var status: String = "", // ATIVO OU INATIVO
-    var motivoStatus: String = "" // SERÁ USADO QUANDO FOR INATIVAR ALGUÉM, QUAUL O MOTIVO DA INATIVAÇÃO ?
+    var ativo: String = "", // ATIVO OU INATIVO
+    var motivoStatus: String = "", // SERÁ USADO QUANDO FOR INATIVAR ALGUÉM, QUAUL O MOTIVO DA INATIVAÇÃO ?
+
+    // Indicação
+    var indicação: String = "",
+
+    // Dados de quem realizou o cadastro
+    var cadastradoPor: String = "",
+    var fotoCadastradoPor: String = "",
+
+    var padrinho: String = "",
+    var retirouSacola: String = "",
+    var blackList: String = ""
 )

@@ -3,6 +3,7 @@ package com.example.adotejr
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -47,21 +48,31 @@ class DadosCriancaActivity : AppCompatActivity() {
                 .addOnSuccessListener { documentSnapshot ->
                     val dadosCrianca = documentSnapshot.data
                     if ( dadosCrianca != null ){
-                        /*
-                        val nome = dadosUsuario["nome"] as String
-                        val foto = dadosUsuario["foto"] as String
-
+                        val foto = dadosCrianca["foto"] as String
                         if (foto.isNotEmpty()) {
                             Picasso.get()
                                 .load( foto )
-                                .into( binding.includeFotoPerfil.imagePerfil )
+                                .into( binding.includeFotoCrianca.imagePerfil )
                         }
 
-                        binding.editNomePerfil.setText( nome )
+                        val nome = dadosCrianca["nome"] as String
+                        binding.editTextNome.setText( nome )
+
+                        val cpf = dadosCrianca["cpf"] as String
+                        binding.editTextCpf.setText( cpf )
+
+                        val nascimento = dadosCrianca["dataNascimento"] as String
+                        binding.editTextDtNascimento.setText( nascimento )
+
+                        val idade = dadosCrianca["idade"] as Long
+                        binding.editTextIdade.setText( idade.toString() )
+
+                        // PUXAR OUTROS CAMPOS
+
+                        /*
                         emailLogado = firebaseAuth.currentUser?.email
                         binding.editEmailPerfil.setText( emailLogado )
                         */
-                        binding.textDadosText.setText(dadosCrianca.toString())
                     }
                 } .addOnFailureListener { exception ->
                     Log.e("Firestore", "Error getting documents: ", exception)
@@ -69,9 +80,51 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
     }
 
+    private var foto: String = ""
+    private lateinit var editTextNome: EditText
+    private lateinit var editTextCpf: EditText
+    private lateinit var editTextDataNascimento: EditText
+    private lateinit var editTextIdade: EditText
+    private var sexo: String = ""
+    private lateinit var editTextBlusa: EditText
+    private lateinit var editTextCalca: EditText
+    private lateinit var editTextSapato: EditText
+    private var especial: String = ""
+    private lateinit var editTextPcd: EditText
+    private lateinit var editTextGostosPessoais: EditText
+    private lateinit var editTextNomeResponsavel: EditText
+    private lateinit var editTextVinculo: EditText
+    private lateinit var editTextTelefonePrincipal: EditText
+    private lateinit var editTextTelefone2: EditText
+    private lateinit var editTextCEP: EditText
+    private lateinit var editTextNumero: EditText
+    private lateinit var editTextRua: EditText
+    private lateinit var editTextComplemento: EditText
+    private lateinit var editTextBairro: EditText
+    private lateinit var editTextCidade: EditText
+    private lateinit var editTextAno: EditText
+    private lateinit var editTextStatus: EditText
+    private lateinit var editTextMotivoStatus: EditText
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        // Inicialize os EditTexts
+        editTextNome = binding.editTextNome
+        editTextCpf = binding.editTextCpf
+        editTextDataNascimento = binding.editTextDtNascimento
+        editTextIdade = binding.editTextIdade
+
+        ///////// CRIAR OUTROS CAMPOS aqui
+
+        // Lista com os EditTexts
+        val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade)
+
+        // Iterar sobre cada um e desativar
+        for (editText in editTexts) {
+            editText.isEnabled = false
+        }
 
         incializarToolbar()
 
@@ -79,7 +132,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         val bundle = intent.extras
         if(bundle != null) {
             idDetalhar = bundle.getString("id").toString()
-            binding.textIdTeste.setText( idDetalhar )
         } else {
             // idDetalhar = "null"
             idDetalhar = 202544290378846.toString()

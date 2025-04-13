@@ -22,7 +22,7 @@
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
         <activity
-            android:name=".DadosCriancaActivity"
+            android:name=".MainActivity"
             android:exported="false"
             android:parentActivityName=".GerenciamentoActivity"/>
         <activity
@@ -49,7 +49,7 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
         <activity
-            android:name=".MainActivity"
+            android:name=".DadosCriancaActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

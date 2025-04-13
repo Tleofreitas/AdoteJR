@@ -1,5 +1,16 @@
 <resources>
     <string name="app_name">AdoteJR</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string-array name="opcoesIndicacao">
+        <item>-- Selecione --</item>
+        <item>Cielle</item>
+        <item>Erica</item>
+        <item>Gabriela</item>
+        <item>Jaqueline</item>
+        <item>Juscilene</item>
+        <item>Kethlyn</item>
+        <item>Mirian</item>
+        <item>Suelen</item>
+        <item>Thainá</item>
+        <item>Nenhum dos anteriores</item>
+    </string-array>
 </resources>

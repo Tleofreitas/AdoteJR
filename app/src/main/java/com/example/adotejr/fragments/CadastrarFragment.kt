@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,7 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -74,7 +76,7 @@ class CadastrarFragment : Fragment() {
     // Armazenar o Bitmap da imagem
     var bitmapImagemSelecionada: Bitmap? = null
 
-    // MAP para armazenar id e link da imagem
+    // link da imagem
     var foto = ""
 
     private var idGerado: String = ""
@@ -97,6 +99,7 @@ class CadastrarFragment : Fragment() {
     private lateinit var editTextComplemento: EditText
     private lateinit var editTextBairro: EditText
     private lateinit var editTextCidade: EditText
+    private lateinit var selecaoIndicacao: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -179,7 +182,7 @@ class CadastrarFragment : Fragment() {
         binding.btnCadastrarCrianca.setOnClickListener {
             // Dados de registro
             var ano = LocalDate.now().year
-            var status = "ATIVO"
+            var ativo = "Sim"
             var motivoStatus = "Apto para contemplação"
 
             // CPF
@@ -259,6 +262,42 @@ class CadastrarFragment : Fragment() {
 
             var uf = "SP"
 
+            selecaoIndicacao = binding.selecaoIndicacao.selectedItem.toString()
+            var indicacao = selecaoIndicacao
+
+            // Dados de quem realizou o cadastro
+            var cadastradoPor: String = ""
+            var fotoCadastradoPor: String = ""
+
+            val idUsuario = firebaseAuth.currentUser?.uid
+            if (idUsuario != null){
+                firestore.collection("Usuarios")
+                    .document( idUsuario )
+                    .get()
+                    .addOnSuccessListener { documentSnapshot ->
+                        val dadosUsuario = documentSnapshot.data
+                        if ( dadosUsuario != null ){
+                            val nome = dadosUsuario["nome"] as String
+                            cadastradoPor = nome
+
+                            val foto = dadosUsuario["foto"] as String
+
+                            if (foto.isNotEmpty()) {
+                                fotoCadastradoPor = foto
+                            }
+                        }
+                    } .addOnFailureListener { exception ->
+                        Log.e("Firestore", "Error getting documents: ", exception)
+                    }
+            }
+
+            // Padrinho
+            var padrinho: String = ""
+
+            // Check Black List
+            var retirouSacola: String = "Não"
+            var blackList: String = "Não"
+
             // Lista de valores obrigatórios a serem validados
             val textInputs = listOf(
                 binding.InputCPF,
@@ -306,6 +345,13 @@ class CadastrarFragment : Fragment() {
                         Toast.LENGTH_LONG
                     ).show()
 
+                } else if (indicacao == "-- Selecione --") {
+                    Toast.makeText(
+                        requireContext(),
+                        "Selecione quem indicou!",
+                        Toast.LENGTH_LONG
+                    ).show()
+
                 } else {
                     binding.InputDtNascimento.error = null
                     binding.includeDadosCriancaSacola.InputDescricaoPcd.error = null
@@ -322,7 +368,7 @@ class CadastrarFragment : Fragment() {
                         /* var teste = "$cpfOriginal , $dataNascimento" +
                                 " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
                                 ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
-                                ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $status , $motivoStatus " +
+                                ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $ativo , $motivoStatus " +
                                 ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep" */
 
                         if (NetworkUtils.conectadoInternet(requireContext())) {
@@ -363,8 +409,14 @@ class CadastrarFragment : Fragment() {
                                             uf,
                                             cep,
                                             ano,
-                                            status,
-                                            motivoStatus
+                                            ativo,
+                                            motivoStatus,
+                                            indicacao,
+                                            cadastradoPor,
+                                            fotoCadastradoPor,
+                                            padrinho,
+                                            retirouSacola,
+                                            blackList
                                         )
                                         salvarUsuarioFirestore(crianca,idGerado)
                                     } else {
@@ -393,6 +445,11 @@ class CadastrarFragment : Fragment() {
                                             especial,
                                             descricaoEspecial,
                                             gostosPessoais,
+                                            foto,
+                                            responsavel,
+                                            vinculoResponsavel,
+                                            telefone1,
+                                            telefone2,
                                             logradouro,
                                             numero,
                                             complemento,
@@ -400,14 +457,15 @@ class CadastrarFragment : Fragment() {
                                             cidade,
                                             uf,
                                             cep,
-                                            foto,
-                                            responsavel,
-                                            vinculoResponsavel,
-                                            telefone1,
-                                            telefone2,
                                             ano,
-                                            status,
-                                            motivoStatus
+                                            ativo,
+                                            motivoStatus,
+                                            indicacao,
+                                            cadastradoPor,
+                                            fotoCadastradoPor,
+                                            padrinho,
+                                            retirouSacola,
+                                            blackList
                                         )
                                         salvarUsuarioFirestore(crianca, idGerado)
                                     } else {
