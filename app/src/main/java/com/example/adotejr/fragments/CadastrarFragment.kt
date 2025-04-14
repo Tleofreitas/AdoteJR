@@ -89,6 +89,7 @@ class CadastrarFragment : Fragment() {
     private var especial: String = "Não"
     private lateinit var editTextPcd: EditText
     private lateinit var editTextGostosPessoais: EditText
+    private lateinit var editTextVinculoFamiliar: EditText
     private lateinit var editTextNomeResponsavel: EditText
     private lateinit var editTextVinculo: EditText
     private lateinit var editTextTelefonePrincipal: EditText
@@ -230,6 +231,10 @@ class CadastrarFragment : Fragment() {
             // Gostos Pessoais
             editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
             var gostosPessoais = editTextGostosPessoais.text.toString()
+
+            // Identificação de crianças da mesma família
+            editTextVinculoFamiliar = binding.includeDadosCriancaSacola.editTextVinculoFamiliar
+            var vinculoFamiliar = editTextVinculoFamiliar.text.toString()
 
             // Dados do Responsável
             editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
@@ -416,7 +421,8 @@ class CadastrarFragment : Fragment() {
                                             fotoCadastradoPor,
                                             padrinho,
                                             retirouSacola,
-                                            blackList
+                                            blackList,
+                                            vinculoFamiliar
                                         )
                                         salvarUsuarioFirestore(crianca,idGerado)
                                     } else {
@@ -465,7 +471,8 @@ class CadastrarFragment : Fragment() {
                                             fotoCadastradoPor,
                                             padrinho,
                                             retirouSacola,
-                                            blackList
+                                            blackList,
+                                            vinculoFamiliar
                                         )
                                         salvarUsuarioFirestore(crianca, idGerado)
                                     } else {

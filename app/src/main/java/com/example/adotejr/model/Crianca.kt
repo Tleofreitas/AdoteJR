@@ -45,5 +45,8 @@ data class Crianca (
 
     var padrinho: String = "",
     var retirouSacola: String = "",
-    var blackList: String = ""
+    var blackList: String = "",
+
+    // Identificação de crianças da mesma família
+    var vinculoFamiliar: String = ""
 )

@@ -184,4 +184,23 @@
             android:layout_height="wrap_content"
             android:hint="Gostos pessoais (dicas para presentes)" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/InputVinculoFamiliar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/InputGostos">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextVinculoFamiliar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Vínculo familiar (identificação de família)" />
+    </com.google.android.material.textfield.TextInputLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
