@@ -37,7 +37,7 @@ data class Crianca (
     var motivoStatus: String = "", // SERÁ USADO QUANDO FOR INATIVAR ALGUÉM, QUAUL O MOTIVO DA INATIVAÇÃO ?
 
     // Indicação
-    var indicação: String = "",
+    var indicacao: String = "",
 
     // Dados de quem realizou o cadastro
     var cadastradoPor: String = "",
@@ -48,5 +48,9 @@ data class Crianca (
     var blackList: String = "",
 
     // Identificação de crianças da mesma família
-    var vinculoFamiliar: String = ""
+    var vinculoFamiliar: String = "",
+
+    // Dados de quem validou o cadastro
+    var validadoPor: String = "",
+    var fotoValidadoPor: String = ""
 )

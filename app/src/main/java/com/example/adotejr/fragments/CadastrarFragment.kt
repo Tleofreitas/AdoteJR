@@ -274,6 +274,10 @@ class CadastrarFragment : Fragment() {
             var cadastradoPor: String = ""
             var fotoCadastradoPor: String = ""
 
+            // Dados de quem validou o cadastro
+            var validadoPor: String = ""
+            var fotoValidadoPor: String = ""
+
             val idUsuario = firebaseAuth.currentUser?.uid
             if (idUsuario != null){
                 firestore.collection("Usuarios")
@@ -422,7 +426,9 @@ class CadastrarFragment : Fragment() {
                                             padrinho,
                                             retirouSacola,
                                             blackList,
-                                            vinculoFamiliar
+                                            vinculoFamiliar,
+                                            validadoPor,
+                                            fotoValidadoPor
                                         )
                                         salvarUsuarioFirestore(crianca,idGerado)
                                     } else {
@@ -472,7 +478,9 @@ class CadastrarFragment : Fragment() {
                                             padrinho,
                                             retirouSacola,
                                             blackList,
-                                            vinculoFamiliar
+                                            vinculoFamiliar,
+                                            validadoPor,
+                                            fotoValidadoPor
                                         )
                                         salvarUsuarioFirestore(crianca, idGerado)
                                     } else {
@@ -702,8 +710,14 @@ class CadastrarFragment : Fragment() {
                     "Cadastro realizado com sucesso",
                     Toast.LENGTH_LONG
                 ).show()
-                val intent = Intent(activity, DadosCriancaActivity::class.java)
+                /*val intent = Intent(activity, DadosCriancaActivity::class.java)
                 intent.putExtra("id", idGerado)
+                putExtra("origem", "cadastro")
+                startActivity(intent) */
+                val intent = Intent(activity, DadosCriancaActivity::class.java).apply {
+                    putExtra("id", idGerado)
+                    putExtra("origem", "cadastro")
+                }
                 startActivity(intent)
 
             }.addOnFailureListener {

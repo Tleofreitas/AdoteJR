@@ -3,7 +3,10 @@ package com.example.adotejr
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +17,8 @@ import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 
 class DadosCriancaActivity : AppCompatActivity() {
+
+    private lateinit var telaDeOrigem: String
 
     private val binding by lazy {
         ActivityDadosCriancaBinding.inflate(layoutInflater)
@@ -47,93 +52,99 @@ class DadosCriancaActivity : AppCompatActivity() {
                 .document(idDetalhar!!)
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
-                    val dadosCrianca = documentSnapshot.data
-                    if ( dadosCrianca != null ){
-                        val foto = dadosCrianca["foto"] as String
-                        if (foto.isNotEmpty()) {
-                            Picasso.get()
-                                .load( foto )
-                                .into( binding.includeFotoCrianca.imagePerfil )
-                        }
-
-                        val nome = dadosCrianca["nome"] as String
-                        binding.editTextNome.setText( nome )
-
-                        val cpf = dadosCrianca["cpf"] as String
-                        binding.editTextCpf.setText( cpf )
-
-                        val nascimento = dadosCrianca["dataNascimento"] as String
-                        binding.editTextDtNascimento.setText( nascimento )
-
-                        val idade = dadosCrianca["idade"] as Long
-                        binding.editTextIdade.setText( idade.toString() )
-
-                        val sexo = dadosCrianca["sexo"] as String
-                        if(sexo == "Masculino"){
-                            binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked
-                        } else {
-                            binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked
-                        }
-
-                        val blusa = dadosCrianca["blusa"] as String
-                        binding.includeDadosCriancaSacola.editTextBlusa.setText( blusa )
-
-                        val calca = dadosCrianca["calca"] as String
-                        binding.includeDadosCriancaSacola.editTextCalca.setText( calca )
-
-                        val sapato = dadosCrianca["sapato"] as String
-                        binding.includeDadosCriancaSacola.editTextSapato.setText( sapato )
-
-                        val especial = dadosCrianca["especial"] as String
-                        if(especial == "Sim"){
-                            binding.includeDadosCriancaSacola.radioButtonPcdSim.isChecked
-                        } else {
-                            binding.includeDadosCriancaSacola.radioButtonPcdNao.isChecked
-                        }
-
-                        val descricaoEspecial = dadosCrianca["descricaoEspecial"] as String
-                        binding.includeDadosCriancaSacola.editTextPcd.setText( descricaoEspecial )
-
-                        val gostosPessoais = dadosCrianca["gostosPessoais"] as String
-                        binding.includeDadosCriancaSacola.editTextGostos.setText( gostosPessoais )
-
-                        val vinculoFamiliar = dadosCrianca["vinculoFamiliar"] as String
-                        binding.includeDadosCriancaSacola.editTextVinculoFamiliar.setText( vinculoFamiliar )
-
-                        val responsavel = dadosCrianca["responsavel"] as String
-                        binding.includeDadosResponsavel.editTextNomeResponsavel.setText( responsavel )
-
-                        val vinculoResponsavel = dadosCrianca["vinculoResponsavel"] as String
-                        binding.includeDadosResponsavel.editTextVinculo.setText( vinculoResponsavel )
-
-                        val telefone1 = dadosCrianca["telefone1"] as String
-                        binding.includeDadosResponsavel.editTextTel1.setText( telefone1 )
-
-                        val telefone2 = dadosCrianca["telefone2"] as String
-                        binding.includeDadosResponsavel.editTextTel2.setText( telefone2 )
-
-                        val cep = dadosCrianca["cep"] as String
-                        binding.includeEndereco.editTextCep.setText( cep )
-
-                        val numero = dadosCrianca["numero"] as String
-                        binding.includeEndereco.editTextNumero.setText( numero )
-
-                        val logradouro = dadosCrianca["logradouro"] as String
-                        binding.includeEndereco.editTextRua.setText( logradouro )
-
-                        val complemento = dadosCrianca["complemento"] as String
-                        binding.includeEndereco.editTextComplemento.setText( complemento )
-
-                        val bairro = dadosCrianca["bairro"] as String
-                        binding.includeEndereco.editTextBairro.setText( bairro )
-
-                        val cidade = dadosCrianca["cidade"] as String
-                        binding.includeEndereco.editTextCidade.setText( cidade )
+                    documentSnapshot.data?.let { dadosCrianca ->
+                        preencherDadosCrianca(dadosCrianca)
                     }
                 } .addOnFailureListener { exception ->
                     Log.e("Firestore", "Error getting documents: ", exception)
                 }
         }
+    }
+
+    private fun preencherDadosCrianca(dados: Map<String, Any>) {
+        binding.includeFotoCrianca.imagePerfil?.let {
+            val foto = dados["foto"] as? String
+            if (!foto.isNullOrEmpty()) {
+                Picasso.get().load(foto).into(it)
+            }
+        }
+
+        binding.editTextNome.setText(dados["nome"] as? String ?: "")
+        binding.editTextCpf.setText(dados["cpf"] as? String ?: "")
+        binding.editTextDtNascimento.setText(dados["dataNascimento"] as? String ?: "")
+        binding.editTextIdade.setText((dados["idade"] as? Long)?.toString() ?: "")
+
+        val sexo = dados["sexo"] as String
+        if(sexo == "Masculino"){
+            binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked
+        } else {
+            binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked
+        }
+
+        binding.includeDadosCriancaSacola.editTextBlusa.setText(dados["blusa"] as? String ?: "")
+        binding.includeDadosCriancaSacola.editTextCalca.setText(dados["calca"] as? String ?: "")
+        binding.includeDadosCriancaSacola.editTextSapato.setText(dados["sapato"] as? String ?: "")
+
+        var especial = dados["especial"] as String
+        if(especial == "Sim"){
+            binding.includeDadosCriancaSacola.radioButtonPcdSim.isChecked
+        } else {
+            binding.includeDadosCriancaSacola.radioButtonPcdNao.isChecked
+        }
+
+        binding.includeDadosCriancaSacola.editTextPcd.setText(dados["descricaoEspecial"] as? String ?: "")
+        binding.includeDadosCriancaSacola.editTextGostos.setText(dados["gostosPessoais"] as? String ?: "")
+        binding.includeDadosCriancaSacola.editTextVinculoFamiliar.setText(dados["vinculoFamiliar"] as? String ?: "")
+
+        // Campos de informações do responsável
+        binding.includeDadosResponsavel.editTextNomeResponsavel.setText(dados["responsavel"] as? String ?: "")
+        binding.includeDadosResponsavel.editTextVinculo.setText(dados["vinculoResponsavel"] as? String ?: "")
+        binding.includeDadosResponsavel.editTextTel1.setText(dados["telefone1"] as? String ?: "")
+        binding.includeDadosResponsavel.editTextTel2.setText(dados["telefone2"] as? String ?: "")
+
+        // Campos de endereço
+        binding.includeEndereco.editTextCep.setText(dados["cep"] as? String ?: "")
+        binding.includeEndereco.editTextNumero.setText(dados["numero"] as? String ?: "")
+        binding.includeEndereco.editTextRua.setText(dados["logradouro"] as? String ?: "")
+        binding.includeEndereco.editTextComplemento.setText(dados["complemento"] as? String ?: "")
+        binding.includeEndereco.editTextBairro.setText(dados["bairro"] as? String ?: "")
+        binding.includeEndereco.editTextCidade.setText(dados["cidade"] as? String ?: "")
+
+        // Campos de registro
+        var status = dados["status"] as String
+        if(status == "Ativo"){
+            binding.includeRegistro.radioButtonStatusAtivo.isChecked
+        } else {
+            binding.includeRegistro.radioButtonStatusInativo.isChecked
+        }
+
+        binding.includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
+        binding.includeRegistro.editTextAno.setText(dados["ano"].toString() as? String ?: "")
+
+        val indicacao = dados["indicacao"] as? String ?: ""
+        definirIndicacaoNoSpinner(indicacao)
+        bloquearSpinner()
+
+        binding.includeRegistro.NomePerfilCadastro.text = dados["cadastradoPor"].toString() as? String ?: ""
+        val foto = dados["fotoCadastradoPor"] as? String ?: ""
+        if (!foto.isNullOrEmpty()) {
+            Picasso.get()
+                .load( foto )
+                .into( binding.includeRegistro.imgPerfilCadastro )
+        }
+
+    }
+
+    private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
+        val adapter = binding.includeRegistro.selecaoIndicacao.adapter as ArrayAdapter<String>
+        val position = adapter.getPosition(valorIndicacao)
+        if (position >= 0) {
+            binding.includeRegistro.selecaoIndicacao.setSelection(position)
+        }
+    }
+
+    private fun bloquearSpinner() {
+        binding.includeRegistro.selecaoIndicacao.isEnabled = false
     }
 
     private lateinit var editTextNome: EditText
@@ -160,10 +171,12 @@ class DadosCriancaActivity : AppCompatActivity() {
     private lateinit var editTextComplemento: EditText
     private lateinit var editTextBairro: EditText
     private lateinit var editTextCidade: EditText
-    /*
+    private lateinit var statusAtivo: RadioButton
+    private lateinit var statusInativo: RadioButton
+    private lateinit var editTextMotivoStatus: EditText
     private lateinit var editTextAno: EditText
-    private lateinit var editTextStatus: EditText
-    private lateinit var editTextMotivoStatus: EditText */
+    /* private lateinit var fotoCadastradoPor: ImageView
+    private lateinit var textCadastradoPor: EditText */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -198,15 +211,19 @@ class DadosCriancaActivity : AppCompatActivity() {
         editTextComplemento = binding.includeEndereco.editTextComplemento
         editTextBairro = binding.includeEndereco.editTextBairro
         editTextCidade = binding.includeEndereco.editTextCidade
-
-        ///////// CRIAR OUTROS CAMPOS aqui
+        statusAtivo = binding.includeRegistro.radioButtonStatusAtivo
+        statusAtivo.isEnabled = false
+        statusInativo = binding.includeRegistro.radioButtonStatusInativo
+        statusInativo.isEnabled = false
+        editTextMotivoStatus = binding.includeRegistro. editMotivoStatus
+        editTextAno = binding.includeRegistro.editTextAno
 
         // Lista com os EditTexts
         val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade,
             editTextBlusa, editTextCalca, editTextSapato, editTextPcd, editTextGostosPessoais,
             editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
             editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
-            editTextBairro, editTextCidade)
+            editTextBairro, editTextCidade, editTextMotivoStatus, editTextAno)
 
         // Iterar sobre cada um e desativar
         for (editText in editTexts) {
@@ -224,7 +241,55 @@ class DadosCriancaActivity : AppCompatActivity() {
             idDetalhar = 202544290378846.toString()
         }
 
+        // Identificar telas para manipular botões
+        var origem = intent.getStringExtra("origem")
+
+        // teste
+        // origem = "cadastro"
+        // origem = "listagem"
+
+        when (origem) {
+            "cadastro" -> configurarBotoesParaCadastro()
+            "listagem" -> configurarBotoesParaListagem()
+        }
+
         inicializarEventosClique()
+    }
+
+    private fun configurarBotoesParaCadastro() {
+        // Ocultar e desabilitar botões de editar e salvar
+        binding.btnEditarDadosCrianca.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+        binding.btnAtualizarDadosCrianca.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+
+        // Exibir e habilitar botão de novo cadastro
+        binding.btnNovoCadastro.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
+    }
+
+    private fun configurarBotoesParaListagem() {
+        // Ocultar e desabilitar botão de novo cadastro
+        binding.btnNovoCadastro.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+
+        // Exibir e habilitar botões de editar e salvar
+        binding.btnEditarDadosCrianca.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
+        binding.btnAtualizarDadosCrianca.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
     }
 
     private fun incializarToolbar() {

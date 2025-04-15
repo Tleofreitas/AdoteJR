@@ -21,67 +21,89 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/LLRegistro"
+        android:id="@+id/LLStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textRegistro">
+
+        <TextView
+            android:id="@+id/textTituloStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
+            android:text="Status"
+            android:textAppearance="?attr/textAppearanceBody1" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radioButtonStatusAtivo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ativo"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radioButtonStatusInativo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Inativo" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/LLMotivoAno"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textRegistro">
+        app:layout_constraintTop_toBottomOf="@+id/LLStatus">
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/InputAnoVigente"
+            android:id="@+id/InputMotivoStatus"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:layout_weight="1">
+            android:layout_weight="3">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editTextAnoVigente"
+                android:id="@+id/editMotivoStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Ano de Contemplação" />
+                android:enabled="false"
+                android:hint="Motivo do Status"
+                android:text="Apto para contemplação" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/InputStatus"
+            android:id="@+id/InputAno"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editTextStatus"
+                android:id="@+id/editTextAno"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false"
-                android:hint="Status do cadastro"
-                android:text="ATIVO" />
+                android:hint="Ano" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/InputMotivoStatus"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/LLRegistro">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editMotivoStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:hint="Motivo do Status"
-            android:text="Apto para contemplação" />
-    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/textIndicacao"
@@ -97,7 +119,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/InputMotivoStatus" />
+        app:layout_constraintTop_toBottomOf="@+id/LLMotivoAno" />
 
     <Spinner
         android:id="@+id/selecaoIndicacao"
@@ -138,11 +160,47 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:text="TextView"
+        android:text="Resposável pelo cadastro"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="@+id/imgPerfilCadastro"
         app:layout_constraintStart_toEndOf="@+id/imgPerfilCadastro"
         app:layout_constraintTop_toTopOf="@+id/imgPerfilCadastro" />
+
+    <TextView
+        android:id="@+id/textValidadoPor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="Validado Por"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:textColor="@color/azulEscuro"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imgPerfilCadastro" />
+
+    <ImageView
+        android:id="@+id/imgPerfilValidacao"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@+id/textValidadoPor"
+        app:layout_constraintTop_toBottomOf="@+id/textValidadoPor"
+        app:srcCompat="@drawable/perfil" />
+
+    <TextView
+        android:id="@+id/NomePerfilValidacao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Resposável pela validação"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@+id/imgPerfilValidacao"
+        app:layout_constraintStart_toEndOf="@+id/imgPerfilValidacao"
+        app:layout_constraintTop_toTopOf="@+id/imgPerfilValidacao" />
 
     <TextView
         android:id="@+id/textPadrinho"
@@ -158,7 +216,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgPerfilCadastro" />
+        app:layout_constraintTop_toBottomOf="@+id/imgPerfilValidacao" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/InputPadrinho"
