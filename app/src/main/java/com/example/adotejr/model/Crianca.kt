@@ -52,5 +52,8 @@ data class Crianca (
 
     // Dados de quem validou o cadastro
     var validadoPor: String = "",
-    var fotoValidadoPor: String = ""
+    var fotoValidadoPor: String = "",
+
+    var retirouSenha: String = "",
+    var numeroCartao: String = ""
 )

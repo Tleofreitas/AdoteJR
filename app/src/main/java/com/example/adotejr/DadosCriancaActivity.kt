@@ -111,8 +111,8 @@ class DadosCriancaActivity : AppCompatActivity() {
         binding.includeEndereco.editTextCidade.setText(dados["cidade"] as? String ?: "")
 
         // Campos de registro
-        var status = dados["status"] as String
-        if(status == "Ativo"){
+        var status = dados["ativo"] as String
+        if(status == "Sim"){
             binding.includeRegistro.radioButtonStatusAtivo.isChecked
         } else {
             binding.includeRegistro.radioButtonStatusInativo.isChecked
@@ -175,6 +175,14 @@ class DadosCriancaActivity : AppCompatActivity() {
     private lateinit var statusInativo: RadioButton
     private lateinit var editTextMotivoStatus: EditText
     private lateinit var editTextAno: EditText
+    private lateinit var editTextCartao: EditText
+    private lateinit var senhaSim: RadioButton
+    private lateinit var senhaNao: RadioButton
+    private lateinit var kitSim: RadioButton
+    private lateinit var kitNão: RadioButton
+    private lateinit var blackListSim: RadioButton
+    private lateinit var blackListNao: RadioButton
+
     /* private lateinit var fotoCadastradoPor: ImageView
     private lateinit var textCadastradoPor: EditText */
 
@@ -217,13 +225,26 @@ class DadosCriancaActivity : AppCompatActivity() {
         statusInativo.isEnabled = false
         editTextMotivoStatus = binding.includeRegistro. editMotivoStatus
         editTextAno = binding.includeRegistro.editTextAno
+        editTextCartao = binding.includeRegistro.editNumeroCartao
+        senhaSim = binding.includeRegistro.radioButtonSenhaSim
+        senhaSim.isEnabled = false
+        senhaNao = binding.includeRegistro.radioButtonSenhaNao
+        senhaNao.isEnabled = false
+        kitSim = binding.includeRegistro.radioButtonRetiradaSim
+        kitSim.isEnabled = false
+        kitNão = binding.includeRegistro.radioButtonRetiradaNao
+        kitNão.isEnabled = false
+        blackListSim = binding.includeRegistro.radioButtonBLSim
+        blackListSim.isEnabled = false
+        blackListNao = binding.includeRegistro.radioButtonBLNao
+        blackListNao.isEnabled = false
 
         // Lista com os EditTexts
         val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade,
             editTextBlusa, editTextCalca, editTextSapato, editTextPcd, editTextGostosPessoais,
             editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
             editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
-            editTextBairro, editTextCidade, editTextMotivoStatus, editTextAno)
+            editTextBairro, editTextCidade, editTextMotivoStatus, editTextAno, editTextCartao)
 
         // Iterar sobre cada um e desativar
         for (editText in editTexts) {
@@ -257,6 +278,12 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaCadastro() {
+        // Ocultar e desabilitar botão de foto
+        binding.includeFotoCrianca.fabSelecionar.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+
         // Ocultar e desabilitar botões de editar e salvar
         binding.btnEditarDadosCrianca.apply {
             visibility = View.GONE
@@ -275,6 +302,12 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaListagem() {
+        // Exibir e habilitar botão de foto
+        binding.includeFotoCrianca.fabSelecionar.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
+
         // Ocultar e desabilitar botão de novo cadastro
         binding.btnNovoCadastro.apply {
             visibility = View.GONE

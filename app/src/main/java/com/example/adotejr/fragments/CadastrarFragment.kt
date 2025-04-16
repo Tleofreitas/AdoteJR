@@ -14,7 +14,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,7 +29,6 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -307,6 +305,9 @@ class CadastrarFragment : Fragment() {
             var retirouSacola: String = "Não"
             var blackList: String = "Não"
 
+            var retirouSenha: String = "Não"
+            var numeroCartao: String = ""
+
             // Lista de valores obrigatórios a serem validados
             val textInputs = listOf(
                 binding.InputCPF,
@@ -380,7 +381,14 @@ class CadastrarFragment : Fragment() {
                                 ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $ativo , $motivoStatus " +
                                 ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep" */
 
+
                         if (NetworkUtils.conectadoInternet(requireContext())) {
+                            // Altera o texto do botão para "Aguarde"
+                            binding.btnCadastrarCrianca.text = "Aguarde..."
+
+                            // Desabilita o botão para evitar novos cliques
+                            binding.btnCadastrarCrianca.isEnabled = false
+
                             /*Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show() */
                             idGerado = id
 
@@ -389,7 +397,7 @@ class CadastrarFragment : Fragment() {
 
                             if (tipo == "Tipo desconhecido") {
                                 // significa que é BITMAP (CAMERA)
-                                uploadImegemCameraStorage(bitmapImagemSelecionada, id) { sucesso ->
+                                uploadImegemCameraStorage(bitmapImagemSelecionada, id, ano) { sucesso ->
                                     if (sucesso) {
                                         // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                                         val crianca = Crianca(
@@ -428,10 +436,18 @@ class CadastrarFragment : Fragment() {
                                             blackList,
                                             vinculoFamiliar,
                                             validadoPor,
-                                            fotoValidadoPor
+                                            fotoValidadoPor,
+                                            retirouSenha,
+                                            numeroCartao
                                         )
                                         salvarUsuarioFirestore(crianca,idGerado)
                                     } else {
+                                        // Altera o texto do botão para "Cadastrar"
+                                        binding.btnCadastrarCrianca.text = "Cadastrar"
+
+                                        // Habilita o botão
+                                        binding.btnCadastrarCrianca.isEnabled = true
+
                                         Toast.makeText(
                                             requireContext(),
                                             "Erro ao salvar. Tente novamente.",
@@ -439,7 +455,8 @@ class CadastrarFragment : Fragment() {
                                         ).show()
                                     }
                                 }
-                            } else {
+                            }
+                            /* else {
                                 // ARMAZENAMENTO
                                 uploadImegemStorage(id) { sucesso ->
                                     if (sucesso) {
@@ -480,7 +497,9 @@ class CadastrarFragment : Fragment() {
                                             blackList,
                                             vinculoFamiliar,
                                             validadoPor,
-                                            fotoValidadoPor
+                                            fotoValidadoPor,
+                                            retirouSenha,
+                                            numeroCartao
                                         )
                                         salvarUsuarioFirestore(crianca, idGerado)
                                     } else {
@@ -491,7 +510,7 @@ class CadastrarFragment : Fragment() {
                                         ).show()
                                     }
                                 }
-                            }
+                            } */
                         } else {
                             Toast.makeText(
                                 requireContext(),
@@ -527,7 +546,8 @@ class CadastrarFragment : Fragment() {
     private fun verificarPermissoes() {
         // Verificar se a permissão da câmera já foi concedida
         if (PermissionUtil.temPermissaoCamera(requireContext())) {
-            mostrarDialogoEscolherImagem()
+            // mostrarDialogoEscolherImagem()
+            abrirCamera()
         } else {
             // Solicitar permissão da câmera
             PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
@@ -535,7 +555,7 @@ class CadastrarFragment : Fragment() {
     }
 
     // --- DIALOG DE SELEÇÃO ---
-    private fun mostrarDialogoEscolherImagem() {
+    /* private fun mostrarDialogoEscolherImagem() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
         val dialog = android.app.AlertDialog.Builder(requireContext())
             .setView(view)
@@ -552,7 +572,7 @@ class CadastrarFragment : Fragment() {
         }
 
         dialog.show()
-    }
+    } */
 
     // --- CAMERA ---
     private fun abrirCamera() {
@@ -582,6 +602,7 @@ class CadastrarFragment : Fragment() {
     private fun uploadImegemCameraStorage(
         bitmapImagemSelecionada: Bitmap?,
         id: String,
+        ano: Int,
         callback: (Boolean) -> Unit
     ) {
         val outputStream = ByteArrayOutputStream()
@@ -593,8 +614,10 @@ class CadastrarFragment : Fragment() {
 
         // fotos -> criancas -> id -> perfil.jpg
         val idCrianca = id
+        val ano = ano
         storage.getReference("fotos")
             .child("criancas")
+            .child(ano.toString())
             .child(idCrianca)
             .child("perfil.jpg")
             .putBytes(outputStream.toByteArray())
@@ -611,51 +634,52 @@ class CadastrarFragment : Fragment() {
             }
     }
 
+
     // ---------- ARMAZENAMENTO ----------
-    private fun abrirArmazenamento() {
-        // Código para abrir o armazenamento
-        gerenciadorGaleria.launch("image/*")
-    }
-
-    // Armazenamento
-    private val gerenciadorGaleria =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            if (uri != null) {
-                bitmapImagemSelecionada = null
-                imagemSelecionadaUri = uri
-                binding.includeFotoCrianca.imagePerfil.setImageURI(uri)
-            } else {
-                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
-                    .show()
-            }
-        }
-
-    // Salvar imagem do armazenamento no storage
-    private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
-        var uri = imagemSelecionadaUri
-        // foto -> criancas -> id -> perfil.jpg
-        val idCrianca = id
-        if (uri != null) {
-            storage.getReference("fotos")
-                .child("criancas")
-                .child(idCrianca)
-                .child("perfil.jpg")
-                .putFile(uri)
-                .addOnSuccessListener { taskSnapshot ->
-                    taskSnapshot.metadata
-                        ?.reference
-                        ?.downloadUrl
-                        ?.addOnSuccessListener { uriDownload ->
-                            foto = uriDownload.toString()
-                            callback(true) // Notifica sucesso
-                        }
-                }.addOnFailureListener {
-                    callback(false) // Notifica falha
-                }
-        } else {
-            callback(false)
-        }
-    }
+//    private fun abrirArmazenamento() {
+//        // Código para abrir o armazenamento
+//        gerenciadorGaleria.launch("image/*")
+//    }
+//
+//    // Armazenamento
+//    private val gerenciadorGaleria =
+//        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            if (uri != null) {
+//                bitmapImagemSelecionada = null
+//                imagemSelecionadaUri = uri
+//                binding.includeFotoCrianca.imagePerfil.setImageURI(uri)
+//            } else {
+//                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
+//                    .show()
+//            }
+//        }
+//
+//    // Salvar imagem do armazenamento no storage
+//    private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
+//        var uri = imagemSelecionadaUri
+//        // foto -> criancas -> id -> perfil.jpg
+//        val idCrianca = id
+//        if (uri != null) {
+//            storage.getReference("fotos")
+//                .child("criancas")
+//                .child(idCrianca)
+//                .child("perfil.jpg")
+//                .putFile(uri)
+//                .addOnSuccessListener { taskSnapshot ->
+//                    taskSnapshot.metadata
+//                        ?.reference
+//                        ?.downloadUrl
+//                        ?.addOnSuccessListener { uriDownload ->
+//                            foto = uriDownload.toString()
+//                            callback(true) // Notifica sucesso
+//                        }
+//                }.addOnFailureListener {
+//                    callback(false) // Notifica falha
+//                }
+//        } else {
+//            callback(false)
+//        }
+//    }
 
     // --- CALCULO DE IDADE ---
     private fun calcularIdadeCompat(dataNascimentoString: String): Int {
@@ -721,6 +745,12 @@ class CadastrarFragment : Fragment() {
                 startActivity(intent)
 
             }.addOnFailureListener {
+                // Altera o texto do botão para "Cadastrar"
+                binding.btnCadastrarCrianca.text = "Cadastrar"
+
+                // Habilita o botão
+                binding.btnCadastrarCrianca.isEnabled = true
+
                 Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG)
                     .show()
             }
