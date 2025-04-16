@@ -15,6 +15,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -76,7 +77,6 @@ class CadastrarFragment : Fragment() {
 
     // link da imagem
     var foto = ""
-
     private var idGerado: String = ""
     private lateinit var editTextCpf: EditText
     private lateinit var editTextNome: EditText
@@ -99,6 +99,13 @@ class CadastrarFragment : Fragment() {
     private lateinit var editTextBairro: EditText
     private lateinit var editTextCidade: EditText
     private lateinit var selecaoIndicacao: String
+    private lateinit var editTextIdade: EditText
+    private lateinit var LLSexoBtnMasculino: RadioButton
+    private lateinit var LLSexoBtnFeminino: RadioButton
+    private lateinit var pcdBtnSim: RadioButton
+    private lateinit var pcdBtnNao: RadioButton
+    var editTexts: List<EditText>? = null
+    var cadastroLiberado = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -114,66 +121,177 @@ class CadastrarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicialize os EditTexts
+        editTextNome = binding.editTextNome
+        editTextCpf = binding.editTextCpf
+        editTextDataNascimento = binding.editTextDtNascimento
+        editTextIdade = binding.editTextIdade
+        LLSexoBtnMasculino = binding.includeDadosCriancaSacola.radioButtonMasculino
+        LLSexoBtnMasculino.isEnabled = false
+        LLSexoBtnFeminino = binding.includeDadosCriancaSacola.radioButtonFeminino
+        LLSexoBtnFeminino.isEnabled = false
+        editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
+        editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
+        editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
+        pcdBtnSim = binding.includeDadosCriancaSacola.radioButtonPcdSim
+        pcdBtnSim.isEnabled = false
+        pcdBtnNao = binding.includeDadosCriancaSacola.radioButtonPcdNao
+        pcdBtnNao.isEnabled = false
+        editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
+        editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
+        editTextVinculoFamiliar = binding.includeDadosCriancaSacola.editTextVinculoFamiliar
+        editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
+        editTextVinculo = binding.includeDadosResponsavel.editTextVinculo
+        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
+        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
+        editTextCEP = binding.includeEndereco.editTextCep
+        editTextNumero = binding.includeEndereco.editTextNumero
+        editTextRua = binding.includeEndereco.editTextRua
+        editTextComplemento = binding.includeEndereco.editTextComplemento
+        editTextBairro = binding.includeEndereco.editTextBairro
+        editTextCidade = binding.includeEndereco.editTextCidade
+        binding.selecaoIndicacao.isEnabled = false
+
+        // Lista com os EditTexts
+        editTexts = listOf(editTextNome, editTextDataNascimento, editTextBlusa, editTextCalca,
+            editTextSapato, editTextGostosPessoais, editTextVinculoFamiliar,
+            editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
+            editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
+            editTextBairro, editTextCidade)
+
+        // Iterar sobre cada um e desativar
+        for (editText in editTexts!!) {
+            editText.isEnabled = false
+        }
+
+        binding.btnCadastrarCrianca.isEnabled = false
+        binding.includeFotoCrianca.fabSelecionar.isEnabled = false
+
         editTextCpf = binding.editTextCpf
         FormatadorUtil.formatarCPF(editTextCpf)
 
-        editTextDataNascimento = binding.editTextDtNascimento
-        FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
+        if(cadastroLiberado) {
+            editTextDataNascimento = binding.editTextDtNascimento
+            FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
 
-        // Adiciona um TextWatcher para calcular idade automaticamente
-        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                val dataNascimento = s.toString()
+            // Adiciona um TextWatcher para calcular idade automaticamente
+            binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    val dataNascimento = s.toString()
 
-                if (dataNascimento.length == 10) { // Verifica se o formato está completo
-                    if (isDataValida(dataNascimento)) {
-                        binding.InputDtNascimento.error = null // Remove erro
-                        val idade = calcularIdadeCompat(dataNascimento)
-                        binding.editTextIdade.setText(idade.toString()) // Atualiza idade
+                    if (dataNascimento.length == 10) { // Verifica se o formato está completo
+                        if (isDataValida(dataNascimento)) {
+                            binding.InputDtNascimento.error = null // Remove erro
+                            val idade = calcularIdadeCompat(dataNascimento)
+                            binding.editTextIdade.setText(idade.toString()) // Atualiza idade
+                        } else {
+                            binding.editTextIdade.setText("0") // Define idade como 0
+                            binding.InputDtNascimento.error = "Data inválida!" // Exibe mensagem de erro
+                        }
                     } else {
-                        binding.editTextIdade.setText("0") // Define idade como 0
-                        binding.InputDtNascimento.error = "Data inválida!" // Exibe mensagem de erro
+                        binding.editTextIdade.setText("") // Limpa o campo de idade
+                        binding.InputDtNascimento.error =
+                            "Data incompleta ou inválida." // Mensagem para formato incompleto
                     }
-                } else {
-                    binding.editTextIdade.setText("") // Limpa o campo de idade
-                    binding.InputDtNascimento.error =
-                        "Data incompleta ou inválida." // Mensagem para formato incompleto
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            })
+
+            // Configurando o listener para mudanças no RadioGroup PCD
+            binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+                // Atualiza a variável "especial"
+                especial =
+                    if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
+
+                // Verifica se o campo deve ser habilitado ou não
+                val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
+
+                // Habilita ou desabilita a descrição com base na seleção
+                binding.includeDadosCriancaSacola.InputDescricaoPcd.isEnabled = habilitarCampo
+                binding.includeDadosCriancaSacola.editTextPcd.isEnabled = habilitarCampo
+
+                // Se voltar para "Não", limpa o texto
+                if (!habilitarCampo) {
+                    binding.includeDadosCriancaSacola.editTextPcd.setText("")
                 }
             }
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
+            editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
+            FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
 
-        // Configurando o listener para mudanças no RadioGroup PCD
-        binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
-            // Atualiza a variável "especial"
-            especial =
-                if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
-
-            // Verifica se o campo deve ser habilitado ou não
-            val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
-
-            // Habilita ou desabilita a descrição com base na seleção
-            binding.includeDadosCriancaSacola.InputDescricaoPcd.isEnabled = habilitarCampo
-            binding.includeDadosCriancaSacola.editTextPcd.isEnabled = habilitarCampo
-
-            // Se voltar para "Não", limpa o texto
-            if (!habilitarCampo) {
-                binding.includeDadosCriancaSacola.editTextPcd.setText("")
-            }
+            editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
+            FormatadorUtil.formatarTelefone(editTextTelefone2)
         }
-
-        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
-        FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
-
-        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
-        FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         inicializarEventosClique()
     }
 
+    private fun verificarCpfNoFirestore(cpf: String) {
+        firestore.collection("Criancas")
+            .whereEqualTo("cpf", cpf)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    // CPF não encontrado, continue com a lógica
+                    liberarCampos() // Chame sua lógica de cadastro
+                } else {
+                    // Altera o texto do botão para "Aguarde"
+                    binding.btnChecarCpf.text = "Checar"
+
+                    // Desabilita o botão para evitar novos cliques
+                    binding.btnChecarCpf.isEnabled = true
+
+                    // CPF já cadastrado
+                    Toast.makeText(requireContext(), "CPF já está cadastrado!" +
+                            "\nPara alteração dirija-se aos fiscais de cadastro!", Toast.LENGTH_LONG).show()
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Firestore", "Erro ao verificar CPF: ", exception)
+                Toast.makeText(requireContext(), "Erro ao verificar CPF, tente novamente", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun liberarCampos() {
+        // Altera o texto do botão para "Aguarde"
+        binding.btnChecarCpf.text = "Checar"
+
+        for (editText in editTexts!!) {
+            editText.isEnabled = true
+        }
+        binding.btnChecarCpf.isEnabled = false
+        binding.btnCadastrarCrianca.isEnabled = true
+        binding.includeFotoCrianca.fabSelecionar.isEnabled = true
+        LLSexoBtnMasculino.isEnabled = true
+        LLSexoBtnFeminino.isEnabled = true
+        pcdBtnSim.isEnabled = true
+        pcdBtnNao.isEnabled = true
+        binding.selecaoIndicacao.isEnabled = true
+
+        cadastroLiberado = true
+
+        Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()
+    }
+
     private fun inicializarEventosClique() {
+        binding.btnChecarCpf.setOnClickListener {
+            val cpfDigitado = binding.editTextCpf.text.toString()
+
+            if (cpfDigitado.isNotEmpty() && cpfDigitado.length==14) {
+                // Altera o texto do botão para "Aguarde"
+                binding.btnChecarCpf.text = "Aguarde..."
+
+                // Desabilita o botão para evitar novos cliques
+                binding.btnChecarCpf.isEnabled = false
+
+                verificarCpfNoFirestore(cpfDigitado)
+            } else {
+                Toast.makeText(requireContext(), "Preencher o CPF corretamente!", Toast.LENGTH_LONG).show()
+            }
+        }
+
         binding.includeFotoCrianca.fabSelecionar.setOnClickListener {
             verificarPermissoes()
         }

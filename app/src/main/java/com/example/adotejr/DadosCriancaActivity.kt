@@ -17,9 +17,6 @@ import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 
 class DadosCriancaActivity : AppCompatActivity() {
-
-    private lateinit var telaDeOrigem: String
-
     private val binding by lazy {
         ActivityDadosCriancaBinding.inflate(layoutInflater)
     }
