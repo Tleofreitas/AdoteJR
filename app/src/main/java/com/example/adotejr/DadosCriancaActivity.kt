@@ -255,8 +255,8 @@ class DadosCriancaActivity : AppCompatActivity() {
         if(bundle != null) {
             idDetalhar = bundle.getString("id").toString()
         } else {
-            // idDetalhar = "null"
-            idDetalhar = 202544290378846.toString()
+            idDetalhar = "null"
+            // idDetalhar = 202544290378846.toString()
         }
 
         // Identificar telas para manipular botões
@@ -275,10 +275,10 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaCadastro() {
-        // Ocultar e desabilitar botão de foto
+        // Exibir e habilitar botão de foto
         binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.GONE
-            isEnabled = false
+            visibility = View.VISIBLE
+            isEnabled = true
         }
 
         // Ocultar e desabilitar botões de editar e salvar
@@ -299,10 +299,10 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaListagem() {
-        // Exibir e habilitar botão de foto
+        // Ocultar e desabilitar botão de foto
         binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.VISIBLE
-            isEnabled = true
+            visibility = View.GONE
+            isEnabled = false
         }
 
         // Ocultar e desabilitar botão de novo cadastro

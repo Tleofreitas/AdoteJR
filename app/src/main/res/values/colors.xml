@@ -4,7 +4,8 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="primaria">#FB8500</color>
-    <color name="destaque">#FFB703</color>
+<!--    <color name="destaque">#FFB703</color>-->
+    <color name="destaque">#96bdc4</color>
     <color name="azulEscuro">#023047</color>
     <color name="azulClaro">#219EBC</color>
     <color name="azulMaisClaro">#8ECAE6</color>
@@ -12,7 +13,8 @@
     <color name="vermelhoEscuro">#8B0000</color>
     <color name="vermelhoCarmim">#DC143C</color>
     <!-- <color name="vermelhoTomate">#FF6347</color> -->
-    <color name="verde">#8A9A5B</color>
+    <color name="verde">#488399</color>
+<!--    96bdc4-->
 
 <!--    6B8E23-->
 <!--    78C850-->

@@ -19,6 +19,7 @@ import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentCadastrarBinding
@@ -105,7 +106,6 @@ class CadastrarFragment : Fragment() {
     private lateinit var pcdBtnSim: RadioButton
     private lateinit var pcdBtnNao: RadioButton
     var editTexts: List<EditText>? = null
-    var cadastroLiberado = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -170,60 +170,75 @@ class CadastrarFragment : Fragment() {
         editTextCpf = binding.editTextCpf
         FormatadorUtil.formatarCPF(editTextCpf)
 
-        if(cadastroLiberado) {
-            editTextDataNascimento = binding.editTextDtNascimento
-            FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
+        editTextDataNascimento = binding.editTextDtNascimento
+        FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
 
-            // Adiciona um TextWatcher para calcular idade automaticamente
-            binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable?) {
-                    val dataNascimento = s.toString()
+        // Adiciona um TextWatcher para calcular idade automaticamente
+        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val dataNascimento = s.toString()
 
-                    if (dataNascimento.length == 10) { // Verifica se o formato está completo
-                        if (isDataValida(dataNascimento)) {
-                            binding.InputDtNascimento.error = null // Remove erro
-                            val idade = calcularIdadeCompat(dataNascimento)
-                            binding.editTextIdade.setText(idade.toString()) // Atualiza idade
+                if (dataNascimento.length == 10) { // Verifica se o formato está completo
+                    if (isDataValida(dataNascimento)) {
+                        binding.InputDtNascimento.error = null // Remove erro
+
+                        val idade = calcularIdadeCompat(dataNascimento)
+
+                        if(especial=="Não"){
+                            if(idade > 12){
+                                Toast.makeText(requireContext(), "Cadastro +12 anos não permitido!", Toast.LENGTH_LONG).show()
+                                editarCampos(false)
+                                // Reabilita o botão
+                                binding.btnChecarCpf.isEnabled = true
+                            }
                         } else {
-                            binding.editTextIdade.setText("0") // Define idade como 0
-                            binding.InputDtNascimento.error = "Data inválida!" // Exibe mensagem de erro
+                            if(idade > 15){
+                                Toast.makeText(requireContext(), "Cadastro +15 anos não permitido!", Toast.LENGTH_LONG).show()
+                                editarCampos(false)
+                                // Reabilita o botão
+                                binding.btnChecarCpf.isEnabled = true
+                            }
                         }
+                        binding.editTextIdade.setText(idade.toString()) // Atualiza idade
                     } else {
-                        binding.editTextIdade.setText("") // Limpa o campo de idade
-                        binding.InputDtNascimento.error =
-                            "Data incompleta ou inválida." // Mensagem para formato incompleto
+                        binding.editTextIdade.setText("0") // Define idade como 0
+                        binding.InputDtNascimento.error = "Data inválida!" // Exibe mensagem de erro
                     }
-                }
-
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            })
-
-            // Configurando o listener para mudanças no RadioGroup PCD
-            binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
-                // Atualiza a variável "especial"
-                especial =
-                    if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
-
-                // Verifica se o campo deve ser habilitado ou não
-                val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
-
-                // Habilita ou desabilita a descrição com base na seleção
-                binding.includeDadosCriancaSacola.InputDescricaoPcd.isEnabled = habilitarCampo
-                binding.includeDadosCriancaSacola.editTextPcd.isEnabled = habilitarCampo
-
-                // Se voltar para "Não", limpa o texto
-                if (!habilitarCampo) {
-                    binding.includeDadosCriancaSacola.editTextPcd.setText("")
+                } else {
+                    binding.editTextIdade.setText("") // Limpa o campo de idade
+                    binding.InputDtNascimento.error =
+                        "Data incompleta ou inválida." // Mensagem para formato incompleto
                 }
             }
 
-            editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
-            FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
 
-            editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
-            FormatadorUtil.formatarTelefone(editTextTelefone2)
+        // Configurando o listener para mudanças no RadioGroup PCD
+        binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+            // Atualiza a variável "especial"
+            especial =
+                if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
+
+            // Verifica se o campo deve ser habilitado ou não
+            val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
+
+            // Habilita ou desabilita a descrição com base na seleção
+            binding.includeDadosCriancaSacola.InputDescricaoPcd.isEnabled = habilitarCampo
+            binding.includeDadosCriancaSacola.editTextPcd.isEnabled = habilitarCampo
+
+            // Se voltar para "Não", limpa o texto
+            if (!habilitarCampo) {
+                binding.includeDadosCriancaSacola.editTextPcd.setText("")
+            }
         }
+
+        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
+        FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
+
+        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
+        FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         inicializarEventosClique()
     }
@@ -235,7 +250,9 @@ class CadastrarFragment : Fragment() {
             .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
                     // CPF não encontrado, continue com a lógica
-                    liberarCampos() // Chame sua lógica de cadastro
+                    editarCampos(true)
+                    binding.editTextDtNascimento.setText("")
+                    Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()
                 } else {
                     // Altera o texto do botão para "Aguarde"
                     binding.btnChecarCpf.text = "Checar"
@@ -254,25 +271,20 @@ class CadastrarFragment : Fragment() {
             }
     }
 
-    private fun liberarCampos() {
-        // Altera o texto do botão para "Aguarde"
+    private fun editarCampos(boolean: Boolean) {
+        // Altera o texto do botão para "Checar"
         binding.btnChecarCpf.text = "Checar"
 
         for (editText in editTexts!!) {
-            editText.isEnabled = true
+            editText.isEnabled = boolean
         }
-        binding.btnChecarCpf.isEnabled = false
-        binding.btnCadastrarCrianca.isEnabled = true
-        binding.includeFotoCrianca.fabSelecionar.isEnabled = true
-        LLSexoBtnMasculino.isEnabled = true
-        LLSexoBtnFeminino.isEnabled = true
-        pcdBtnSim.isEnabled = true
-        pcdBtnNao.isEnabled = true
-        binding.selecaoIndicacao.isEnabled = true
-
-        cadastroLiberado = true
-
-        Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()
+        binding.includeFotoCrianca.fabSelecionar.isEnabled = boolean
+        LLSexoBtnMasculino.isEnabled = boolean
+        LLSexoBtnFeminino.isEnabled = boolean
+        pcdBtnSim.isEnabled = boolean
+        pcdBtnNao.isEnabled = boolean
+        binding.selecaoIndicacao.isEnabled = boolean
+        binding.btnCadastrarCrianca.isEnabled = boolean
     }
 
     private fun inicializarEventosClique() {
@@ -672,26 +684,6 @@ class CadastrarFragment : Fragment() {
         }
     }
 
-    // --- DIALOG DE SELEÇÃO ---
-    /* private fun mostrarDialogoEscolherImagem() {
-        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
-        val dialog = android.app.AlertDialog.Builder(requireContext())
-            .setView(view)
-            .create()
-
-        view.findViewById<Button>(R.id.button_camera).setOnClickListener {
-            abrirCamera()
-            dialog.dismiss()
-        }
-
-        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
-            abrirArmazenamento()
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    } */
-
     // --- CAMERA ---
     private fun abrirCamera() {
         // Código para abrir a câmera
@@ -752,53 +744,6 @@ class CadastrarFragment : Fragment() {
             }
     }
 
-
-    // ---------- ARMAZENAMENTO ----------
-//    private fun abrirArmazenamento() {
-//        // Código para abrir o armazenamento
-//        gerenciadorGaleria.launch("image/*")
-//    }
-//
-//    // Armazenamento
-//    private val gerenciadorGaleria =
-//        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-//            if (uri != null) {
-//                bitmapImagemSelecionada = null
-//                imagemSelecionadaUri = uri
-//                binding.includeFotoCrianca.imagePerfil.setImageURI(uri)
-//            } else {
-//                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
-//                    .show()
-//            }
-//        }
-//
-//    // Salvar imagem do armazenamento no storage
-//    private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
-//        var uri = imagemSelecionadaUri
-//        // foto -> criancas -> id -> perfil.jpg
-//        val idCrianca = id
-//        if (uri != null) {
-//            storage.getReference("fotos")
-//                .child("criancas")
-//                .child(idCrianca)
-//                .child("perfil.jpg")
-//                .putFile(uri)
-//                .addOnSuccessListener { taskSnapshot ->
-//                    taskSnapshot.metadata
-//                        ?.reference
-//                        ?.downloadUrl
-//                        ?.addOnSuccessListener { uriDownload ->
-//                            foto = uriDownload.toString()
-//                            callback(true) // Notifica sucesso
-//                        }
-//                }.addOnFailureListener {
-//                    callback(false) // Notifica falha
-//                }
-//        } else {
-//            callback(false)
-//        }
-//    }
-
     // --- CALCULO DE IDADE ---
     private fun calcularIdadeCompat(dataNascimentoString: String): Int {
         return if (isDataValida(dataNascimentoString)) {
@@ -852,10 +797,6 @@ class CadastrarFragment : Fragment() {
                     "Cadastro realizado com sucesso",
                     Toast.LENGTH_LONG
                 ).show()
-                /*val intent = Intent(activity, DadosCriancaActivity::class.java)
-                intent.putExtra("id", idGerado)
-                putExtra("origem", "cadastro")
-                startActivity(intent) */
                 val intent = Intent(activity, DadosCriancaActivity::class.java).apply {
                     putExtra("id", idGerado)
                     putExtra("origem", "cadastro")
