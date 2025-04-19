@@ -249,7 +249,7 @@ class CadastrarFragment : Fragment() {
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
-                    // CPF não encontrado, continue com a lógica
+                    // CPF não encontrado
                     editarCampos(true)
                     binding.editTextDtNascimento.setText("")
                     Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()

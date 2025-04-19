@@ -1,12 +1,13 @@
 package com.example.adotejr
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
 import com.example.adotejr.fragments.CadastrarFragment
 import com.example.adotejr.fragments.ContaFragment
+import com.example.adotejr.fragments.ReportsFragment
+import com.example.adotejr.fragments.SettingsFragment
 import com.example.adotejr.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.util.concurrent.TimeUnit
@@ -38,7 +39,7 @@ class GerenciamentoActivity : AppCompatActivity() {
 
         sessionManager.startSessionExpirationCheck(
             interval = 1,
-            expirationTime = TimeUnit.HOURS.toMillis(3) // 3 HORAS
+            expirationTime = TimeUnit.HOURS.toMillis(12) // 12 HORAS
         )
 
         bottomNavigationView = binding.bottomNavigation
@@ -46,18 +47,8 @@ class GerenciamentoActivity : AppCompatActivity() {
             var selectedFragment: Fragment? = null
 
             when (item.itemId) {
-                R.id.navigation_home -> {
-                    // Abrir a Home
-                    val intent = Intent(this, MainActivity::class.java)
-                    startActivity(intent)
-                    /*
-                    Destacar o item home e depois redirecionar
-                    , interrompe a execução do listener e garante que o código
-                    restante não será executado
-                     */
-                    return@setOnItemSelectedListener true
-                }
-
+                R.id.navigation_reports -> selectedFragment = ReportsFragment()
+                R.id.navigation_definir -> selectedFragment = SettingsFragment()
                 R.id.navigation_listagem -> selectedFragment = ListagemFragment()
                 R.id.navigation_cadastrar -> selectedFragment = CadastrarFragment()
                 R.id.navigation_perfil -> selectedFragment = ContaFragment()
@@ -78,7 +69,7 @@ class GerenciamentoActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         sessionManager.checkSessionExpiration(
-            TimeUnit.HOURS.toMillis(3) // 3 HORAS
+            TimeUnit.HOURS.toMillis(12) // 12 HORAS
         )
     }
 }

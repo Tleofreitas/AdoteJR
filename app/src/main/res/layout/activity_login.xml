@@ -81,7 +81,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="8dp"
-        android:backgroundTint="@color/destaque"
+        android:backgroundTint="@color/azul"
         android:text="Criar Conta"
         android:textAllCaps="false"
         android:textColor="@color/white"

@@ -59,7 +59,7 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun preencherDadosCrianca(dados: Map<String, Any>) {
-        binding.includeFotoCrianca.imagePerfil?.let {
+        binding.includeFotoCrianca.imagePerfil.let {
             val foto = dados["foto"] as? String
             if (!foto.isNullOrEmpty()) {
                 Picasso.get().load(foto).into(it)

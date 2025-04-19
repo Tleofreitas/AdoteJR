@@ -18,7 +18,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.example.adotejr.LoginActivity
-import com.example.adotejr.MainActivity
 import com.example.adotejr.R
 import com.example.adotejr.RedefinirSenhaDeslogadoActivity
 import com.example.adotejr.databinding.FragmentContaBinding
