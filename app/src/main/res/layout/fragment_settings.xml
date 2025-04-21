@@ -58,10 +58,10 @@
                 android:id="@+id/editTextDataInicial"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="Data de Início"
                 android:inputType="datetime|date"
-                android:maxLength="10"
-                android:enabled="false" />
+                android:maxLength="10" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -82,10 +82,10 @@
                 android:id="@+id/editTextDataFinal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="Data de Término"
                 android:inputType="datetime|date"
-                android:maxLength="10"
-                android:enabled="false" />
+                android:maxLength="10" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -93,7 +93,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             android:text="Quantidade de Crianças"
             android:textAppearance="?attr/textAppearanceHeadline6"
@@ -124,8 +124,69 @@
                 android:enabled="false"
                 android:hint="Limite"
                 android:inputType="number"
-                android:maxLength="5"
-                android:text="1000" />
+                android:maxLength="5" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textDefinicoesLimites"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:text="Limites de Idade"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="@color/azulEscuro"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/InputQtdCriancas" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/InputLimiteNormal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            app:counterMaxLength="2"
+            app:layout_constraintEnd_toStartOf="@+id/InputLimitePCD"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textDefinicoesLimites">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextLimiteNormal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:hint="Comuns"
+                android:inputType="number"
+                android:maxLength="2" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/InputLimitePCD"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            app:counterMaxLength="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/InputLimiteNormal"
+            app:layout_constraintTop_toBottomOf="@+id/textDefinicoesLimites">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextLimitePCD"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:hint="PCD"
+                android:inputType="number"
+                android:maxLength="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
@@ -134,14 +195,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="32dp"
-            android:text="Editar"
             android:backgroundTint="@color/destaque"
+            android:text="Editar"
             app:cornerRadius="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/btnAtualizarDefinicoes"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/InputQtdCriancas"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/InputLimiteNormal" />
 
         <Button
             android:id="@+id/btnAtualizarDefinicoes"
@@ -149,14 +210,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="32dp"
-            android:text="Salvar"
             android:backgroundTint="@color/azul"
+            android:text="Salvar"
             app:cornerRadius="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/btnEditarDefinicoes"
-            app:layout_constraintTop_toBottomOf="@id/InputQtdCriancas"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/InputLimiteNormal" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
