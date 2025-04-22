@@ -22,6 +22,7 @@ import com.example.adotejr.R
 import com.example.adotejr.RedefinirSenhaDeslogadoActivity
 import com.example.adotejr.databinding.FragmentContaBinding
 import com.example.adotejr.util.PermissionUtil
+import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -88,30 +89,38 @@ class ContaFragment : Fragment() {
     // Recuperar dados do user no firebase
     private var emailLogado: String? = null
     private fun recuperarDadosIniciaisUsuario() {
-        val idUsuario = firebaseAuth.currentUser?.uid
-        if (idUsuario != null){
-            firestore.collection("Usuarios")
-                .document( idUsuario )
-                .get()
-                .addOnSuccessListener { documentSnapshot ->
-                    val dadosUsuario = documentSnapshot.data
-                    if ( dadosUsuario != null ){
-                        val nome = dadosUsuario["nome"] as String
-                        val foto = dadosUsuario["foto"] as String
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            val idUsuario = firebaseAuth.currentUser?.uid
+            if (idUsuario != null){
+                firestore.collection("Usuarios")
+                    .document( idUsuario )
+                    .get()
+                    .addOnSuccessListener { documentSnapshot ->
+                        val dadosUsuario = documentSnapshot.data
+                        if ( dadosUsuario != null ){
+                            val nome = dadosUsuario["nome"] as String
+                            val foto = dadosUsuario["foto"] as String
 
-                        if (foto.isNotEmpty()) {
-                            Picasso.get()
-                                .load( foto )
-                                .into( binding.includeFotoPerfil.imagePerfil )
+                            if (foto.isNotEmpty()) {
+                                Picasso.get()
+                                    .load( foto )
+                                    .into( binding.includeFotoPerfil.imagePerfil )
+                            }
+
+                            binding.editNomePerfil.setText( nome )
+                            emailLogado = firebaseAuth.currentUser?.email
+                            binding.editEmailPerfil.setText( emailLogado )
                         }
-
-                        binding.editNomePerfil.setText( nome )
-                        emailLogado = firebaseAuth.currentUser?.email
-                        binding.editEmailPerfil.setText( emailLogado )
+                    } .addOnFailureListener { exception ->
+                        Log.e("Firestore", "Error getting documents: ", exception)
                     }
-                } .addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error getting documents: ", exception)
-                }
+            }
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -123,12 +132,20 @@ class ContaFragment : Fragment() {
         binding.btnAtualizarPerfil.setOnClickListener {
             val nomeUsuario = binding.editNomePerfil.text.toString()
             if ( nomeUsuario.isNotEmpty() ) {
-                val idUsuario = firebaseAuth.currentUser?.uid
-                if ( idUsuario != null ) {
-                    val dados = mapOf(
-                        "nome" to nomeUsuario
-                    )
-                    atualizarDadosPerfil( idUsuario, dados )
+                if (NetworkUtils.conectadoInternet(requireContext())) {
+                    val idUsuario = firebaseAuth.currentUser?.uid
+                    if ( idUsuario != null ) {
+                        val dados = mapOf(
+                            "nome" to nomeUsuario
+                        )
+                        atualizarDadosPerfil( idUsuario, dados )
+                    }
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Verifique a conexão com a internet e tente novamente!",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             } else {
                 Toast.makeText(requireContext(), "Preencha o nome para atualizar", Toast.LENGTH_LONG).show()

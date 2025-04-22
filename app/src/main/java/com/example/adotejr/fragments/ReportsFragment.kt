@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.model.Usuario
 import com.example.adotejr.utils.NetworkUtils
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -22,11 +21,6 @@ class ReportsFragment : Fragment() {
     private lateinit var binding: FragmentReportsBinding
     private lateinit var eventoSnapshot: ListenerRegistration
     private val listaUsuarios = mutableListOf<Usuario>()
-
-    // Autenticação
-    private val firebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
 
     // Banco de dados Firestore
     private val firestore by lazy {

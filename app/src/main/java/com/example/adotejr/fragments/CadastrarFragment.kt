@@ -2,6 +2,7 @@ package com.example.adotejr.fragments
 
 import android.Manifest
 import android.app.Activity.RESULT_OK
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -14,12 +15,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentCadastrarBinding
@@ -34,6 +35,7 @@ import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
@@ -106,6 +108,14 @@ class CadastrarFragment : Fragment() {
     private lateinit var pcdBtnSim: RadioButton
     private lateinit var pcdBtnNao: RadioButton
     var editTexts: List<EditText>? = null
+    var ano = LocalDate.now().year
+
+    var dataInicial = ""
+    var dataFinal = ""
+    var quantidadeCriancasTotal = ""
+    var limiteNormal = ""
+    var limitePCD = ""
+    private var qtdCadastrosFeitos: Int = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -116,6 +126,137 @@ class CadastrarFragment : Fragment() {
         )
 
         return binding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        recuperarQtdCadastros(FirebaseFirestore.getInstance()) { quantidade ->
+            qtdCadastrosFeitos = quantidade
+        }
+        recuperarDadosDefinicoes()
+    }
+
+    private fun recuperarDadosDefinicoes() {
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            firestore.collection("Definicoes")
+                .document( ano.toString() )
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val dadosDefinicoes = documentSnapshot.data
+                    if ( dadosDefinicoes != null ){
+                        dataInicial = dadosDefinicoes["dataInicial"] as String
+                        dataFinal = dadosDefinicoes["dataFinal"] as String
+                        quantidadeCriancasTotal = dadosDefinicoes["quantidadeDeCriancas"] as String
+                        limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
+                        limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
+
+                        val estaNoIntervalo = verificarDataNoIntervalo(dataInicial, dataFinal)
+                        // Data de tentativa de cadastro não está no intervalo do settings ?
+                        if(!estaNoIntervalo){
+                            // Desabilita os campos para evitar qualquer tentativa de cadastro
+                            binding.editTextCpf.isEnabled = false
+                            binding.btnChecarCpf.isEnabled = false
+                            alertaDefinicoes("DATA")
+                            // Toast.makeText(requireContext(), "A data vigente está no intervalo? $estaNoIntervalo", Toast.LENGTH_LONG).show()
+                        }
+
+                        if(qtdCadastrosFeitos >= quantidadeCriancasTotal.toInt()){
+                            // Desabilita os campos para evitar qualquer tentativa de cadastro
+                            binding.editTextCpf.isEnabled = false
+                            binding.btnChecarCpf.isEnabled = false
+                            alertaDefinicoes("LIMITE")
+                        }
+                    } else {
+                        // Desabilita os campos para evitar qualquer tentativa de cadastro
+                        binding.editTextCpf.isEnabled = false
+                        binding.btnChecarCpf.isEnabled = false
+                        alertaDefinicoes("DEF")
+                    }
+                } .addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error getting documents: ", exception)
+                }
+        } else {
+            binding.editTextCpf.isEnabled = false
+            binding.btnChecarCpf.isEnabled = false
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun recuperarQtdCadastros(firestore: FirebaseFirestore, callback: (Int) -> Unit) {
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            firestore.collection("Criancas")
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    val quantidade = querySnapshot.size()
+                    callback(quantidade)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firebase", "Erro ao obter documentos: ", exception)
+                    callback(0) // Retorna 0 em caso de falha
+                }
+        } else {
+            binding.editTextCpf.isEnabled = false
+            binding.btnChecarCpf.isEnabled = false
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun verificarDataNoIntervalo(dataInicialStr: String, dataFinalStr: String): Boolean {
+        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Define o formato das datas
+
+        // Obtém a data vigente (hoje) sem horas
+        val hoje = LocalDate.now()
+
+        // Converte as strings para LocalDate
+        val dataInicial = LocalDate.parse(dataInicialStr, formato)
+        val dataFinal = LocalDate.parse(dataFinalStr, formato)
+
+        // Verifica se a data vigente está dentro do intervalo
+        return !hoje.isBefore(dataInicial) && !hoje.isAfter(dataFinal)
+    }
+
+    private fun alertaDefinicoes(tipo: String) {
+        val alertBuilder = AlertDialog.Builder(requireContext())
+
+        alertBuilder.setTitle("Cadastros não permitidos!")
+
+        if(tipo == "DEF"){
+            alertBuilder.setMessage("Não há datas liberadas para realização de cadastros." +
+                    "\nAdicione os campos no menu Definições ou fale com a administração do do Adote.")
+
+        } else if(tipo == "DATA"){
+            alertBuilder.setMessage("Período de cadastro finalizado." +
+                    "\nDúvidas procurar a administração do Adote.")
+
+        } else if(tipo == "LIMITE") {
+            alertBuilder.setMessage("Cadastro finalizado." +
+                    "\nA quantidade limite de crianças foi atingido." +
+                    "\nDúvidas procurar a administração do Adote.")
+
+        } else {
+            alertBuilder.setMessage("Outro")
+        }
+
+        val customView = LayoutInflater.from(requireContext()).inflate(R.layout.botao_alerta, null)
+        alertBuilder.setView(customView)
+
+        val dialog = alertBuilder.create()
+
+        // Configurar o botão personalizado
+        val btnFechar: Button = customView.findViewById(R.id.btnFechar)
+        btnFechar.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -185,15 +326,15 @@ class CadastrarFragment : Fragment() {
                         val idade = calcularIdadeCompat(dataNascimento)
 
                         if(especial=="Não"){
-                            if(idade > 12){
-                                Toast.makeText(requireContext(), "Cadastro +12 anos não permitido!", Toast.LENGTH_LONG).show()
+                            if(idade > limiteNormal.toInt()){
+                                Toast.makeText(requireContext(), "Cadastro +$limiteNormal anos não permitido!", Toast.LENGTH_LONG).show()
                                 editarCampos(false)
                                 // Reabilita o botão
                                 binding.btnChecarCpf.isEnabled = true
                             }
                         } else {
-                            if(idade > 15){
-                                Toast.makeText(requireContext(), "Cadastro +15 anos não permitido!", Toast.LENGTH_LONG).show()
+                            if(idade > limitePCD.toInt()){
+                                Toast.makeText(requireContext(), "Cadastro +$limitePCD anos não permitido!", Toast.LENGTH_LONG).show()
                                 editarCampos(false)
                                 // Reabilita o botão
                                 binding.btnChecarCpf.isEnabled = true
@@ -231,6 +372,12 @@ class CadastrarFragment : Fragment() {
             // Se voltar para "Não", limpa o texto
             if (!habilitarCampo) {
                 binding.includeDadosCriancaSacola.editTextPcd.setText("")
+                if(binding.editTextIdade.text.toString().toInt() > limiteNormal.toInt()){
+                    Toast.makeText(requireContext(), "Cadastro +$limiteNormal anos não permitido!", Toast.LENGTH_LONG).show()
+                    editarCampos(false)
+                    // Reabilita o botão
+                    binding.btnChecarCpf.isEnabled = true
+                }
             }
         }
 
@@ -310,7 +457,6 @@ class CadastrarFragment : Fragment() {
 
         binding.btnCadastrarCrianca.setOnClickListener {
             // Dados de registro
-            var ano = LocalDate.now().year
             var ativo = "Sim"
             var motivoStatus = "Apto para contemplação"
 

@@ -1,7 +1,6 @@
 package com.example.adotejr.fragments
 
 import android.app.AlertDialog
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,25 +11,19 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.core.view.isEmpty
 import androidx.fragment.app.Fragment
-import com.example.adotejr.GerenciamentoActivity
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentSettingsBinding
 import com.example.adotejr.model.Definicoes
 import com.example.adotejr.utils.FormatadorUtil
+import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class SettingsFragment : Fragment() {
     private lateinit var binding: FragmentSettingsBinding
-
-    // Autenticação
-    private val firebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
 
     // Banco de dados Firestore
     private val firestore by lazy {
@@ -100,10 +93,18 @@ class SettingsFragment : Fragment() {
             val idadePcd = verificarIdadePCD(binding.InputLimitePCD)
 
             if (datasValidas && quantidadeCriancasValida && idadeComum && idadePcd) {
-                val definicoes = Definicoes(
-                    ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd
-                )
-                salvarDadosFirestore( definicoes )
+                if (NetworkUtils.conectadoInternet(requireContext())) {
+                    val definicoes = Definicoes(
+                        ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd
+                    )
+                    salvarDadosFirestore( definicoes )
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Verifique a conexão com a internet e tente novamente!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
@@ -180,7 +181,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    fun verificarDatas(
+    private fun verificarDatas(
         inputDataInicial: TextInputLayout,
         inputDataFinal: TextInputLayout
     ): Boolean {
@@ -298,46 +299,54 @@ class SettingsFragment : Fragment() {
     // Teste AlertDialog
     // ano = 2026
     private fun recuperarDadosDefinicoes() {
-        firestore.collection("Definicoes")
-            .document( ano.toString() )
-            .get()
-            .addOnSuccessListener { documentSnapshot ->
-                val dadosDefinicoes = documentSnapshot.data
-                if ( dadosDefinicoes != null ){
-                    val dataInicial = dadosDefinicoes["dataInicial"] as String
-                    val dataFinal = dadosDefinicoes["dataFinal"] as String
-                    val quantidadeCriancas = dadosDefinicoes["quantidadeDeCriancas"] as String
-                    val limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
-                    val limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            firestore.collection("Definicoes")
+                .document( ano.toString() )
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val dadosDefinicoes = documentSnapshot.data
+                    if ( dadosDefinicoes != null ){
+                        val dataInicial = dadosDefinicoes["dataInicial"] as String
+                        val dataFinal = dadosDefinicoes["dataFinal"] as String
+                        val quantidadeCriancas = dadosDefinicoes["quantidadeDeCriancas"] as String
+                        val limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
+                        val limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
 
-                    if(dataInicial!=""){
-                        binding.editTextDataInicial.setText(dataInicial)
-                    }
+                        if(dataInicial!=""){
+                            binding.editTextDataInicial.setText(dataInicial)
+                        }
 
-                    if(dataFinal!=""){
-                        binding.editTextDataFinal.setText(dataFinal)
-                    }
+                        if(dataFinal!=""){
+                            binding.editTextDataFinal.setText(dataFinal)
+                        }
 
-                    if(quantidadeCriancas!=""){
-                        binding.editTextQtdCriancas.setText(quantidadeCriancas)
-                    }
+                        if(quantidadeCriancas!=""){
+                            binding.editTextQtdCriancas.setText(quantidadeCriancas)
+                        }
 
-                    if(limiteNormal!=""){
-                        binding.editTextLimiteNormal.setText(limiteNormal)
-                    }
+                        if(limiteNormal!=""){
+                            binding.editTextLimiteNormal.setText(limiteNormal)
+                        }
 
-                    if(limitePCD!=""){
-                        binding.editTextLimitePCD.setText(limitePCD)
+                        if(limitePCD!=""){
+                            binding.editTextLimitePCD.setText(limitePCD)
+                        }
+                    } else {
+                        binding.editTextQtdCriancas.setText(qtdCriancas.toString())
+                        binding.editTextLimiteNormal.setText(limiteIdadeNormal.toString())
+                        binding.editTextLimitePCD.setText(limiteIdadePcd.toString())
+                        alertaDefinicoes(ano)
                     }
-                } else {
-                    binding.editTextQtdCriancas.setText(qtdCriancas.toString())
-                    binding.editTextLimiteNormal.setText(limiteIdadeNormal.toString())
-                    binding.editTextLimitePCD.setText(limiteIdadePcd.toString())
-                    alertaDefinicoes(ano)
+                } .addOnFailureListener { exception ->
+                    Log.e("Firestore", "Error getting documents: ", exception)
                 }
-            } .addOnFailureListener { exception ->
-                Log.e("Firestore", "Error getting documents: ", exception)
-            }
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun alertaDefinicoes(ano: Int) {

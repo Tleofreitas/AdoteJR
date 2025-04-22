@@ -161,7 +161,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:enabled="false"
-                android:hint="Comuns"
+                android:hint="Típicas"
                 android:inputType="number"
                 android:maxLength="2" />
         </com.google.android.material.textfield.TextInputLayout>
