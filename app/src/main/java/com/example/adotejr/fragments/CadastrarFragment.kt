@@ -156,21 +156,25 @@ class CadastrarFragment : Fragment() {
                             // Desabilita os campos para evitar qualquer tentativa de cadastro
                             binding.editTextCpf.isEnabled = false
                             binding.btnChecarCpf.isEnabled = false
-                            alertaDefinicoes("DATA")
+                            alertaDefinicoes("DATA", 0, 0.toString())
                             // Toast.makeText(requireContext(), "A data vigente está no intervalo? $estaNoIntervalo", Toast.LENGTH_LONG).show()
+                        }
+
+                        if((quantidadeCriancasTotal.toInt()-qtdCadastrosFeitos) == 50 ) {
+                            alertaDefinicoes("CHEGANDOLIMITE",qtdCadastrosFeitos,quantidadeCriancasTotal)
                         }
 
                         if(qtdCadastrosFeitos >= quantidadeCriancasTotal.toInt()){
                             // Desabilita os campos para evitar qualquer tentativa de cadastro
                             binding.editTextCpf.isEnabled = false
                             binding.btnChecarCpf.isEnabled = false
-                            alertaDefinicoes("LIMITE")
+                            alertaDefinicoes("LIMITE", 0, 0.toString())
                         }
                     } else {
                         // Desabilita os campos para evitar qualquer tentativa de cadastro
                         binding.editTextCpf.isEnabled = false
                         binding.btnChecarCpf.isEnabled = false
-                        alertaDefinicoes("DEF")
+                        alertaDefinicoes("DEF", 0, 0.toString())
                     }
                 } .addOnFailureListener { exception ->
                     Log.e("Firestore", "Error getting documents: ", exception)
@@ -223,7 +227,11 @@ class CadastrarFragment : Fragment() {
         return !hoje.isBefore(dataInicial) && !hoje.isAfter(dataFinal)
     }
 
-    private fun alertaDefinicoes(tipo: String) {
+    private fun alertaDefinicoes(
+        tipo: String,
+        qtdCadastrosFeitos: Int,
+        quantidadeCriancasTotal: String
+    ) {
         val alertBuilder = AlertDialog.Builder(requireContext())
 
         alertBuilder.setTitle("Cadastros não permitidos!")
@@ -241,8 +249,10 @@ class CadastrarFragment : Fragment() {
                     "\nA quantidade limite de crianças foi atingido." +
                     "\nDúvidas procurar a administração do Adote.")
 
-        } else {
-            alertBuilder.setMessage("Outro")
+        } else if(tipo == "CHEGANDOLIMITE") {
+            alertBuilder.setTitle("Limite quase atingido!")
+            alertBuilder.setMessage("Cadastros realizados: $qtdCadastrosFeitos" +
+                    "\nLimite: $quantidadeCriancasTotal")
         }
 
         val customView = LayoutInflater.from(requireContext()).inflate(R.layout.botao_alerta, null)
