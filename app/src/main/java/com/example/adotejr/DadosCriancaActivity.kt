@@ -275,10 +275,10 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaCadastro() {
-        // Exibir e habilitar botão de foto
+        // Ocultar e desabilitar botão de foto
         binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.VISIBLE
-            isEnabled = true
+            visibility = View.GONE
+            isEnabled = false
         }
 
         // Ocultar e desabilitar botões de editar e salvar
@@ -299,10 +299,10 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaListagem() {
-        // Ocultar e desabilitar botão de foto
+        // Exibir e habilitar botão de foto
         binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.GONE
-            isEnabled = false
+            visibility = View.VISIBLE
+            isEnabled = true
         }
 
         // Ocultar e desabilitar botão de novo cadastro

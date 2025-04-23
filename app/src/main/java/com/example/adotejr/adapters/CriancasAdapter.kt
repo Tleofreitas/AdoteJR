@@ -1,0 +1,48 @@
+package com.example.adotejr.adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView.Adapter
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.example.adotejr.databinding.ItemCadastrosBinding
+import com.example.adotejr.model.Crianca
+import com.squareup.picasso.Picasso
+
+class CriancasAdapter : Adapter<CriancasAdapter.CriancasViewHolder>() {
+
+    private var listaCadastros = emptyList<Crianca>()
+    fun adicionarLista( lista: List<Crianca> ){
+        listaCadastros = lista
+        notifyDataSetChanged()
+    }
+
+    inner class CriancasViewHolder(
+        private val binding: ItemCadastrosBinding
+    ) : ViewHolder(binding.root) {
+
+        fun bind( crianca: Crianca ){
+            binding.textNomeCrianca.text = crianca.nome
+            // binding.textCpfCrianca.text = "CPF: "+crianca.cpf
+            Picasso.get()
+                .load( crianca.foto )
+                .into( binding.imgFotoCrianca )
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CriancasViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        val itemView = ItemCadastrosBinding.inflate(
+            inflater, parent, false
+        )
+        return CriancasViewHolder( itemView )
+    }
+
+    override fun onBindViewHolder(holder: CriancasViewHolder, position: Int) {
+        val crianca = listaCadastros[position]
+        holder.bind( crianca )
+    }
+
+    override fun getItemCount(): Int {
+        return listaCadastros.size
+    }
+}

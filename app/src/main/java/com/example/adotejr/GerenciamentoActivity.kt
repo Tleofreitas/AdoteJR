@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
 import com.example.adotejr.fragments.CadastrarFragment
 import com.example.adotejr.fragments.ContaFragment
+import com.example.adotejr.fragments.ListagemFragment
 import com.example.adotejr.fragments.ReportsFragment
 import com.example.adotejr.fragments.SettingsFragment
 import com.example.adotejr.utils.SessionManager
