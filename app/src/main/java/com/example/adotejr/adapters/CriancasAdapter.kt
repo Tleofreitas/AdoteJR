@@ -8,7 +8,9 @@ import com.example.adotejr.databinding.ItemCadastrosBinding
 import com.example.adotejr.model.Crianca
 import com.squareup.picasso.Picasso
 
-class CriancasAdapter : Adapter<CriancasAdapter.CriancasViewHolder>() {
+class CriancasAdapter(
+    private val onClick: (Crianca) -> Unit
+) : Adapter<CriancasAdapter.CriancasViewHolder>() {
 
     private var listaCadastros = emptyList<Crianca>()
     fun adicionarLista( lista: List<Crianca> ){
@@ -26,6 +28,11 @@ class CriancasAdapter : Adapter<CriancasAdapter.CriancasViewHolder>() {
             Picasso.get()
                 .load( crianca.foto )
                 .into( binding.imgFotoCrianca )
+
+            // Evento de clique
+            binding.cvItemCrianca.setOnClickListener {
+                onClick(crianca)
+            }
         }
     }
 

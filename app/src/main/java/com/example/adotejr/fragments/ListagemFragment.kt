@@ -1,5 +1,6 @@
 package com.example.adotejr.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.adapters.CriancasAdapter
 import com.example.adotejr.databinding.FragmentListagemBinding
 import com.example.adotejr.model.Crianca
@@ -41,7 +43,12 @@ class ListagemFragment : Fragment() {
             inflater, container, false
         )
 
-        criancasAdapter = CriancasAdapter()
+        criancasAdapter = CriancasAdapter{ crianca ->
+            val intent = Intent(context, DadosCriancaActivity::class.java)
+            intent.putExtra("id", crianca.id)
+            intent.putExtra("origem", "listagem")
+            startActivity(intent)
+        }
         binding.rvCadastros.adapter = criancasAdapter
         binding.rvCadastros.layoutManager = LinearLayoutManager(context)
 

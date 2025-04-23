@@ -41,16 +41,17 @@
 <!--        app:layout_constraintStart_toEndOf="@+id/imageView8" />-->
 <!--</androidx.constraintlayout.widget.ConstraintLayout>-->
 
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cvItemCrianca"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="12dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clItemCrianca"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
@@ -80,28 +81,28 @@
             app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca"
             app:layout_constraintTop_toTopOf="@+id/imgFotoCrianca" />
 
-<!--        <TextView-->
-<!--            android:id="@+id/textNomeCrianca"-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginStart="16dp"-->
-<!--            android:text="Fulano da Silva"-->
-<!--            android:textSize="20sp"-->
-<!--            android:textStyle="bold"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca"-->
-<!--            app:layout_constraintTop_toTopOf="@+id/imgFotoCrianca" />-->
-<!--        -->
-<!--        <TextView-->
-<!--            android:id="@+id/textCpfCrianca"-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginStart="16dp"-->
-<!--            android:text="CPF: 000.000.000-00"-->
-<!--            android:textSize="16sp"-->
-<!--            app:layout_constraintBottom_toBottomOf="@+id/imgFotoCrianca"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca" />-->
+        <!--        <TextView-->
+        <!--            android:id="@+id/textNomeCrianca"-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginStart="16dp"-->
+        <!--            android:text="Fulano da Silva"-->
+        <!--            android:textSize="20sp"-->
+        <!--            android:textStyle="bold"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca"-->
+        <!--            app:layout_constraintTop_toTopOf="@+id/imgFotoCrianca" />-->
+        <!--        -->
+        <!--        <TextView-->
+        <!--            android:id="@+id/textCpfCrianca"-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginStart="16dp"-->
+        <!--            android:text="CPF: 000.000.000-00"-->
+        <!--            android:textSize="16sp"-->
+        <!--            app:layout_constraintBottom_toBottomOf="@+id/imgFotoCrianca"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>
