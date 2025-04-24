@@ -1,10 +1,14 @@
 package com.example.adotejr.fragments
 
+import android.R
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -43,6 +47,17 @@ class ListagemFragment : Fragment() {
             inflater, container, false
         )
 
+        val spinner = binding.spinnerAno
+        // Lista de valores // --- Pegar do banco igual ao de crianças
+        val opcoes = listOf("2025", "2024")
+
+        // Criando o Adapter
+        val adapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, opcoes)
+        adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
+
+        // Configurar o Spinner com o Adapter
+        spinner.adapter = adapter
+
         criancasAdapter = CriancasAdapter{ crianca ->
             val intent = Intent(context, DadosCriancaActivity::class.java)
             intent.putExtra("id", crianca.id)
@@ -52,17 +67,14 @@ class ListagemFragment : Fragment() {
         binding.rvCadastros.adapter = criancasAdapter
         binding.rvCadastros.layoutManager = LinearLayoutManager(context)
 
-        /* binding.rvCadastros.addItemDecoration(
-            DividerItemDecoration(
-                context, LinearLayoutManager.VERTICAL
-            )
-        ) */
-
         return binding.root
     }
 
     override fun onStart() {
         super.onStart()
+
+        // colocar teste de internet
+        // botão editar e salvar da tela de dadosCrianca
         adicionarListenerCadastros()
     }
 

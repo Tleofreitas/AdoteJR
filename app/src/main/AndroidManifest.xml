@@ -24,31 +24,39 @@
         <activity
             android:name=".DadosCriancaActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustPan"
             android:parentActivityName=".GerenciamentoActivity"/>
         <activity
             android:name=".RedefinirSenhaDeslogadoActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustPan"
             android:parentActivityName=".LoginActivity" />
         <activity
             android:name=".ChecarAcessoActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".LoginActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".GerenciamentoActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustPan"
             android:parentActivityName=".LoginActivity" />
         <activity
             android:name=".RedefinirSenhaActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustPan"
             android:parentActivityName=".GerenciamentoActivity" />
         <activity
             android:name=".CadastroActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustPan"
             android:parentActivityName=".LoginActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="false" />
         <activity
             android:name=".LoginActivity"
+            android:windowSoftInputMode="adjustPan"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
