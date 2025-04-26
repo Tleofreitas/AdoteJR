@@ -2,6 +2,7 @@ package com.example.adotejr.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.adotejr.databinding.ItemCadastrosBinding

@@ -6,11 +6,11 @@ import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.RadioButton
-import android.widget.RadioGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
+import com.example.adotejr.utils.NetworkUtils
+import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -44,17 +44,22 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun recuperarDadosIdGerado() {
-        if (idDetalhar != null){
-            firestore.collection("Criancas")
-                .document(idDetalhar!!)
-                .get()
-                .addOnSuccessListener { documentSnapshot ->
-                    documentSnapshot.data?.let { dadosCrianca ->
-                        preencherDadosCrianca(dadosCrianca)
+        // colocar teste de internet
+        if (NetworkUtils.conectadoInternet(this)) {
+            if (idDetalhar != null){
+                firestore.collection("Criancas")
+                    .document(idDetalhar!!)
+                    .get()
+                    .addOnSuccessListener { documentSnapshot ->
+                        documentSnapshot.data?.let { dadosCrianca ->
+                            preencherDadosCrianca(dadosCrianca)
+                        }
+                    } .addOnFailureListener { exception ->
+                        Log.e("Firestore", "Error getting documents: ", exception)
                     }
-                } .addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error getting documents: ", exception)
-                }
+            }
+        } else {
+            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
         }
     }
 
