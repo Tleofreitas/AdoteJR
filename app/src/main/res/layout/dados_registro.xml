@@ -234,7 +234,6 @@
             android:id="@+id/editPadrinho"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:enabled="false"
             android:hint="Padrinho" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -271,7 +270,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:enabled="false"
-            android:hint="Número do cartão" />
+            android:hint="Número do cartão"
+            android:text="Será gerado automaticamente" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView

@@ -125,7 +125,7 @@ class DadosCriancaActivity : AppCompatActivity() {
 
         val indicacao = dados["indicacao"] as? String ?: ""
         definirIndicacaoNoSpinner(indicacao)
-        bloquearSpinner()
+        // bloquearSpinner()
 
         binding.includeRegistro.NomePerfilCadastro.text = dados["cadastradoPor"].toString() as? String ?: ""
         val foto = dados["fotoCadastradoPor"] as? String ?: ""
@@ -145,9 +145,9 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
     }
 
-    private fun bloquearSpinner() {
+    /* private fun bloquearSpinner() {
         binding.includeRegistro.selecaoIndicacao.isEnabled = false
-    }
+    } */
 
     private lateinit var editTextNome: EditText
     private lateinit var editTextCpf: EditText
@@ -187,6 +187,10 @@ class DadosCriancaActivity : AppCompatActivity() {
 
     /* private lateinit var fotoCadastradoPor: ImageView
     private lateinit var textCadastradoPor: EditText */
+    // Habilitar botão foto
+
+    // se status Inativo, Motivo libera e fica vazio, se volta para ativo Motivo bloqueia e "Apto para contemplação"
+    // Só valida se inativo se motiv for preenchido
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -198,9 +202,9 @@ class DadosCriancaActivity : AppCompatActivity() {
         editTextDataNascimento = binding.editTextDtNascimento
         editTextIdade = binding.editTextIdade
         LLSexoBtnMasculino = binding.includeDadosCriancaSacola.radioButtonMasculino
-        LLSexoBtnMasculino.isEnabled = false
+        // LLSexoBtnMasculino.isEnabled = false
         LLSexoBtnFeminino = binding.includeDadosCriancaSacola.radioButtonFeminino
-        LLSexoBtnFeminino.isEnabled = false
+        // LLSexoBtnFeminino.isEnabled = false
         editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
         editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
         editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
@@ -222,31 +226,36 @@ class DadosCriancaActivity : AppCompatActivity() {
         editTextBairro = binding.includeEndereco.editTextBairro
         editTextCidade = binding.includeEndereco.editTextCidade
         statusAtivo = binding.includeRegistro.radioButtonStatusAtivo
-        statusAtivo.isEnabled = false
+        // statusAtivo.isEnabled = false
         statusInativo = binding.includeRegistro.radioButtonStatusInativo
-        statusInativo.isEnabled = false
+        // statusInativo.isEnabled = false
         editTextMotivoStatus = binding.includeRegistro. editMotivoStatus
         editTextAno = binding.includeRegistro.editTextAno
         editTextCartao = binding.includeRegistro.editNumeroCartao
         senhaSim = binding.includeRegistro.radioButtonSenhaSim
-        senhaSim.isEnabled = false
+        // senhaSim.isEnabled = false
         senhaNao = binding.includeRegistro.radioButtonSenhaNao
-        senhaNao.isEnabled = false
+        // senhaNao.isEnabled = false
         kitSim = binding.includeRegistro.radioButtonRetiradaSim
-        kitSim.isEnabled = false
+        // kitSim.isEnabled = false
         kitNão = binding.includeRegistro.radioButtonRetiradaNao
-        kitNão.isEnabled = false
+        // kitNão.isEnabled = false
         blackListSim = binding.includeRegistro.radioButtonBLSim
-        blackListSim.isEnabled = false
+        // blackListSim.isEnabled = false
         blackListNao = binding.includeRegistro.radioButtonBLNao
-        blackListNao.isEnabled = false
+        // blackListNao.isEnabled = false
 
         // Lista com os EditTexts
-        val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade,
+        /* val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade,
             editTextBlusa, editTextCalca, editTextSapato, editTextPcd, editTextGostosPessoais,
             editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
             editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
-            editTextBairro, editTextCidade, editTextMotivoStatus, editTextAno, editTextCartao)
+            editTextBairro, editTextCidade, editTextMotivoStatus, editTextAno, editTextCartao) */
+
+        val editTexts = listOf(editTextCpf, editTextDataNascimento, editTextIdade,
+            editTextPcd, editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
+            editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
+            editTextBairro, editTextCidade, editTextAno)
 
         // Iterar sobre cada um e desativar
         for (editText in editTexts) {
@@ -287,10 +296,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
 
         // Ocultar e desabilitar botões de editar e salvar
-        binding.btnEditarDadosCrianca.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
         binding.btnAtualizarDadosCrianca.apply {
             visibility = View.GONE
             isEnabled = false
@@ -317,10 +322,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
 
         // Exibir e habilitar botões de editar e salvar
-        binding.btnEditarDadosCrianca.apply {
-            visibility = View.VISIBLE
-            isEnabled = true
-        }
         binding.btnAtualizarDadosCrianca.apply {
             visibility = View.VISIBLE
             isEnabled = true

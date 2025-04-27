@@ -165,34 +165,18 @@
             app:layout_constraintTop_toBottomOf="@+id/includeEndereco" />
 
         <Button
-            android:id="@+id/btnEditarDadosCrianca"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="32dp"
-            android:text="Editar"
-            android:backgroundTint="@color/destaque"
-            app:cornerRadius="8dp"
-            app:layout_constraintEnd_toStartOf="@+id/btnAtualizarDadosCrianca"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/includeRegistro"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <Button
             android:id="@+id/btnAtualizarDadosCrianca"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="32dp"
-            android:text="Salvar / Validar"
             android:backgroundTint="@color/azul"
+            android:text="Salvar / Validar"
             app:cornerRadius="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/btnEditarDadosCrianca"
-            app:layout_constraintTop_toBottomOf="@id/includeRegistro"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/includeRegistro" />
 
         <Button
             android:id="@+id/btnNovoCadastro"
