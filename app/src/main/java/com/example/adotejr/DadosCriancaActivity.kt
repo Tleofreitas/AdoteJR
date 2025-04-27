@@ -96,9 +96,9 @@ class DadosCriancaActivity : AppCompatActivity() {
 
         binding.includeDadosCriancaSacola.editTextPcd.setText(dados["descricaoEspecial"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextGostos.setText(dados["gostosPessoais"] as? String ?: "")
-        binding.includeDadosCriancaSacola.editTextVinculoFamiliar.setText(dados["vinculoFamiliar"] as? String ?: "")
 
         // Campos de informações do responsável
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.setText(dados["vinculoFamiliar"] as? String ?: "")
         binding.includeDadosResponsavel.editTextNomeResponsavel.setText(dados["responsavel"] as? String ?: "")
         binding.includeDadosResponsavel.editTextVinculo.setText(dados["vinculoResponsavel"] as? String ?: "")
         binding.includeDadosResponsavel.editTextTel1.setText(dados["telefone1"] as? String ?: "")
@@ -210,7 +210,7 @@ class DadosCriancaActivity : AppCompatActivity() {
         pcdBtnNao.isEnabled = false
         editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
         editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
-        editTextVinculoFamiliar = binding.includeDadosCriancaSacola.editTextVinculoFamiliar
+        editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
         editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
         editTextVinculo = binding.includeDadosResponsavel.editTextVinculo
         editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1

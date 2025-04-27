@@ -112,7 +112,7 @@ class CadastrarFragment : Fragment() {
 
     var dataInicial = ""
     var dataFinal = ""
-    var quantidadeCriancasTotal = ""
+    private var quantidadeCriancasTotal = ""
     var limiteNormal = ""
     var limitePCD = ""
     private var qtdCadastrosFeitos: Int = 0
@@ -290,7 +290,7 @@ class CadastrarFragment : Fragment() {
         pcdBtnNao.isEnabled = false
         editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
         editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
-        editTextVinculoFamiliar = binding.includeDadosCriancaSacola.editTextVinculoFamiliar
+        editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
         editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
         editTextVinculo = binding.includeDadosResponsavel.editTextVinculo
         editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
@@ -382,11 +382,15 @@ class CadastrarFragment : Fragment() {
             // Se voltar para "Não", limpa o texto
             if (!habilitarCampo) {
                 binding.includeDadosCriancaSacola.editTextPcd.setText("")
-                if(binding.editTextIdade.text.toString().toInt() > limiteNormal.toInt()){
-                    Toast.makeText(requireContext(), "Cadastro +$limiteNormal anos não permitido!", Toast.LENGTH_LONG).show()
-                    editarCampos(false)
-                    // Reabilita o botão
-                    binding.btnChecarCpf.isEnabled = true
+                // Verifica idade novamente
+                val checkIdade = binding.editTextIdade.text.toString()
+                if(checkIdade != ""){
+                    if(checkIdade.toInt() > limiteNormal.toInt()){
+                        Toast.makeText(requireContext(), "Cadastro +$limiteNormal anos não permitido!", Toast.LENGTH_LONG).show()
+                        editarCampos(false)
+                        // Reabilita o botão
+                        binding.btnChecarCpf.isEnabled = true
+                    }
                 }
             }
         }
@@ -517,7 +521,7 @@ class CadastrarFragment : Fragment() {
             var gostosPessoais = editTextGostosPessoais.text.toString()
 
             // Identificação de crianças da mesma família
-            editTextVinculoFamiliar = binding.includeDadosCriancaSacola.editTextVinculoFamiliar
+            editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
             var vinculoFamiliar = editTextVinculoFamiliar.text.toString()
 
             // Dados do Responsável

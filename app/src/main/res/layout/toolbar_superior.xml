@@ -28,6 +28,17 @@
         app:layout_constraintBottom_toBottomOf="@+id/tbPrincipal"
         app:layout_constraintEnd_toEndOf="@+id/tbPrincipal"
         app:layout_constraintTop_toTopOf="@+id/tbPrincipal"
-        app:srcCompat="@drawable/logo_adva_vermelho"
+        app:srcCompat="@drawable/logo_redondo_laranja_melhor_semfundo"
         app:shapeAppearanceOverlay="@style/Circulo" />
+
+<!--    <com.google.android.material.imageview.ShapeableImageView-->
+<!--        android:id="@+id/imageView7"-->
+<!--        android:layout_width="45dp"-->
+<!--        android:layout_height="45dp"-->
+<!--        android:layout_marginEnd="16dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="@+id/tbPrincipal"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/tbPrincipal"-->
+<!--        app:layout_constraintTop_toTopOf="@+id/tbPrincipal"-->
+<!--        app:srcCompat="@drawable/logo_adva_vermelho"-->
+<!--        app:shapeAppearanceOverlay="@style/Circulo" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +27,7 @@ class ListagemFragment : Fragment() {
     private lateinit var eventoSnapshot: ListenerRegistration
     private lateinit var criancasAdapter: CriancasAdapter
     private lateinit var txtAno: TextView
+    private lateinit var txtEvolucaoCadastro: TextView
 
     // Autenticação
     private val firebaseAuth by lazy {
@@ -37,7 +39,9 @@ class ListagemFragment : Fragment() {
         FirebaseFirestore.getInstance()
     }
 
-    var ano = LocalDate.now().year
+    private var ano = LocalDate.now().year
+    private var quantidadeCriancasTotal = ""
+    private var qtdCadastrosFeitos: Int = 0
     private var listaCriancas = mutableListOf<Crianca>()
 
     override fun onCreateView(
@@ -101,6 +105,8 @@ class ListagemFragment : Fragment() {
         txtAno = binding.txtAno
         txtAno.setText(ano.toString())
 
+        txtEvolucaoCadastro = binding.textCadastroXLimite
+
         val editTextPesquisa = binding.InputPesquisa.editText  // Obtém o campo de texto para pesquisa
         val radioGroupFiltro = binding.rgFiltroTipo  // Obtém o grupo de botões de rádio para definir o critério de busca
 
@@ -153,7 +159,87 @@ class ListagemFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        // Recupera a quantidade de cadastros feitos
+        recuperarQtdCadastros(FirebaseFirestore.getInstance()) { quantidade ->
+            qtdCadastrosFeitos = quantidade
+            atualizarEvolucaoCadastro() // Atualiza a UI após obter a quantidade de cadastros
+        }
+
+        // Recupera os dados de definições e espera o retorno antes de atualizar a UI
+        recuperarDadosDefinicoes { quantidadeTotal ->
+            quantidadeCriancasTotal = quantidadeTotal.toInt().toString() // Converte para Int
+            atualizarEvolucaoCadastro() // Atualiza a interface após obter os dados
+        }
+
         adicionarListenerCadastros()
+    }
+
+    private fun recuperarQtdCadastros(firestore: FirebaseFirestore, callback: (Int) -> Unit) {
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            firestore.collection("Criancas")
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    val quantidade = querySnapshot.size()
+                    qtdCadastrosFeitos = quantidade // Atualiza a variável global
+
+                    atualizarEvolucaoCadastro() // Atualiza a UI
+                    callback(quantidade)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firebase", "Erro ao obter documentos: ", exception)
+                    callback(0)
+                }
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun recuperarDadosDefinicoes(callback: (String) -> Unit) {
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            firestore.collection("Definicoes")
+                .document(ano.toString())
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val dadosDefinicoes = documentSnapshot.data
+                    if (dadosDefinicoes != null) {
+                        val quantidade = dadosDefinicoes["quantidadeDeCriancas"] as String
+
+                        quantidadeCriancasTotal = quantidade // Atualiza a variável global
+                        atualizarEvolucaoCadastro() // Atualiza a UI
+
+                        callback(quantidade) // Retorna o valor pelo callback
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firestore", "Erro ao obter documentos: ", exception)
+                    callback("0") // Retorna "0" em caso de falha
+                }
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun atualizarEvolucaoCadastro() {
+        if(quantidadeCriancasTotal != ""){
+            val qtdCadastrosFeitosD = qtdCadastrosFeitos
+            val quantidadeCriancasTotalD = quantidadeCriancasTotal.toDouble()
+
+            val percentual = if (quantidadeCriancasTotalD > 0) {
+                (qtdCadastrosFeitosD * 100) / quantidadeCriancasTotalD
+            } else {
+                0.0 // Evita erro de divisão por zero
+            }
+
+            txtEvolucaoCadastro.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentual%)"
+        }
     }
 
     private fun adicionarListenerCadastros() {
@@ -171,9 +257,12 @@ class ListagemFragment : Fragment() {
                     }
 
                     // Log.i("fragmento_listagem", "nome: $listaCriancas ")
-                    if(listaCriancas.isNotEmpty()){
+                    if (listaCriancas.isNotEmpty()) {
+                        // Ordena por nome antes de atualizar a RecyclerView
+                        listaCriancas.sortBy { it.nome }
                         criancasAdapter.adicionarLista(listaCriancas)
                     }
+
                 }
         } else {
             // Inicializar eventoSnapshot com um listener "fake" para evitar erro
