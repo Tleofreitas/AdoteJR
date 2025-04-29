@@ -125,11 +125,22 @@
             layout="@layout/dados_crianca_sacola"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/InputIdade" />
+
+        <include
+            android:id="@+id/includeDadosPCD"
+            layout="@layout/dados_pcd"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/includeDadosCriancaSacola" />
 
         <include
             android:id="@+id/includeDadosResponsavel"
@@ -140,7 +151,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/includeDadosCriancaSacola" />
+            app:layout_constraintTop_toBottomOf="@+id/includeDadosPCD" />
 
         <include
             android:id="@+id/includeEndereco"

@@ -2,13 +2,19 @@ package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.RadioButton
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
+import com.example.adotejr.model.Crianca
+import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
@@ -89,12 +95,12 @@ class DadosCriancaActivity : AppCompatActivity() {
 
         var especial = dados["especial"] as String
         if(especial == "Sim"){
-            binding.includeDadosCriancaSacola.radioButtonPcdSim.isChecked
+            binding.includeDadosPCD.radioButtonPcdSim.isChecked
         } else {
-            binding.includeDadosCriancaSacola.radioButtonPcdNao.isChecked
+            binding.includeDadosPCD.radioButtonPcdNao.isChecked
         }
 
-        binding.includeDadosCriancaSacola.editTextPcd.setText(dados["descricaoEspecial"] as? String ?: "")
+        binding.includeDadosPCD.editTextPcd.setText(dados["descricaoEspecial"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextGostos.setText(dados["gostosPessoais"] as? String ?: "")
 
         // Campos de informações do responsável
@@ -123,7 +129,7 @@ class DadosCriancaActivity : AppCompatActivity() {
         binding.includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
         binding.includeRegistro.editTextAno.setText(dados["ano"].toString() as? String ?: "")
 
-        val indicacao = dados["indicacao"] as? String ?: ""
+        var indicacao = dados["indicacao"] as? String ?: ""
         definirIndicacaoNoSpinner(indicacao)
         // bloquearSpinner()
 
@@ -133,6 +139,14 @@ class DadosCriancaActivity : AppCompatActivity() {
             Picasso.get()
                 .load( foto )
                 .into( binding.includeRegistro.imgPerfilCadastro )
+        }
+
+        binding.includeRegistro.NomePerfilValidacao.text = dados["validadoPor"].toString() as? String ?: ""
+        val fotoValidacao = dados["fotoValidadoPor"] as? String ?: ""
+        if (!fotoValidacao.isNullOrEmpty()) {
+            Picasso.get()
+                .load( fotoValidacao )
+                .into( binding.includeRegistro.imgPerfilValidacao )
         }
 
     }
@@ -177,6 +191,7 @@ class DadosCriancaActivity : AppCompatActivity() {
     private lateinit var statusInativo: RadioButton
     private lateinit var editTextMotivoStatus: EditText
     private lateinit var editTextAno: EditText
+    private lateinit var selecaoIndicacao: String
     private lateinit var editTextCartao: EditText
     private lateinit var senhaSim: RadioButton
     private lateinit var senhaNao: RadioButton
@@ -184,13 +199,6 @@ class DadosCriancaActivity : AppCompatActivity() {
     private lateinit var kitNão: RadioButton
     private lateinit var blackListSim: RadioButton
     private lateinit var blackListNao: RadioButton
-
-    /* private lateinit var fotoCadastradoPor: ImageView
-    private lateinit var textCadastradoPor: EditText */
-    // Habilitar botão foto
-
-    // se status Inativo, Motivo libera e fica vazio, se volta para ativo Motivo bloqueia e "Apto para contemplação"
-    // Só valida se inativo se motiv for preenchido
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -208,11 +216,11 @@ class DadosCriancaActivity : AppCompatActivity() {
         editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
         editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
         editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
-        pcdBtnSim = binding.includeDadosCriancaSacola.radioButtonPcdSim
+        pcdBtnSim = binding.includeDadosPCD.radioButtonPcdSim
         pcdBtnSim.isEnabled = false
-        pcdBtnNao = binding.includeDadosCriancaSacola.radioButtonPcdNao
+        pcdBtnNao = binding.includeDadosPCD.radioButtonPcdNao
         pcdBtnNao.isEnabled = false
-        editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
+        editTextPcd = binding.includeDadosPCD.editTextPcd
         editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
         editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
         editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
@@ -338,10 +346,235 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun inicializarEventosClique() {
+        binding.btnAtualizarDadosCrianca.setOnClickListener {
+            selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
+            var indicacao = selecaoIndicacao
+
+            if( validarCampos() ) {
+                if (indicacao == "-- Selecione --") {
+                    exibirMensagem("Selecione quem indicou!")
+                } else {
+                    val nome = binding.editTextNome.text.toString()
+                    // Sexo
+                    var sexo = when {
+                        binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked -> "Masculino"
+                        binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked -> "Feminino"
+                        else -> "Nenhum"
+                    }
+                    // Blusa
+                    editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
+                    var blusa = editTextBlusa.text.toString()
+
+                    // Calça
+                    editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
+                    var calca = editTextCalca.text.toString()
+
+                    // Sapato
+                    editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
+                    var sapato = editTextSapato.text.toString()
+
+                    // Gostos Pessoais
+                    editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
+                    var gostosPessoais = editTextGostosPessoais.text.toString()
+
+                    var telefone1 = binding.includeDadosResponsavel.editTextTel1.text.toString()
+
+                    selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
+                    var indicacao = selecaoIndicacao
+
+                    // Habilitar botão foto
+                    // se status Inativo, Motivo libera e fica vazio, se volta para ativo Motivo bloqueia e "Apto para contemplação"
+                    // Só valida se inativo se motiv for preenchido
+
+                    // Dados de quem validou o cadastro
+                    var validadoPor: String = ""
+                    var fotoValidadoPor: String = ""
+
+                    val idUsuario = firebaseAuth.currentUser?.uid
+                    if (idUsuario != null){
+                        firestore.collection("Usuarios")
+                            .document( idUsuario )
+                            .get()
+                            .addOnSuccessListener { documentSnapshot ->
+                                val dadosUsuario = documentSnapshot.data
+                                if ( dadosUsuario != null ){
+                                    val nomeUser = dadosUsuario["nome"] as String
+                                    validadoPor = nomeUser
+
+                                    val foto = dadosUsuario["foto"] as String
+
+                                    if (foto.isNotEmpty()) {
+                                        fotoValidadoPor = foto
+                                    }
+                                    // Após obter os dados do Firestore, processa os dados
+                                    processarDados(
+                                        nome,
+                                        sexo,
+                                        blusa,
+                                        calca,
+                                        sapato,
+                                        gostosPessoais,
+                                        telefone1,
+                                        indicacao,
+                                        validadoPor,
+                                        fotoValidadoPor
+                                    )
+                                }
+                            } .addOnFailureListener { exception ->
+                                Log.e("Firestore", "Error getting documents: ", exception)
+                            }
+                    }
+
+                    /*
+                    if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
+                        exibirMensagem("Nenhuma imegem selecionada")
+                    } else {
+                        // A imagem foi alterada e pode ser inserida no banco de dados
+
+                        if (NetworkUtils.conectadoInternet(this)) {
+                            // Altera o texto do botão para "Aguarde"
+                            binding.btnAtualizarDadosCrianca.text = "Aguarde..."
+
+                            // Desabilita o botão para evitar novos cliques
+                            binding.btnAtualizarDadosCrianca.isEnabled = false
+
+                            /*
+                            // Identificar tipo de imagem
+                            val tipo = identificarTipoImagem()
+                            if (tipo == "Tipo desconhecido") {
+                                // significa que é BITMAP (CAMERA)
+                                uploadImegemCameraStorage(bitmapImagemSelecionada, id, ano) { sucesso ->
+
+                                    if (sucesso) {
+                                        val crianca = Crianca(
+                                            id,
+                                            cpfOriginal,
+                                            nome,
+                                            dataNascimento,
+                                            idade,
+                                            sexo,
+                                            blusa,
+                                            calca,
+                                            sapato,
+                                            especial,
+                                            descricaoEspecial,
+                                            gostosPessoais,
+                                            foto,
+                                            responsavel,
+                                            vinculoResponsavel,
+                                            telefone1,
+                                            telefone2,
+                                            logradouro,
+                                            numero,
+                                            complemento,
+                                            bairro,
+                                            cidade,
+                                            uf,
+                                            cep,
+                                            ano,
+                                            ativo,
+                                            motivoStatus,
+                                            indicacao,
+                                            cadastradoPor,
+                                            fotoCadastradoPor,
+                                            padrinho,
+                                            retirouSacola,
+                                            blackList,
+                                            vinculoFamiliar,
+                                            validadoPor,
+                                            fotoValidadoPor,
+                                            retirouSenha,
+                                            numeroCartao
+                                        )
+                                    } else {
+                                        // Altera o texto do botão para "Salvar / Validar"
+                                        binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+
+                                        // Habilita o botão
+                                        binding.btnAtualizarDadosCrianca.isEnabled = true
+
+                                        exibirMensagem("Erro ao salvar. Tente novamente.")
+                                    }
+                                }
+                            }
+                            */
+                        } else {
+                            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                        }
+                    }
+                    */
+                }
+            }
+        }
+
         binding.btnNovoCadastro.setOnClickListener {
             startActivity(
                 Intent(this, GerenciamentoActivity::class.java)
             )
         }
+    }
+
+    private fun processarDados(
+        nome: String,
+        sexo: String,
+        blusa: String,
+        calca: String,
+        sapato: String,
+        gostosPessoais: String,
+        telefone1: String,
+        indicacao: String,
+        validadoPor: String,
+        fotoValidadoPor: String
+    ) {
+        val dados = mapOf(
+            "nome" to nome,
+            "sexo" to sexo,
+            "blusa" to blusa,
+            "calca" to calca,
+            "sapato" to sapato,
+            "gostosPessoais" to gostosPessoais,
+            "telefone1" to telefone1,
+            "indicacao" to indicacao,
+            "fotoValidadoPor" to fotoValidadoPor,
+            "validadoPor" to validadoPor
+        )
+
+        atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
+    }
+
+    private fun validarCampos(): Boolean {
+        // Lista de valores obrigatórios a serem validados
+        val textInputs = listOf(
+            binding.InputNome,
+            binding.includeDadosCriancaSacola.InputBlusa,
+            binding.includeDadosCriancaSacola.InputCalca,
+            binding.includeDadosCriancaSacola.InputSapato,
+            binding.includeDadosCriancaSacola.InputGostos
+        )
+
+        for (textInput in textInputs) {
+            val editText = textInput.editText // Obtém o EditText associado
+            if (editText?.text.toString().trim().isEmpty()) {
+                textInput.error = "Campo obrigatório"
+                return false
+            } else {
+                textInput.error = null // Remove o erro caso o campo esteja preenchido
+            }
+        }
+        return true
+    }
+
+    // ---------- SALVAR A FOTO/IMAGEM ----------
+    private fun atualizarDadosPerfil(id: String, dados: Map<String, String>) {
+        firestore.collection("Criancas")
+            .document( id )
+            .update( dados )
+            .addOnSuccessListener {
+                onStart()
+                exibirMensagem("Validado com Sucesso.")
+            }
+            .addOnFailureListener {
+                exibirMensagem("Erro ao atualizar perfil. Tente novamente.")
+            }
     }
 }

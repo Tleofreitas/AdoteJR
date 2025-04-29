@@ -284,11 +284,11 @@ class CadastrarFragment : Fragment() {
         editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
         editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
         editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
-        pcdBtnSim = binding.includeDadosCriancaSacola.radioButtonPcdSim
+        pcdBtnSim = binding.includeDadosPCD.radioButtonPcdSim
         pcdBtnSim.isEnabled = false
-        pcdBtnNao = binding.includeDadosCriancaSacola.radioButtonPcdNao
+        pcdBtnNao = binding.includeDadosPCD.radioButtonPcdNao
         pcdBtnNao.isEnabled = false
-        editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
+        editTextPcd = binding.includeDadosPCD.editTextPcd
         editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
         editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
         editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
@@ -367,21 +367,21 @@ class CadastrarFragment : Fragment() {
         })
 
         // Configurando o listener para mudanças no RadioGroup PCD
-        binding.includeDadosCriancaSacola.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+        binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
             // Atualiza a variável "especial"
             especial =
-                if (checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id) "Sim" else "Não"
+                if (checkedId == binding.includeDadosPCD.radioButtonPcdSim.id) "Sim" else "Não"
 
             // Verifica se o campo deve ser habilitado ou não
-            val habilitarCampo = checkedId == binding.includeDadosCriancaSacola.radioButtonPcdSim.id
+            val habilitarCampo = checkedId == binding.includeDadosPCD.radioButtonPcdSim.id
 
             // Habilita ou desabilita a descrição com base na seleção
-            binding.includeDadosCriancaSacola.InputDescricaoPcd.isEnabled = habilitarCampo
-            binding.includeDadosCriancaSacola.editTextPcd.isEnabled = habilitarCampo
+            binding.includeDadosPCD.InputDescricaoPcd.isEnabled = habilitarCampo
+            binding.includeDadosPCD.editTextPcd.isEnabled = habilitarCampo
 
             // Se voltar para "Não", limpa o texto
             if (!habilitarCampo) {
-                binding.includeDadosCriancaSacola.editTextPcd.setText("")
+                binding.includeDadosPCD.editTextPcd.setText("")
                 // Verifica idade novamente
                 val checkIdade = binding.editTextIdade.text.toString()
                 if(checkIdade != ""){
@@ -513,7 +513,7 @@ class CadastrarFragment : Fragment() {
             var sapato = editTextSapato.text.toString()
 
             // Descrição de PCD se SIM
-            editTextPcd = binding.includeDadosCriancaSacola.editTextPcd
+            editTextPcd = binding.includeDadosPCD.editTextPcd
             var descricaoEspecial = editTextPcd.text.toString()
 
             // Gostos Pessoais
@@ -637,7 +637,7 @@ class CadastrarFragment : Fragment() {
 
                     // Testar se PCD está como SIM e se a descrição está vazia
                 } else if (especial == "Sim" && descricaoEspecial.isEmpty()) {
-                    binding.includeDadosCriancaSacola.InputDescricaoPcd.error =
+                    binding.includeDadosPCD.InputDescricaoPcd.error =
                         "Descreva as condições especiais..."
                     Toast.makeText(
                         requireContext(),
@@ -654,7 +654,7 @@ class CadastrarFragment : Fragment() {
 
                 } else {
                     binding.InputDtNascimento.error = null
-                    binding.includeDadosCriancaSacola.InputDescricaoPcd.error = null
+                    binding.includeDadosPCD.InputDescricaoPcd.error = null
 
                     if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
                         Toast.makeText(
