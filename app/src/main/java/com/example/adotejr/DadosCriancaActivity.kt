@@ -43,6 +43,7 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private var idDetalhar: String? = null
+    private var status: String = ""
 
     override fun onStart() {
         super.onStart()
@@ -82,23 +83,9 @@ class DadosCriancaActivity : AppCompatActivity() {
         binding.editTextDtNascimento.setText(dados["dataNascimento"] as? String ?: "")
         binding.editTextIdade.setText((dados["idade"] as? Long)?.toString() ?: "")
 
-        val sexo = dados["sexo"] as String
-        if(sexo == "Masculino"){
-            binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked
-        } else {
-            binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked
-        }
-
         binding.includeDadosCriancaSacola.editTextBlusa.setText(dados["blusa"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextCalca.setText(dados["calca"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextSapato.setText(dados["sapato"] as? String ?: "")
-
-        var especial = dados["especial"] as String
-        if(especial == "Sim"){
-            binding.includeDadosPCD.radioButtonPcdSim.isChecked
-        } else {
-            binding.includeDadosPCD.radioButtonPcdNao.isChecked
-        }
 
         binding.includeDadosPCD.editTextPcd.setText(dados["descricaoEspecial"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextGostos.setText(dados["gostosPessoais"] as? String ?: "")
@@ -118,15 +105,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         binding.includeEndereco.editTextBairro.setText(dados["bairro"] as? String ?: "")
         binding.includeEndereco.editTextCidade.setText(dados["cidade"] as? String ?: "")
 
-        // Campos de registro
-        var status = dados["ativo"] as String
-        if(status == "Sim"){
-            binding.includeRegistro.radioButtonStatusAtivo.isChecked
-        } else {
-            binding.includeRegistro.radioButtonStatusInativo.isChecked
-        }
-
-        binding.includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
         binding.includeRegistro.editTextAno.setText(dados["ano"].toString() as? String ?: "")
 
         var indicacao = dados["indicacao"] as? String ?: ""
@@ -149,6 +127,36 @@ class DadosCriancaActivity : AppCompatActivity() {
                 .into( binding.includeRegistro.imgPerfilValidacao )
         }
 
+        // Radio buttons
+        val sexo = dados["sexo"] as? String ?: return
+        binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked = sexo == "Masculino"
+        binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked = sexo == "Feminino"
+
+        val especial = dados["especial"] as? String ?: return
+        binding.includeDadosPCD.radioButtonPcdSim.isChecked = especial == "Sim"
+        binding.includeDadosPCD.radioButtonPcdNao.isChecked = especial == "Não"
+
+        val statusfirebase = dados["ativo"] as? String ?: return
+        binding.includeRegistro.radioButtonStatusAtivo.isChecked = statusfirebase == "Sim"
+        binding.includeRegistro.radioButtonStatusInativo.isChecked = statusfirebase == "Não"
+        status = statusfirebase
+
+        if(statusfirebase == "Não"){
+            binding.includeRegistro.editMotivoStatus.isEnabled = true
+        }
+        binding.includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
+
+        val senha = dados["retirouSenha"] as? String ?: return
+        binding.includeRegistro.radioButtonSenhaSim.isChecked = senha == "Sim"
+        binding.includeRegistro.radioButtonSenhaNao.isChecked = senha == "Não"
+
+        val kit = dados["retirouSacola"] as? String ?: return
+        binding.includeRegistro.radioButtonRetiradaSim.isChecked = kit == "Sim"
+        binding.includeRegistro.radioButtonRetiradaNao.isChecked = kit == "Não"
+
+        val blackList = dados["blackList"] as? String ?: return
+        binding.includeRegistro.radioButtonBLSim.isChecked = blackList == "Sim"
+        binding.includeRegistro.radioButtonBLNao.isChecked = blackList == "Não"
     }
 
     private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
@@ -253,13 +261,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         blackListNao = binding.includeRegistro.radioButtonBLNao
         // blackListNao.isEnabled = false
 
-        // Lista com os EditTexts
-        /* val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade,
-            editTextBlusa, editTextCalca, editTextSapato, editTextPcd, editTextGostosPessoais,
-            editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
-            editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
-            editTextBairro, editTextCidade, editTextMotivoStatus, editTextAno, editTextCartao) */
-
         val editTexts = listOf(editTextCpf, editTextDataNascimento, editTextIdade,
             editTextPcd, editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
             editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
@@ -270,7 +271,26 @@ class DadosCriancaActivity : AppCompatActivity() {
             editText.isEnabled = false
         }
 
-        incializarToolbar()
+        // Configurando o listener para mudanças no RadioGroup Status
+        binding.includeRegistro.radioGroupStatus.setOnCheckedChangeListener { _, checkedId ->
+            // Atualiza a variável "especial"
+            status =
+                if (checkedId == binding.includeRegistro.radioButtonStatusAtivo.id) "Sim" else "Não"
+
+            // Verifica se o campo deve ser habilitado ou não
+            val habilitarCampo = checkedId == binding.includeRegistro.radioButtonStatusInativo.id
+
+            // Habilita ou desabilita a descrição com base na seleção
+            binding.includeRegistro.InputMotivoStatus.isEnabled = habilitarCampo
+            binding.includeRegistro.editMotivoStatus.isEnabled = habilitarCampo
+
+            // Se voltar para "Ativo", define texto "Apto para contemplação"
+            if (!habilitarCampo) {
+                binding.includeRegistro.editMotivoStatus.setText("Apto para contemplação")
+            } else {
+                binding.includeRegistro.editMotivoStatus.setText("")
+            }
+        }
 
         // Pegar ID passado
         val bundle = intent.extras
@@ -293,6 +313,7 @@ class DadosCriancaActivity : AppCompatActivity() {
             "listagem" -> configurarBotoesParaListagem()
         }
 
+        incializarToolbar()
         inicializarEventosClique()
     }
 
@@ -382,47 +403,78 @@ class DadosCriancaActivity : AppCompatActivity() {
                     selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
                     var indicacao = selecaoIndicacao
 
+                    var senha = when {
+                        binding.includeRegistro.radioButtonSenhaSim.isChecked -> "Sim"
+                        binding.includeRegistro.radioButtonSenhaNao.isChecked -> "Não"
+                        else -> "Nenhum"
+                    }
+
+                    var kit = when {
+                        binding.includeRegistro.radioButtonRetiradaSim.isChecked -> "Sim"
+                        binding.includeRegistro.radioButtonRetiradaNao.isChecked -> "Não"
+                        else -> "Nenhum"
+                    }
+
+                    var blackList = when {
+                        binding.includeRegistro.radioButtonBLSim.isChecked -> "Sim"
+                        binding.includeRegistro.radioButtonBLNao.isChecked -> "Não"
+                        else -> "Nenhum"
+                    }
+
+                    // Descrição de Status
+                    // editTextMotivoStatus = binding.includeRegistro.editMotivoStatus
+                    var descricaoAtivo = editTextMotivoStatus.text.toString()
+
                     // Habilitar botão foto
-                    // se status Inativo, Motivo libera e fica vazio, se volta para ativo Motivo bloqueia e "Apto para contemplação"
-                    // Só valida se inativo se motiv for preenchido
 
                     // Dados de quem validou o cadastro
                     var validadoPor: String = ""
                     var fotoValidadoPor: String = ""
 
-                    val idUsuario = firebaseAuth.currentUser?.uid
-                    if (idUsuario != null){
-                        firestore.collection("Usuarios")
-                            .document( idUsuario )
-                            .get()
-                            .addOnSuccessListener { documentSnapshot ->
-                                val dadosUsuario = documentSnapshot.data
-                                if ( dadosUsuario != null ){
-                                    val nomeUser = dadosUsuario["nome"] as String
-                                    validadoPor = nomeUser
+                    if (status == "Não" && descricaoAtivo.isEmpty()) {
+                        binding.includeRegistro.InputMotivoStatus.error = "Descreva o motivo da inativação..."
+                        exibirMensagem("Descreva as condições especiais...")
+                    } else {
+                        binding.includeRegistro.InputMotivoStatus.error = null
+                        val idUsuario = firebaseAuth.currentUser?.uid
+                        if (idUsuario != null){
+                            firestore.collection("Usuarios")
+                                .document( idUsuario )
+                                .get()
+                                .addOnSuccessListener { documentSnapshot ->
+                                    val dadosUsuario = documentSnapshot.data
+                                    if ( dadosUsuario != null ){
+                                        val nomeUser = dadosUsuario["nome"] as String
+                                        validadoPor = nomeUser
 
-                                    val foto = dadosUsuario["foto"] as String
+                                        val foto = dadosUsuario["foto"] as String
 
-                                    if (foto.isNotEmpty()) {
-                                        fotoValidadoPor = foto
+                                        if (foto.isNotEmpty()) {
+                                            fotoValidadoPor = foto
+                                        }
+                                        // Após obter os dados do Firestore, processa os dados
+                                        processarDados(
+                                            nome,
+                                            sexo,
+                                            blusa,
+                                            calca,
+                                            sapato,
+                                            gostosPessoais,
+                                            telefone1,
+                                            indicacao,
+                                            validadoPor,
+                                            fotoValidadoPor,
+                                            status,
+                                            descricaoAtivo,
+                                            senha,
+                                            kit,
+                                            blackList
+                                        )
                                     }
-                                    // Após obter os dados do Firestore, processa os dados
-                                    processarDados(
-                                        nome,
-                                        sexo,
-                                        blusa,
-                                        calca,
-                                        sapato,
-                                        gostosPessoais,
-                                        telefone1,
-                                        indicacao,
-                                        validadoPor,
-                                        fotoValidadoPor
-                                    )
+                                } .addOnFailureListener { exception ->
+                                    Log.e("Firestore", "Error getting documents: ", exception)
                                 }
-                            } .addOnFailureListener { exception ->
-                                Log.e("Firestore", "Error getting documents: ", exception)
-                            }
+                        }
                     }
 
                     /*
@@ -524,7 +576,12 @@ class DadosCriancaActivity : AppCompatActivity() {
         telefone1: String,
         indicacao: String,
         validadoPor: String,
-        fotoValidadoPor: String
+        fotoValidadoPor: String,
+        status: String,
+        descricaoAtivo: String,
+        senha: String,
+        kit: String,
+        blackList: String
     ) {
         val dados = mapOf(
             "nome" to nome,
@@ -536,7 +593,12 @@ class DadosCriancaActivity : AppCompatActivity() {
             "telefone1" to telefone1,
             "indicacao" to indicacao,
             "fotoValidadoPor" to fotoValidadoPor,
-            "validadoPor" to validadoPor
+            "ativo" to status,
+            "motivoStatus" to descricaoAtivo,
+            "validadoPor" to validadoPor,
+            "retirouSenha" to senha,
+            "retirouSacola" to kit,
+            "blackList" to blackList
         )
 
         atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
