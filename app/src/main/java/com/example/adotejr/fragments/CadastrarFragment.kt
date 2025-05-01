@@ -730,7 +730,7 @@ class CadastrarFragment : Fragment() {
                                             retirouSenha,
                                             numeroCartao
                                         )
-                                        salvarUsuarioFirestore(crianca,idGerado)
+                                        salvarCriancaFirestore(crianca,idGerado)
                                     } else {
                                         // Altera o texto do botão para "Cadastrar"
                                         binding.btnCadastrarCrianca.text = "Cadastrar"
@@ -947,7 +947,7 @@ class CadastrarFragment : Fragment() {
     }
 
     // --- SALVAR NO BANCO DE DADOS ---
-    private fun salvarUsuarioFirestore(crianca: Crianca, idGerado: String) {
+    private fun salvarCriancaFirestore(crianca: Crianca, idGerado: String) {
         firestore.collection("Criancas")
             .document(crianca.id)
             .set(crianca)

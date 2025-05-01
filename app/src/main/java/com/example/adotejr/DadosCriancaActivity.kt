@@ -1,26 +1,23 @@
 package com.example.adotejr
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.RadioButton
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
-import com.example.adotejr.model.Crianca
-import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
+import java.time.LocalDate
 
 class DadosCriancaActivity : AppCompatActivity() {
     private val binding by lazy {
@@ -30,11 +27,6 @@ class DadosCriancaActivity : AppCompatActivity() {
     // Autenticação
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
-    }
-
-    // Armazenamento Storage
-    private val storage by lazy {
-        FirebaseStorage.getInstance()
     }
 
     // Banco de dados Firestore
@@ -51,7 +43,6 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun recuperarDadosIdGerado() {
-        // colocar teste de internet
         if (NetworkUtils.conectadoInternet(this)) {
             if (idDetalhar != null){
                 firestore.collection("Criancas")
@@ -338,10 +329,10 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun configurarBotoesParaListagem() {
-        // Exibir e habilitar botão de foto
+        // Ocultar e desabilitar botão de foto
         binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.VISIBLE
-            isEnabled = true
+            visibility = View.GONE
+            isEnabled = false
         }
 
         // Ocultar e desabilitar botão de novo cadastro
@@ -368,13 +359,32 @@ class DadosCriancaActivity : AppCompatActivity() {
 
     private fun inicializarEventosClique() {
         binding.btnAtualizarDadosCrianca.setOnClickListener {
+            // Altera o texto do botão para "Aguarde"
+            binding.btnAtualizarDadosCrianca.text = "Aguarde..."
+
+            // Desabilita o botão para evitar novos cliques
+            binding.btnAtualizarDadosCrianca.isEnabled = false
+
             selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
             var indicacao = selecaoIndicacao
 
             if( validarCampos() ) {
+                // Descrição de Status
+                var descricaoAtivo = editTextMotivoStatus.text.toString()
+
                 if (indicacao == "-- Selecione --") {
                     exibirMensagem("Selecione quem indicou!")
+                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                    binding.btnAtualizarDadosCrianca.isEnabled = true
+
+                } else if (status == "Não" && descricaoAtivo.isEmpty()) {
+                    binding.includeRegistro.InputMotivoStatus.error = "Descreva o motivo da inativação..."
+                    exibirMensagem("Descreva as condições especiais...")
+                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                    binding.btnAtualizarDadosCrianca.isEnabled = true
                 } else {
+                    binding.includeRegistro.InputMotivoStatus.error = null
+
                     val nome = binding.editTextNome.text.toString()
                     // Sexo
                     var sexo = when {
@@ -421,21 +431,11 @@ class DadosCriancaActivity : AppCompatActivity() {
                         else -> "Nenhum"
                     }
 
-                    // Descrição de Status
-                    // editTextMotivoStatus = binding.includeRegistro.editMotivoStatus
-                    var descricaoAtivo = editTextMotivoStatus.text.toString()
-
-                    // Habilitar botão foto
-
                     // Dados de quem validou o cadastro
                     var validadoPor: String = ""
                     var fotoValidadoPor: String = ""
 
-                    if (status == "Não" && descricaoAtivo.isEmpty()) {
-                        binding.includeRegistro.InputMotivoStatus.error = "Descreva o motivo da inativação..."
-                        exibirMensagem("Descreva as condições especiais...")
-                    } else {
-                        binding.includeRegistro.InputMotivoStatus.error = null
+                    if (NetworkUtils.conectadoInternet(this)) {
                         val idUsuario = firebaseAuth.currentUser?.uid
                         if (idUsuario != null){
                             firestore.collection("Usuarios")
@@ -471,90 +471,15 @@ class DadosCriancaActivity : AppCompatActivity() {
                                             blackList
                                         )
                                     }
-                                } .addOnFailureListener { exception ->
+                                }.addOnFailureListener { exception ->
                                     Log.e("Firestore", "Error getting documents: ", exception)
                                 }
                         }
-                    }
-
-                    /*
-                    if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
-                        exibirMensagem("Nenhuma imegem selecionada")
                     } else {
-                        // A imagem foi alterada e pode ser inserida no banco de dados
-
-                        if (NetworkUtils.conectadoInternet(this)) {
-                            // Altera o texto do botão para "Aguarde"
-                            binding.btnAtualizarDadosCrianca.text = "Aguarde..."
-
-                            // Desabilita o botão para evitar novos cliques
-                            binding.btnAtualizarDadosCrianca.isEnabled = false
-
-                            /*
-                            // Identificar tipo de imagem
-                            val tipo = identificarTipoImagem()
-                            if (tipo == "Tipo desconhecido") {
-                                // significa que é BITMAP (CAMERA)
-                                uploadImegemCameraStorage(bitmapImagemSelecionada, id, ano) { sucesso ->
-
-                                    if (sucesso) {
-                                        val crianca = Crianca(
-                                            id,
-                                            cpfOriginal,
-                                            nome,
-                                            dataNascimento,
-                                            idade,
-                                            sexo,
-                                            blusa,
-                                            calca,
-                                            sapato,
-                                            especial,
-                                            descricaoEspecial,
-                                            gostosPessoais,
-                                            foto,
-                                            responsavel,
-                                            vinculoResponsavel,
-                                            telefone1,
-                                            telefone2,
-                                            logradouro,
-                                            numero,
-                                            complemento,
-                                            bairro,
-                                            cidade,
-                                            uf,
-                                            cep,
-                                            ano,
-                                            ativo,
-                                            motivoStatus,
-                                            indicacao,
-                                            cadastradoPor,
-                                            fotoCadastradoPor,
-                                            padrinho,
-                                            retirouSacola,
-                                            blackList,
-                                            vinculoFamiliar,
-                                            validadoPor,
-                                            fotoValidadoPor,
-                                            retirouSenha,
-                                            numeroCartao
-                                        )
-                                    } else {
-                                        // Altera o texto do botão para "Salvar / Validar"
-                                        binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-
-                                        // Habilita o botão
-                                        binding.btnAtualizarDadosCrianca.isEnabled = true
-
-                                        exibirMensagem("Erro ao salvar. Tente novamente.")
-                                    }
-                                }
-                            }
-                            */
-                        } else {
-                            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
-                        }
+                        binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                        binding.btnAtualizarDadosCrianca.isEnabled = true
+                        exibirMensagem("Verifique a conexão com a internet e tente novamente!")
                     }
-                    */
                 }
             }
         }
@@ -626,7 +551,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         return true
     }
 
-    // ---------- SALVAR A FOTO/IMAGEM ----------
     private fun atualizarDadosPerfil(id: String, dados: Map<String, String>) {
         firestore.collection("Criancas")
             .document( id )
@@ -634,8 +558,13 @@ class DadosCriancaActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 onStart()
                 exibirMensagem("Validado com Sucesso.")
+                val intent = Intent(this, CartaoActivity::class.java)
+                intent.putExtra("id", id)
+                startActivity(intent)
             }
             .addOnFailureListener {
+                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                binding.btnAtualizarDadosCrianca.isEnabled = true
                 exibirMensagem("Erro ao atualizar perfil. Tente novamente.")
             }
     }

@@ -22,15 +22,18 @@
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
         <activity
+            android:name=".CartaoActivity"
+            android:exported="false" />
+        <activity
             android:name=".DadosCriancaActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"
-            android:parentActivityName=".GerenciamentoActivity"/>
+            android:parentActivityName=".GerenciamentoActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".RedefinirSenhaDeslogadoActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"
-            android:parentActivityName=".LoginActivity" />
+            android:parentActivityName=".LoginActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".ChecarAcessoActivity"
             android:exported="false"
@@ -39,25 +42,25 @@
         <activity
             android:name=".GerenciamentoActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"
-            android:parentActivityName=".LoginActivity" />
+            android:parentActivityName=".LoginActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".RedefinirSenhaActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"
-            android:parentActivityName=".GerenciamentoActivity" />
+            android:parentActivityName=".GerenciamentoActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".CadastroActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"
-            android:parentActivityName=".LoginActivity" />
+            android:parentActivityName=".LoginActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".MainActivity"
             android:exported="false" />
         <activity
             android:name=".LoginActivity"
-            android:windowSoftInputMode="adjustPan"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
