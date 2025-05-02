@@ -65,6 +65,10 @@ class GerenciamentoActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             bottomNavigationView.selectedItemId = R.id.navigation_cadastrar
         }
+
+        // Recuperar botão selecionado ao vir de outra Activity
+        val botaoSelecionado = intent.getIntExtra("botao_selecionado", R.id.navigation_cadastrar)
+        bottomNavigationView.selectedItemId = botaoSelecionado
     }
 
     override fun onResume() {

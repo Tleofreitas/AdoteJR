@@ -118,6 +118,8 @@ class DadosCriancaActivity : AppCompatActivity() {
                 .into( binding.includeRegistro.imgPerfilValidacao )
         }
 
+        binding.includeRegistro.editNumeroCartao.setText(dados["numeroCartao"].toString() as? String ?: "")
+
         // Radio buttons
         val sexo = dados["sexo"] as? String ?: return
         binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked = sexo == "Masculino"

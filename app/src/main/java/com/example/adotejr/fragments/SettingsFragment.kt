@@ -35,6 +35,7 @@ class SettingsFragment : Fragment() {
     private lateinit var editTextQuantidadeCrianca: EditText
     private lateinit var editTextLimiteComum: EditText
     private lateinit var editTextLimitePcd: EditText
+    private var idCartao : String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -94,8 +95,11 @@ class SettingsFragment : Fragment() {
 
             if (datasValidas && quantidadeCriancasValida && idadeComum && idadePcd) {
                 if (NetworkUtils.conectadoInternet(requireContext())) {
+                    if(idCartao == ""){
+                        idCartao = "0"
+                    }
                     val definicoes = Definicoes(
-                        ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd
+                        ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd, idCartao.toInt()
                     )
                     salvarDadosFirestore( definicoes )
                 } else {
@@ -311,6 +315,11 @@ class SettingsFragment : Fragment() {
                         val quantidadeCriancas = dadosDefinicoes["quantidadeDeCriancas"] as String
                         val limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
                         val limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
+                        val idCartaoF = dadosDefinicoes["idCartao"] as Long
+
+                        if(idCartaoF!= 0.toLong()){
+                            idCartao = idCartaoF.toString()
+                        }
 
                         if(dataInicial!=""){
                             binding.editTextDataInicial.setText(dataInicial)

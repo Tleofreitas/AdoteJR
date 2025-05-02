@@ -6,5 +6,6 @@ data class Definicoes(
     var dataFinal: String = "",
     var quantidadeDeCriancas: String = "",
     var limiteIdadeNormal: String = "",
-    var limiteIdadePCD: String = ""
+    var limiteIdadePCD: String = "",
+    var idCartao: Int = 0
 )
