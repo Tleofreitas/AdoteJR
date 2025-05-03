@@ -597,6 +597,7 @@ class CadastrarFragment : Fragment() {
 
             var retirouSenha: String = "Não"
             var numeroCartao: String = ""
+            var gerouCartao: String = "Não"
 
             // Lista de valores obrigatórios a serem validados
             val textInputs = listOf(
@@ -689,48 +690,95 @@ class CadastrarFragment : Fragment() {
                                 // significa que é BITMAP (CAMERA)
                                 uploadImegemCameraStorage(bitmapImagemSelecionada, id, ano) { sucesso ->
                                     if (sucesso) {
-                                        // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                                        val crianca = Crianca(
-                                            id,
-                                            cpfOriginal,
-                                            nome,
-                                            dataNascimento,
-                                            idade,
-                                            sexo,
-                                            blusa,
-                                            calca,
-                                            sapato,
-                                            especial,
-                                            descricaoEspecial,
-                                            gostosPessoais,
-                                            foto,
-                                            responsavel,
-                                            vinculoResponsavel,
-                                            telefone1,
-                                            telefone2,
-                                            logradouro,
-                                            numero,
-                                            complemento,
-                                            bairro,
-                                            cidade,
-                                            uf,
-                                            cep,
-                                            ano,
-                                            ativo,
-                                            motivoStatus,
-                                            indicacao,
-                                            cadastradoPor,
-                                            fotoCadastradoPor,
-                                            padrinho,
-                                            retirouSacola,
-                                            blackList,
-                                            vinculoFamiliar,
-                                            validadoPor,
-                                            fotoValidadoPor,
-                                            retirouSenha,
-                                            numeroCartao
-                                        )
-                                        salvarCriancaFirestore(crianca,idGerado)
+                                        // GERAR NUM CARTAO
+                                        val db = FirebaseFirestore.getInstance()
+                                        db.runTransaction { transaction ->
+                                            val referencia = db.collection("Definicoes").document(ano.toString())
+                                            referencia.get()
+                                                .addOnSuccessListener { documentSnapshot ->
+                                                    if (documentSnapshot.exists()) {
+                                                        val idCartao = documentSnapshot.getLong("idCartao") ?: 0
+                                                        Log.d("Firestore", "ID do cartão recuperado: $idCartao")
+                                                    } else {
+                                                        Log.d("Firestore", "Documento não encontrado, criando um novo.")
+                                                        referencia.set(mapOf("idCartao" to 1)) // Cria o documento com ID inicial
+                                                    }
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    Log.e("Firestore", "Erro ao recuperar documento", e)
+                                                }
+
+                                            val snapshot = transaction.get(referencia)
+
+                                            val ultimoId = snapshot.getLong("idCartao") ?: 0
+                                            val novoId = ultimoId + 1
+
+                                            // Atualiza o ID no banco de forma segura
+                                            transaction.update(referencia, "idCartao", novoId)
+
+                                            // Atualiza o valor do número do cartão
+                                            var numeroCartao = novoId.toString()
+
+                                            val crianca = Crianca(
+                                                id,
+                                                cpfOriginal,
+                                                nome,
+                                                dataNascimento,
+                                                idade,
+                                                sexo,
+                                                blusa,
+                                                calca,
+                                                sapato,
+                                                especial,
+                                                descricaoEspecial,
+                                                gostosPessoais,
+                                                foto,
+                                                responsavel,
+                                                vinculoResponsavel,
+                                                telefone1,
+                                                telefone2,
+                                                logradouro,
+                                                numero,
+                                                complemento,
+                                                bairro,
+                                                cidade,
+                                                uf,
+                                                cep,
+                                                ano,
+                                                ativo,
+                                                motivoStatus,
+                                                indicacao,
+                                                cadastradoPor,
+                                                fotoCadastradoPor,
+                                                padrinho,
+                                                retirouSacola,
+                                                blackList,
+                                                vinculoFamiliar,
+                                                validadoPor,
+                                                fotoValidadoPor,
+                                                retirouSenha,
+                                                numeroCartao,
+                                                gerouCartao
+                                            )
+                                            salvarCriancaFirestore(crianca,idGerado)
+
+                                            novoId // Retorna o novo ID gerado
+                                        }.addOnSuccessListener { novoId ->
+                                            Log.d("Firebase", "Cartão gerado com ID: $novoId")
+                                        }.addOnFailureListener {
+                                            // Altera o texto do botão para "Cadastrar"
+                                            binding.btnCadastrarCrianca.text = "Cadastrar"
+
+                                            // Habilita o botão
+                                            binding.btnCadastrarCrianca.isEnabled = true
+                                            Log.e("Firebase", "Erro ao gerar cartão", it)
+
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "Erro ao gerar Num. Cartão. Tente novamente.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
                                     } else {
                                         // Altera o texto do botão para "Cadastrar"
                                         binding.btnCadastrarCrianca.text = "Cadastrar"
@@ -973,6 +1021,5 @@ class CadastrarFragment : Fragment() {
                 Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG)
                     .show()
             }
-
     }
 }

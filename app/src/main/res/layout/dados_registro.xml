@@ -274,6 +274,50 @@
             android:text="Será gerado automaticamente" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <LinearLayout
+        android:id="@+id/LLCartao"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/InputNumeroCartao">
+
+        <TextView
+            android:id="@+id/textTituloCartao"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
+            android:text="Gerou o cartão?"
+            android:textAppearance="?attr/textAppearanceBody1" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupCartao"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radioButtonCartaoSim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sim"
+                android:enabled="false" />
+
+            <RadioButton
+                android:id="@+id/radioButtonCartaoNao"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Não"
+                android:enabled="false" />
+        </RadioGroup>
+    </LinearLayout>
+
     <TextView
         android:id="@+id/textSenha"
         android:layout_width="match_parent"
@@ -288,8 +332,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/InputNumeroCartao" />
-
+        app:layout_constraintTop_toBottomOf="@+id/LLCartao" />
     <LinearLayout
         android:id="@+id/LLSenha"
         android:layout_width="match_parent"

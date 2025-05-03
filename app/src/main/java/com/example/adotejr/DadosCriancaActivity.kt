@@ -150,6 +150,10 @@ class DadosCriancaActivity : AppCompatActivity() {
         val blackList = dados["blackList"] as? String ?: return
         binding.includeRegistro.radioButtonBLSim.isChecked = blackList == "Sim"
         binding.includeRegistro.radioButtonBLNao.isChecked = blackList == "Não"
+
+        val gerouCartao = dados["gerouCartao"] as? String ?: return
+        binding.includeRegistro.radioButtonCartaoSim.isChecked = gerouCartao == "Sim"
+        binding.includeRegistro.radioButtonCartaoNao.isChecked = gerouCartao == "Não"
     }
 
     private fun definirIndicacaoNoSpinner(valorIndicacao: String) {

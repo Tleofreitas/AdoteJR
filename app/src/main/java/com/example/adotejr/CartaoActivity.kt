@@ -33,7 +33,6 @@ class CartaoActivity : AppCompatActivity() {
 
     var ano = LocalDate.now().year
     private var idDetalhar: String? = null
-    private var idCartaoGerado: Long? = null
 
     override fun onStart() {
         super.onStart()
@@ -60,8 +59,12 @@ class CartaoActivity : AppCompatActivity() {
     }
 
     private fun preencherDadosCrianca(dados: Map<String, Any>) {
+        binding.nomeCartao.text = dados["nome"] as? String ?: ""
+        var nCartao = dados["numeroCartao"] as? String ?: ""
+        binding.numCartao.text = "N°: $nCartao"
 
-        binding.testeDados.text = dados["nome"] as? String ?: ""
+        gerarCartao()
+
         /*
         binding.includeFotoCrianca.imagePerfil.let {
             val foto = dados["foto"] as? String
@@ -89,6 +92,12 @@ class CartaoActivity : AppCompatActivity() {
         binding.includeDadosPCD.radioButtonPcdNao.isChecked = especial == "Não" */
     }
 
+    private fun gerarCartao() {
+        exibirMensagem("Gerando cartão, aguarde...")
+        val bitmap = capturarScreenshot()
+        salvarImagemFirebase(bitmap, idDetalhar, ano)
+    }
+
     private lateinit var textNome: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,28 +113,28 @@ class CartaoActivity : AppCompatActivity() {
             // idDetalhar = 202544290378846.toString()
         }
 
-        textNome = binding.testeDados
-        inicializarEventosClique()
+        textNome = binding.nomeCartao
+        // inicializarEventosClique()
     }
 
-    private fun inicializarEventosClique() {
-        binding.btnGerarCartao.setOnClickListener {
-            // Altera o texto do botão para "Aguarde"
-            binding.btnGerarCartao.text = "Aguarde..."
-
-            // Desabilita o botão para evitar novos cliques
-            binding.btnGerarCartao.isEnabled = false
-
-            val bitmap = capturarScreenshot()
-            salvarImagemFirebase(bitmap, idDetalhar, ano)
-        }
-    }
-
-    // TESTAR VINCULAR O IDCARTAO AO CAMPO DELE
+//    private fun inicializarEventosClique() {
+//        binding.btnGerarCartao.setOnClickListener {
+//            // Altera o texto do botão para "Aguarde"
+//            binding.btnGerarCartao.text = "Aguarde..."
+//
+//            // Desabilita o botão para evitar novos cliques
+//            binding.btnGerarCartao.isEnabled = false
+//
+//            val bitmap = capturarScreenshot()
+//            salvarImagemFirebase(bitmap, idDetalhar, ano)
+//        }
+//    }
 
     private fun capturarScreenshot(): Bitmap {
+        /*
         // Esconde temporariamente o botão
         binding.btnGerarCartao.visibility = View.INVISIBLE
+         */
 
         // Captura apenas o ConstraintLayout
         val view = binding.layoutCartao // Substitua pelo ID correto do seu ConstraintLayout
@@ -133,8 +142,10 @@ class CartaoActivity : AppCompatActivity() {
         val canvas = Canvas(bitmap)
         view.draw(canvas)
 
+        /*
         // Torna o botão visível novamente
         binding.btnGerarCartao.visibility = View.VISIBLE
+         */
 
         return bitmap
     }
@@ -147,82 +158,27 @@ class CartaoActivity : AppCompatActivity() {
             outputStream
         )
 
+        // ADICIONAR TESTES DE INTERNET E REDIRECIONAMENTO SE ERRO
+
         // fotos -> crianças -> ano -> id -> cartao.jpg
         val idCrianca = idDetalhar
-        val ano = ano
-
         if (idCrianca != null) {
             storage.getReference("cartoes")
                 .child(ano.toString())
                 .child("Cartao$idCrianca.jpg")
                 .putBytes(outputStream.toByteArray())
-                .addOnSuccessListener { taskSnapshot ->
-                    /*taskSnapshot.metadata?.reference?.downloadUrl?.addOnSuccessListener { uriDownload ->
-                        val dados = mapOf(
-                            "screenshot" to uriDownload.toString()
-                        )
-                        atualizarDadosPerfil(idUsuario, dados)
-                    }
-                    */
-
-                    val db = FirebaseFirestore.getInstance()
-                    db.runTransaction { transaction ->
-                        val referencia = db.collection("Definicoes").document(ano.toString())
-                        referencia.get()
-                            .addOnSuccessListener { documentSnapshot ->
-                                if (documentSnapshot.exists()) {
-                                    val idCartao = documentSnapshot.getLong("idCartao") ?: 0
-                                    Log.d("Firestore", "ID do cartão recuperado: $idCartao")
-                                } else {
-                                    Log.d("Firestore", "Documento não encontrado, criando um novo.")
-                                    referencia.set(mapOf("idCartao" to 1)) // Cria o documento com ID inicial
-                                }
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("Firestore", "Erro ao recuperar documento", e)
-                            }
-
-                        val snapshot = transaction.get(referencia)
-
-                        val ultimoId = snapshot.getLong("idCartao") ?: 0
-                        val novoId = ultimoId + 1
-
-                        // Atualiza o ID no banco de forma segura
-                        transaction.update(referencia, "idCartao", novoId)
-
-                        // Atualiza o valor do número do cartão
-                        val dados = mapOf(
-                            "numeroCartao" to novoId.toString()
-                        )
-                        firestore.collection("Criancas")
-                            .document( idCrianca )
-                            .update( dados )
-                            .addOnSuccessListener {
-                                exibirMensagem("Cartão gerado com sucesso!")
-                                startActivity(
-                                    Intent(this, GerenciamentoActivity::class.java).apply {
-                                        // Passa o ID do botão desejado
-                                        putExtra("botao_selecionado", R.id.navigation_listagem)
-                                    }
-                                )
-                            }
-                            .addOnFailureListener {
-                                binding.btnGerarCartao.text = "Gerar Cartão"
-                                binding.btnGerarCartao.isEnabled = true
-                                exibirMensagem("Erro ao gerar Num. Cartão. Tente novamente.")
-                            }
-
-                        novoId // Retorna o novo ID gerado
-                    }.addOnSuccessListener { novoId ->
-                        Log.d("Firebase", "Cartão gerado com ID: $novoId")
-                    }.addOnFailureListener {
-                        binding.btnGerarCartao.text = "Gerar Cartão"
-                        binding.btnGerarCartao.isEnabled = true
-                        Log.e("Firebase", "Erro ao gerar cartão", it)
-                    }
+                .addOnSuccessListener {
+                    exibirMensagem("Cartão gerado com sucesso!")
+                    startActivity(
+                        Intent(this, GerenciamentoActivity::class.java).apply {
+                            // Passa o ID do botão desejado
+                            putExtra("botao_selecionado", R.id.navigation_listagem)
+                        }
+                    )
                 }.addOnFailureListener {
+                    /*
                     binding.btnGerarCartao.text = "Gerar Cartão"
-                    binding.btnGerarCartao.isEnabled = true
+                    binding.btnGerarCartao.isEnabled = true */
                     exibirMensagem("Erro ao gerar o cartão. Tente novamente.")
                 }
         }

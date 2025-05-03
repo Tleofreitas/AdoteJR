@@ -55,5 +55,6 @@ data class Crianca (
     var fotoValidadoPor: String = "",
 
     var retirouSenha: String = "",
-    var numeroCartao: String = ""
+    var numeroCartao: String = "",
+    var gerouCartao: String = ""
 )

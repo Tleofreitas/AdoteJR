@@ -238,7 +238,9 @@ class ListagemFragment : Fragment() {
                 0.0 // Evita erro de divisão por zero
             }
 
-            txtEvolucaoCadastro.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentual%)"
+            val percentualArredondado = String.format("%.2f", percentual).replace(",", ".")
+
+            txtEvolucaoCadastro.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentualArredondado%)"
         }
     }
 
