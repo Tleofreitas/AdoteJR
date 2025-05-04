@@ -13,6 +13,7 @@ import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 
@@ -59,37 +60,39 @@ class CartaoActivity : AppCompatActivity() {
     }
 
     private fun preencherDadosCrianca(dados: Map<String, Any>) {
-        binding.nomeCartao.text = dados["nome"] as? String ?: ""
         var nCartao = dados["numeroCartao"] as? String ?: ""
         binding.numCartao.text = "N°: $nCartao"
 
-        gerarCartao()
+        var nome = dados["nome"] as? String ?: ""
+        binding.nomeCartao.text = "$nome"
 
-        /*
-        binding.includeFotoCrianca.imagePerfil.let {
+        var idade = dados["idade"] as? Number ?: 0
+        binding.idadeCartao.text = " Idade: $idade anos"
+
+        var blusa = dados["blusa"] as? String ?: ""
+        binding.blusaCartao.text = " Blusa: $blusa"
+
+        var calca = dados["calca"] as? String ?: ""
+        binding.calcaCartao.text = " Calça: $calca"
+
+        var sapato = dados["sapato"] as? String ?: ""
+        binding.sapatoCartao.text = " Calçado: $sapato"
+
+        var obs = dados["descricaoEspecial"] as? String ?: ""
+        if(obs != ""){
+            binding.pcdCartao.text = " Obs: PCD - $obs"
+        } else {
+            binding.pcdCartao.text = ""
+        }
+
+        binding.fotoCartao.let {
             val foto = dados["foto"] as? String
             if (!foto.isNullOrEmpty()) {
                 Picasso.get().load(foto).into(it)
             }
         }
-        binding.editTextDtNascimento.setText(dados["dataNascimento"] as? String ?: "")
-        binding.editTextIdade.setText((dados["idade"] as? Long)?.toString() ?: "")
-        binding.includeDadosCriancaSacola.editTextBlusa.setText(dados["blusa"] as? String ?: "")
-        binding.includeDadosCriancaSacola.editTextCalca.setText(dados["calca"] as? String ?: "")
-        binding.includeDadosCriancaSacola.editTextSapato.setText(dados["sapato"] as? String ?: "")
-        binding.includeDadosPCD.editTextPcd.setText(dados["descricaoEspecial"] as? String ?: "")
-        binding.includeDadosCriancaSacola.editTextGostos.setText(dados["gostosPessoais"] as? String ?: "")
 
-        // Campos de informações do responsável
-        binding.includeDadosResponsavel.editTextTel1.setText(dados["telefone1"] as? String ?: "")
-
-        val sexo = dados["sexo"] as? String ?: return
-        binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked = sexo == "Masculino"
-        binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked = sexo == "Feminino"
-
-        val especial = dados["especial"] as? String ?: return
-        binding.includeDadosPCD.radioButtonPcdSim.isChecked = especial == "Sim"
-        binding.includeDadosPCD.radioButtonPcdNao.isChecked = especial == "Não" */
+        gerarCartao()
     }
 
     private fun gerarCartao() {
@@ -113,7 +116,7 @@ class CartaoActivity : AppCompatActivity() {
             // idDetalhar = 202544290378846.toString()
         }
 
-        textNome = binding.nomeCartao
+        // textNome = binding.nomeCartao
         // inicializarEventosClique()
     }
 
@@ -131,10 +134,8 @@ class CartaoActivity : AppCompatActivity() {
 //    }
 
     private fun capturarScreenshot(): Bitmap {
-        /*
         // Esconde temporariamente o botão
-        binding.btnGerarCartao.visibility = View.INVISIBLE
-         */
+        // binding.btnGerarCartao.visibility = View.INVISIBLE
 
         // Captura apenas o ConstraintLayout
         val view = binding.layoutCartao // Substitua pelo ID correto do seu ConstraintLayout
@@ -142,10 +143,8 @@ class CartaoActivity : AppCompatActivity() {
         val canvas = Canvas(bitmap)
         view.draw(canvas)
 
-        /*
         // Torna o botão visível novamente
-        binding.btnGerarCartao.visibility = View.VISIBLE
-         */
+        // binding.btnGerarCartao.visibility = View.VISIBLE
 
         return bitmap
     }
@@ -176,9 +175,8 @@ class CartaoActivity : AppCompatActivity() {
                         }
                     )
                 }.addOnFailureListener {
-                    /*
-                    binding.btnGerarCartao.text = "Gerar Cartão"
-                    binding.btnGerarCartao.isEnabled = true */
+                    // binding.btnGerarCartao.text = "Gerar Cartão"
+                    // binding.btnGerarCartao.isEnabled = true
                     exibirMensagem("Erro ao gerar o cartão. Tente novamente.")
                 }
         }

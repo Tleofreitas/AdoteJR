@@ -11,7 +11,7 @@
         android:id="@+id/layoutCartao"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/cinza" >
+        android:background="@color/cinza">
 
         <ImageView
             android:id="@+id/imageView5"
@@ -92,9 +92,11 @@
 
                 <TextView
                     android:id="@+id/nomeCartao"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Thiago Leonardo Rodrigues de Freitas"
+                    android:fontFamily="@font/oswald"
+                    android:text="Teste num cartão"
+                    android:textAlignment="center"
                     android:textColor="@color/azulEscuro"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -120,8 +122,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:background="@color/primaria"
+                    android:fontFamily="@font/noto_sans"
                     android:text=" Idade: 15 anos"
-                    android:textColor="@color/white"
+                    android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -134,9 +137,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@color/primaria"
+                    android:fontFamily="@font/noto_sans"
                     android:text=" Blusa: P adulto"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
@@ -148,9 +152,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@color/primaria"
+                    android:fontFamily="@font/noto_sans"
                     android:text=" Calça: 34 adulto"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
@@ -158,14 +163,15 @@
                     app:layout_constraintTop_toBottomOf="@+id/blusaCartao" />
 
                 <TextView
-                    android:id="@+id/textView11"
+                    android:id="@+id/sapatoCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@color/primaria"
+                    android:fontFamily="@font/noto_sans"
                     android:text=" Sapato: 36 adulto"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
@@ -177,12 +183,27 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text=" OBS: PCD - Cadeirante, TEA, TDAH"
+                    android:fontFamily="@font/noto_sans"
+                    android:text=" Obs: PCD - Cadeirante, tea"
+                    android:textColor="@color/azulEscuro"
                     android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
-                    app:layout_constraintTop_toBottomOf="@+id/textView11" />
+                    app:layout_constraintTop_toBottomOf="@+id/sapatoCartao" />
+
+                <TextView
+                    android:id="@+id/dica"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans"
+                    android:text="Gostos: Basketball"
+                    android:textColor="@color/azulEscuro"
+                    android:textSize="16sp"
+                    android:textStyle="normal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/pcdCartao" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
@@ -218,6 +239,7 @@
                     android:id="@+id/itensObg"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/fjalla_one"
                     android:text="Itens Obrigatórios"
                     android:textColor="@color/azulEscuro"
                     android:textSize="18sp"
@@ -230,7 +252,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="- Bulusa\n- Calça\n- Sapato\n- Peças Íntimas\n- Meia\n- Brinquedo"
+                    android:fontFamily="@font/noto_sans"
+                    android:text="- Blusa\n- Calça\n- Sapato\n- Peças Íntimas\n- Meia\n- Brinquedo"
                     android:textSize="16sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/itensObg" />
@@ -240,6 +263,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:fontFamily="@font/oswald"
                     android:text="Itens Opcionais"
                     android:textColor="@color/azulEscuro"
                     android:textSize="18sp"
@@ -253,6 +277,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:fontFamily="@font/noto_sans"
                     android:text="- Escova e pasta de\ndentes\n- Sabonete, Shampoo\n- Desodorante, Toalha\n- Material escolar\n- Fralda, etc."
                     android:textSize="16sp"
                     app:layout_constraintStart_toStartOf="@+id/guideline3"
@@ -263,8 +288,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:fontFamily="@font/noto_sans_bold"
                     android:justificationMode="inter_word"
-                    android:text="Todos os presentes devem estar embrulhados.\nTodos os itens devem ser novos e conter as etiquetas para possíveis trocas."
+                    android:text="Todos os itens devem ser novos, estar embrulhados e conter as etiquetas para possíveis trocas."
                     android:textSize="16sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -290,26 +316,45 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/cardCartaoItens" />
 
-        <TextView
-            android:id="@+id/respPadrinho"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardResponsavel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
-            android:text="Responsável pelo Padrinho\n\n_______________________________________________\n\nContato: ______________________________________"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/texto2" />
+            app:layout_constraintTop_toBottomOf="@+id/texto2">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/clResp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/respCont"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/fjalla_one"
+                    android:text="Responsável / Contato:"
+                    android:textColor="@color/azulEscuro"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:id="@+id/agradecimento"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
@@ -319,23 +364,17 @@
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/respPadrinho" />
+            app:layout_constraintTop_toBottomOf="@+id/cardResponsavel" />
 
 <!--        <Button-->
 <!--            android:id="@+id/btnGerarCartao"-->
-<!--            android:layout_width="match_parent"-->
+<!--            android:layout_width="130dp"-->
 <!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginStart="16dp"-->
-<!--            android:layout_marginTop="16dp"-->
-<!--            android:layout_marginEnd="16dp"-->
-<!--            android:layout_marginBottom="16dp"-->
 <!--            android:text="Gerar Cartão"-->
 <!--            app:cornerRadius="8dp"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
 <!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintHorizontal_bias="0.5"-->
+<!--            app:layout_constraintHorizontal_bias="0.491"-->
 <!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintTop_toBottomOf="@+id/agradecimento" />-->
+<!--            app:layout_constraintTop_toBottomOf="@+id/respPadrinho" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
