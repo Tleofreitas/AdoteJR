@@ -3,6 +3,7 @@ package com.example.adotejr
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -60,6 +61,9 @@ class CartaoActivity : AppCompatActivity() {
     }
 
     private fun preencherDadosCrianca(dados: Map<String, Any>) {
+        var ano = dados["ano"] as? Number ?: 0
+        binding.cartaoAdote.text = "ADOTE $ano"
+
         var nCartao = dados["numeroCartao"] as? String ?: ""
         binding.numCartao.text = "N°: $nCartao"
 
@@ -78,11 +82,16 @@ class CartaoActivity : AppCompatActivity() {
         var sapato = dados["sapato"] as? String ?: ""
         binding.sapatoCartao.text = " Calçado: $sapato"
 
+        var gostosPessoais = dados["gostosPessoais"] as? String ?: ""
+        binding.dicaCartao.text = " $gostosPessoais"
+
         var obs = dados["descricaoEspecial"] as? String ?: ""
         if(obs != ""){
-            binding.pcdCartao.text = " Obs: PCD - $obs"
+            binding.pcdCartao.text = " PCD - $obs"
         } else {
-            binding.pcdCartao.text = ""
+            binding.pcdCartao.text = " PCD - Não"
+            // binding.pcdCartao.text = ""
+            // binding.pcdCartao.visibility = View.INVISIBLE
         }
 
         binding.fotoCartao.let {
@@ -98,7 +107,8 @@ class CartaoActivity : AppCompatActivity() {
     private fun gerarCartao() {
         exibirMensagem("Gerando cartão, aguarde...")
         val bitmap = capturarScreenshot()
-        salvarImagemFirebase(bitmap, idDetalhar, ano)
+        // salvarImagemFirebase(bitmap, idDetalhar, ano)
+        salvarPdfFirebase(bitmap, idDetalhar, ano)
     }
 
     private lateinit var textNome: TextView
@@ -149,36 +159,76 @@ class CartaoActivity : AppCompatActivity() {
         return bitmap
     }
 
-    private fun salvarImagemFirebase(bitmapImagemSelecionada: Bitmap, idDetalhar: String?, ano: Int) {
+    private fun salvarPdfFirebase(bitmapImagemSelecionada: Bitmap, idDetalhar: String?, ano: Int) {
+        val pdfDocument = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmapImagemSelecionada.width, bitmapImagemSelecionada.height, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+
+        val canvas = page.canvas
+        canvas.drawBitmap(bitmapImagemSelecionada, 0f, 0f, null)
+        pdfDocument.finishPage(page)
+
+        // Convertendo PDF para ByteArray
         val outputStream = ByteArrayOutputStream()
-        bitmapImagemSelecionada.compress(
-            Bitmap.CompressFormat.JPEG,
-            100,
-            outputStream
-        )
+        pdfDocument.writeTo(outputStream)
+        pdfDocument.close()
+
+        val pdfBytes = outputStream.toByteArray()
 
         // ADICIONAR TESTES DE INTERNET E REDIRECIONAMENTO SE ERRO
 
+        // Upload do PDF para Firebase Storage
         // fotos -> crianças -> ano -> id -> cartao.jpg
         val idCrianca = idDetalhar
         if (idCrianca != null) {
             storage.getReference("cartoes")
                 .child(ano.toString())
-                .child("Cartao$idCrianca.jpg")
-                .putBytes(outputStream.toByteArray())
+                .child("Cartao$idCrianca.pdf") // Agora salvamos como PDF
+                .putBytes(pdfBytes)
                 .addOnSuccessListener {
-                    exibirMensagem("Cartão gerado com sucesso!")
+                    exibirMensagem("Cartão em PDF gerado com sucesso!")
                     startActivity(
                         Intent(this, GerenciamentoActivity::class.java).apply {
-                            // Passa o ID do botão desejado
                             putExtra("botao_selecionado", R.id.navigation_listagem)
                         }
                     )
                 }.addOnFailureListener {
-                    // binding.btnGerarCartao.text = "Gerar Cartão"
-                    // binding.btnGerarCartao.isEnabled = true
-                    exibirMensagem("Erro ao gerar o cartão. Tente novamente.")
+                    exibirMensagem("Erro ao gerar o cartão em PDF. Tente novamente.")
                 }
         }
     }
+
+
+//    private fun salvarImagemFirebase(bitmapImagemSelecionada: Bitmap, idDetalhar: String?, ano: Int) {
+//        val outputStream = ByteArrayOutputStream()
+//        bitmapImagemSelecionada.compress(
+//            Bitmap.CompressFormat.JPEG,
+//            100,
+//            outputStream
+//        )
+//
+//        // ADICIONAR TESTES DE INTERNET E REDIRECIONAMENTO SE ERRO
+//
+//        // fotos -> crianças -> ano -> id -> cartao.jpg
+//        val idCrianca = idDetalhar
+//        if (idCrianca != null) {
+//            storage.getReference("cartoes")
+//                .child(ano.toString())
+//                .child("Cartao$idCrianca.jpg")
+//                .putBytes(outputStream.toByteArray())
+//                .addOnSuccessListener {
+//                    exibirMensagem("Cartão gerado com sucesso!")
+//                    startActivity(
+//                        Intent(this, GerenciamentoActivity::class.java).apply {
+//                            // Passa o ID do botão desejado
+//                            putExtra("botao_selecionado", R.id.navigation_listagem)
+//                        }
+//                    )
+//                }.addOnFailureListener {
+//                    // binding.btnGerarCartao.text = "Gerar Cartão"
+//                    // binding.btnGerarCartao.isEnabled = true
+//                    exibirMensagem("Erro ao gerar o cartão. Tente novamente.")
+//                }
+//        }
+//    }
 }

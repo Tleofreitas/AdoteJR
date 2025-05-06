@@ -13,45 +13,38 @@
         android:layout_height="match_parent"
         android:background="@color/cinza">
 
-        <ImageView
-            android:id="@+id/imageView5"
-            android:layout_width="120dp"
-            android:layout_height="30dp"
-            android:scaleType="centerInside"
-            app:layout_constraintBottom_toBottomOf="@+id/imageView9"
-            app:layout_constraintStart_toEndOf="@+id/imageView9"
-            app:layout_constraintTop_toTopOf="@+id/imageView9"
-            app:srcCompat="@drawable/logo_adote2006_laranja" />
-
-        <ImageView
-            android:id="@+id/imageView9"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+        <TextView
+            android:id="@+id/cartaoAdote"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/sriracha"
+            android:text="ADOTE 2025"
+            android:textColor="@color/black"
+            android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/logo_redondo_laranja_melhor_semfundo" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/numCartao"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:fontFamily="@font/sriracha"
             android:text="Nº: 177"
             android:textColor="@color/black"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="@+id/imageView5"
+            android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/imageView5" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/texto1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:justificationMode="inter_word"
             android:text="Este cartão deve ser colocado dentro da sacola junto com os itens obrigatórios. Por favor escreva o número deste cartão na sacola."
@@ -60,7 +53,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView5" />
+            app:layout_constraintTop_toBottomOf="@+id/cartaoAdote" />
 
 
         <androidx.cardview.widget.CardView
@@ -81,14 +74,14 @@
                 android:id="@+id/clDadosCrianca"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guideline2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    app:layout_constraintGuide_percent="0.5" />
+                    app:layout_constraintGuide_percent="0.45" />
 
                 <TextView
                     android:id="@+id/nomeCartao"
@@ -108,8 +101,8 @@
                 <ImageView
                     android:id="@+id/fotoCartao"
                     android:layout_width="0dp"
-                    android:layout_height="150dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_height="175dp"
+                    android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:scaleType="centerCrop"
                     app:layout_constraintEnd_toStartOf="@+id/guideline2"
@@ -125,7 +118,7 @@
                     android:fontFamily="@font/noto_sans"
                     android:text=" Idade: 15 anos"
                     android:textColor="@color/black"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
@@ -158,7 +151,8 @@
                     android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/fotoCartao"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
                     app:layout_constraintTop_toBottomOf="@+id/blusaCartao" />
 
@@ -179,13 +173,15 @@
                     app:layout_constraintTop_toBottomOf="@+id/calcaCartao" />
 
                 <TextView
-                    android:id="@+id/pcdCartao"
+                    android:id="@+id/dicaCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:background="@color/primaria"
+                    android:drawableStart="@drawable/ic_check"
                     android:fontFamily="@font/noto_sans"
-                    android:text=" Obs: PCD - Cadeirante, tea"
-                    android:textColor="@color/azulEscuro"
+                    android:text=" Basketball"
+                    android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -193,17 +189,19 @@
                     app:layout_constraintTop_toBottomOf="@+id/sapatoCartao" />
 
                 <TextView
-                    android:id="@+id/dica"
+                    android:id="@+id/pcdCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/primaria"
                     android:fontFamily="@font/noto_sans"
-                    android:text="Gostos: Basketball"
-                    android:textColor="@color/azulEscuro"
+                    android:text=" PCD - TEA"
+                    android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/pcdCartao" />
+                    app:layout_constraintStart_toStartOf="@+id/guideline2"
+                    app:layout_constraintTop_toBottomOf="@+id/dicaCartao" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
@@ -226,7 +224,7 @@
                 android:id="@+id/clDadosItens"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guideline3"
