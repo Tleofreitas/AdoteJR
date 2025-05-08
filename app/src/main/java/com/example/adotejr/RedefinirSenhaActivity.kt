@@ -33,21 +33,13 @@ class RedefinirSenhaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
         setContentView(binding.root)
-        /*
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }*/
 
         incializarToolbar()
 
         // Pegar E-mail passado
         val bundle = intent.extras
 
-        // val filmes = bundle?.getString("filme")
         if(bundle != null) {
             email = bundle.getString("email").toString()
             binding.editEmailRedefinir.setText( email )

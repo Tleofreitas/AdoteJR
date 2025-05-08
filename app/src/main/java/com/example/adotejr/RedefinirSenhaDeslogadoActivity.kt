@@ -27,15 +27,8 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
         setContentView(binding.root)
-        /*
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-         */
+
         incializarToolbar()
 
         // Pegar E-mail passado
@@ -78,6 +71,8 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
             if( validarCamposCadastroUsuario() ){
                 if( validarEmail(email) ){
                     if (NetworkUtils.conectadoInternet(this)) {
+                        binding.btnSolicitar.text = "Aguarde..."
+                        binding.btnSolicitar.isEnabled = false
                         firebaseAuth.sendPasswordResetEmail(email)
                             .addOnCompleteListener { resultado ->
                                 if (resultado.isSuccessful) {
@@ -93,6 +88,8 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
                                         Intent(this, LoginActivity::class.java)
                                     )
                                 } else {
+                                    binding.btnSolicitar.text = "Solicitar link para redefinir senha"
+                                    binding.btnSolicitar.isEnabled = true
                                     val errorMessage = resultado.exception?.message
                                     exibirMensagem("Erro: $errorMessage");
                                 }
@@ -104,6 +101,8 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
                                     // Testar se o e-mail é válido
                                 } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
                                     erroCredenciaisInvalidas.printStackTrace()
+                                    binding.btnSolicitar.text = "Solicitar link para redefinir senha"
+                                    binding.btnSolicitar.isEnabled = true
                                     exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
                                 }
                             }
@@ -111,6 +110,8 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
                         exibirMensagem("Verifique a conexão com a internet e tente novamente!")
                     }
                 } else {
+                    binding.btnSolicitar.text = "Solicitar link para redefinir senha"
+                    binding.btnSolicitar.isEnabled = true
                     exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
                 }
             }

@@ -26,16 +26,8 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
         setContentView(binding.root)
 
-        /*
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        */
         incializarToolbar()
         inicializarEventosClique()
     }
@@ -65,6 +57,12 @@ class LoginActivity : AppCompatActivity() {
     private fun inicializarEventosClique() {
         binding.btnLogarUsuario.setOnClickListener {
             if( validarCamposLogin() ){
+                binding.btnLogarUsuario.text = "Aguarde..."
+                binding.btnLogarUsuario.isEnabled = false
+
+                binding.btnCriarConta.isEnabled = false
+                binding.btnEsqueciSenha.isEnabled = false
+
                 if (NetworkUtils.conectadoInternet(this)) {
                     logarUsuario()
                 } else {
@@ -101,11 +99,22 @@ class LoginActivity : AppCompatActivity() {
             // testar E-mail cadastrado
             } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
                 erroEmailInvalido.printStackTrace()
+                binding.btnCriarConta.isEnabled = true
+                binding.btnEsqueciSenha.isEnabled = true
+
+                binding.btnLogarUsuario.text = "Logar"
+                binding.btnLogarUsuario.isEnabled = true
                 exibirMensagem("E-mail não cadastrado")
 
             // Testar E-mail e senha
             } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
                 erroCredenciaisInvalidas.printStackTrace()
+
+                binding.btnCriarConta.isEnabled = true
+                binding.btnEsqueciSenha.isEnabled = true
+
+                binding.btnLogarUsuario.text = "Logar"
+                binding.btnLogarUsuario.isEnabled = true
                 exibirMensagem("E-mail não cadastrado OU E-mail/Senha estão incorretos!")
             }
         }

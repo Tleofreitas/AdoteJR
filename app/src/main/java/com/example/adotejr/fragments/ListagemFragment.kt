@@ -1,5 +1,6 @@
 package com.example.adotejr.fragments
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -28,6 +29,7 @@ class ListagemFragment : Fragment() {
     private lateinit var criancasAdapter: CriancasAdapter
     private lateinit var txtAno: TextView
     private lateinit var txtEvolucaoCadastro: TextView
+    private lateinit var progressDialog: ProgressDialog
 
     // Autenticação
     private val firebaseAuth by lazy {
@@ -159,6 +161,12 @@ class ListagemFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+
+        progressDialog = ProgressDialog(requireContext())
+        progressDialog.setMessage("Carregando dados...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+
         // Recupera a quantidade de cadastros feitos
         recuperarQtdCadastros(FirebaseFirestore.getInstance()) { quantidade ->
             qtdCadastrosFeitos = quantidade
@@ -169,9 +177,14 @@ class ListagemFragment : Fragment() {
         recuperarDadosDefinicoes { quantidadeTotal ->
             quantidadeCriancasTotal = quantidadeTotal.toInt().toString() // Converte para Int
             atualizarEvolucaoCadastro() // Atualiza a interface após obter os dados
+            if (dadosCarregados()) progressDialog.dismiss()
         }
 
         adicionarListenerCadastros()
+    }
+
+    private fun dadosCarregados(): Boolean {
+        return qtdCadastrosFeitos != null && quantidadeCriancasTotal != null
     }
 
     private fun recuperarQtdCadastros(firestore: FirebaseFirestore, callback: (Int) -> Unit) {
@@ -264,9 +277,12 @@ class ListagemFragment : Fragment() {
                         listaCriancas.sortBy { it.nome }
                         criancasAdapter.adicionarLista(listaCriancas)
                     }
-
+                    // Fecha o ProgressDialog **após** processar os dados
+                    progressDialog.dismiss()
                 }
         } else {
+            progressDialog.dismiss() // Garante que fecha se houver erro na conexão
+
             // Inicializar eventoSnapshot com um listener "fake" para evitar erro
             eventoSnapshot = firestore.collection("Criancas")
                 .addSnapshotListener { _, _ -> } // Listener vazio

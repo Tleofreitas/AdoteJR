@@ -83,6 +83,7 @@ class ContaFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        binding.progressBar.visibility = View.VISIBLE // Exibe o indicador de carregamento
         recuperarDadosIniciaisUsuario()
     }
 
@@ -111,8 +112,11 @@ class ContaFragment : Fragment() {
                             emailLogado = firebaseAuth.currentUser?.email
                             binding.editEmailPerfil.setText( emailLogado )
                         }
-                    } .addOnFailureListener { exception ->
-                        Log.e("Firestore", "Error getting documents: ", exception)
+                        binding.progressBar.visibility = View.GONE // Esconde o loader quando terminar
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.e("Firestore", "Erro ao obter documentos: ", exception)
+                        binding.progressBar.visibility = View.GONE // Garante que esconde mesmo em erro
                     }
             }
         } else {
@@ -121,6 +125,7 @@ class ContaFragment : Fragment() {
                 "Verifique a conexão com a internet e tente novamente!",
                 Toast.LENGTH_LONG
             ).show()
+            binding.progressBar.visibility = View.GONE // Esconde se não houver conexão
         }
     }
 

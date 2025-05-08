@@ -18,15 +18,8 @@ class ChecarAcessoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
         setContentView(binding.root)
-        /*
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        */
+
         incializarToolbar()
         inicializarEventosClique()
     }
@@ -41,9 +34,11 @@ class ChecarAcessoActivity : AppCompatActivity() {
     }
 
     val currentDate = LocalDate.now()
-    val formatter = DateTimeFormatter.ofPattern("MMyyyy")
-    val mesAno = currentDate.format(formatter)
-    private val senhaAcesso = "@dote$mesAno";
+    val formatterMes = DateTimeFormatter.ofPattern("MM")
+    val formatterDia = DateTimeFormatter.ofPattern("dd")
+    val mes = currentDate.format(formatterMes)
+    val dia = currentDate.format(formatterDia)
+    private val senhaAcesso = "@dote$mes$dia";
 
     private fun inicializarEventosClique() {
         binding.btnChecarSenhaInterna.setOnClickListener {

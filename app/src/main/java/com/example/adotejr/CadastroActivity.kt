@@ -35,15 +35,7 @@ class CadastroActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
         setContentView(binding.root)
-        /*
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-         */
 
         incializarToolbar()
         inicializarEventosClique()
@@ -62,6 +54,9 @@ class CadastroActivity : AppCompatActivity() {
         binding.btnCadastrar.setOnClickListener {
             if( validarCamposCadastroUsuario() ){
                 if (NetworkUtils.conectadoInternet(this)) {
+                    binding.btnCadastrar.text = "Aguarde..."
+                    binding.btnCadastrar.isEnabled = false
+
                     cadastrarUsuarioVoluntario(nome, email, senha)
                 } else {
                     exibirMensagem("Verifique a conexão com a internet e tente novamente!")
@@ -90,16 +85,23 @@ class CadastroActivity : AppCompatActivity() {
 
             // Testar senha forte
             } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException ) {
+                binding.btnCadastrar.text = "Cadastrar"
+                binding.btnCadastrar.isEnabled = true
+
                 erroSenhaFraca.printStackTrace()
                 exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
 
             // Testar se o e-mail já está cadastrado
             } catch ( erroEmailExistente: FirebaseAuthUserCollisionException ) {
+                binding.btnCadastrar.text = "Cadastrar"
+                binding.btnCadastrar.isEnabled = true
                 erroEmailExistente.printStackTrace()
                 exibirMensagem("E-mail já cadastrado, use outro e-mail ou redefina a senha!")
 
             // Testar se o e-mail é válido
             } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException ) {
+                binding.btnCadastrar.text = "Cadastrar"
+                binding.btnCadastrar.isEnabled = true
                 erroCredenciaisInvalidas.printStackTrace()
                 exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
             }
@@ -116,6 +118,8 @@ class CadastroActivity : AppCompatActivity() {
                     Intent(applicationContext, GerenciamentoActivity::class.java)
                 )
             }.addOnFailureListener {
+                binding.btnCadastrar.text = "Cadastrar"
+                binding.btnCadastrar.isEnabled = true
                 exibirMensagem("Erro ao realizar cadastro")
             }
     }
