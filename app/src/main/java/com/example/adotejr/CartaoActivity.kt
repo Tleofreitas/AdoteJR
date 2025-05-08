@@ -6,8 +6,6 @@ import android.graphics.Canvas
 import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityCartaoBinding
 import com.example.adotejr.utils.NetworkUtils
@@ -57,6 +55,10 @@ class CartaoActivity : AppCompatActivity() {
             }
         } else {
             exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+            val intent = Intent(this, DadosCriancaActivity::class.java)
+            intent.putExtra("id", idDetalhar)
+            intent.putExtra("origem", "listagem")
+            startActivity(intent)
         }
     }
 
@@ -90,8 +92,6 @@ class CartaoActivity : AppCompatActivity() {
             binding.pcdCartao.text = " PCD - $obs"
         } else {
             binding.pcdCartao.text = " PCD - Não"
-            // binding.pcdCartao.text = ""
-            // binding.pcdCartao.visibility = View.INVISIBLE
         }
 
         binding.fotoCartao.let {
@@ -111,8 +111,6 @@ class CartaoActivity : AppCompatActivity() {
         salvarPdfFirebase(bitmap, idDetalhar, ano)
     }
 
-    private lateinit var textNome: TextView
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -125,36 +123,14 @@ class CartaoActivity : AppCompatActivity() {
             idDetalhar = "null"
             // idDetalhar = 202544290378846.toString()
         }
-
-        // textNome = binding.nomeCartao
-        // inicializarEventosClique()
     }
 
-//    private fun inicializarEventosClique() {
-//        binding.btnGerarCartao.setOnClickListener {
-//            // Altera o texto do botão para "Aguarde"
-//            binding.btnGerarCartao.text = "Aguarde..."
-//
-//            // Desabilita o botão para evitar novos cliques
-//            binding.btnGerarCartao.isEnabled = false
-//
-//            val bitmap = capturarScreenshot()
-//            salvarImagemFirebase(bitmap, idDetalhar, ano)
-//        }
-//    }
-
     private fun capturarScreenshot(): Bitmap {
-        // Esconde temporariamente o botão
-        // binding.btnGerarCartao.visibility = View.INVISIBLE
-
         // Captura apenas o ConstraintLayout
         val view = binding.layoutCartao // Substitua pelo ID correto do seu ConstraintLayout
         val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         view.draw(canvas)
-
-        // Torna o botão visível novamente
-        // binding.btnGerarCartao.visibility = View.VISIBLE
 
         return bitmap
     }
@@ -174,8 +150,6 @@ class CartaoActivity : AppCompatActivity() {
         pdfDocument.close()
 
         val pdfBytes = outputStream.toByteArray()
-
-        // ADICIONAR TESTES DE INTERNET E REDIRECIONAMENTO SE ERRO
 
         // Upload do PDF para Firebase Storage
         // fotos -> crianças -> ano -> id -> cartao.jpg
@@ -197,38 +171,4 @@ class CartaoActivity : AppCompatActivity() {
                 }
         }
     }
-
-
-//    private fun salvarImagemFirebase(bitmapImagemSelecionada: Bitmap, idDetalhar: String?, ano: Int) {
-//        val outputStream = ByteArrayOutputStream()
-//        bitmapImagemSelecionada.compress(
-//            Bitmap.CompressFormat.JPEG,
-//            100,
-//            outputStream
-//        )
-//
-//        // ADICIONAR TESTES DE INTERNET E REDIRECIONAMENTO SE ERRO
-//
-//        // fotos -> crianças -> ano -> id -> cartao.jpg
-//        val idCrianca = idDetalhar
-//        if (idCrianca != null) {
-//            storage.getReference("cartoes")
-//                .child(ano.toString())
-//                .child("Cartao$idCrianca.jpg")
-//                .putBytes(outputStream.toByteArray())
-//                .addOnSuccessListener {
-//                    exibirMensagem("Cartão gerado com sucesso!")
-//                    startActivity(
-//                        Intent(this, GerenciamentoActivity::class.java).apply {
-//                            // Passa o ID do botão desejado
-//                            putExtra("botao_selecionado", R.id.navigation_listagem)
-//                        }
-//                    )
-//                }.addOnFailureListener {
-//                    // binding.btnGerarCartao.text = "Gerar Cartão"
-//                    // binding.btnGerarCartao.isEnabled = true
-//                    exibirMensagem("Erro ao gerar o cartão. Tente novamente.")
-//                }
-//        }
-//    }
 }

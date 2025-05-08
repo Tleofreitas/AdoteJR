@@ -35,6 +35,8 @@ import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
@@ -596,8 +598,8 @@ class CadastrarFragment : Fragment() {
             var blackList: String = "Não"
 
             var retirouSenha: String = "Não"
-            var numeroCartao: String = ""
             var gerouCartao: String = "Não"
+            var dataCadastro = obterDataHoraBrasil()
 
             // Lista de valores obrigatórios a serem validados
             val textInputs = listOf(
@@ -758,7 +760,8 @@ class CadastrarFragment : Fragment() {
                                                 fotoValidadoPor,
                                                 retirouSenha,
                                                 numeroCartao,
-                                                gerouCartao
+                                                gerouCartao,
+                                                dataCadastro
                                             )
                                             salvarCriancaFirestore(crianca,idGerado)
 
@@ -862,6 +865,13 @@ class CadastrarFragment : Fragment() {
         }
     }
 
+    private fun obterDataHoraBrasil(): String {
+        val zonaBrasil = ZoneId.of("America/Sao_Paulo") // Zona do Brasil
+        val dataHoraAtual = ZonedDateTime.now(zonaBrasil) // Data e hora com fuso horário
+        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss") // Formato
+        return dataHoraAtual.format(formato) // Retorna a data formatada
+    }
+
     private fun identificarTipoImagem(): String {
         return if (imagemSelecionadaUri != null) {
             "URI"
@@ -929,7 +939,6 @@ class CadastrarFragment : Fragment() {
             100,
             outputStream
         )
-
         // fotos -> criancas -> id -> perfil.jpg
         val idCrianca = id
         val ano = ano

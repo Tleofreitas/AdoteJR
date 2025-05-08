@@ -126,10 +126,10 @@ class ListagemFragment : Fragment() {
             }
         })
 
-        inicializarEventosClique()
+        // inicializarEventosClique()
     }
 
-    private fun inicializarEventosClique() {
+    /* private fun inicializarEventosClique() {
         binding.fabRefrese.setOnClickListener {
             Toast.makeText(
                 requireContext(),
@@ -139,7 +139,7 @@ class ListagemFragment : Fragment() {
 
             onStart()
         }
-    }
+    } */
 
     private fun filtrarListaCriancas(texto: String, filtroId: Int) {
         // Filtra a lista com base no critério selecionado pelo usuário (Nome ou CPF)
