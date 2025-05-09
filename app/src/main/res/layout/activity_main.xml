@@ -89,7 +89,7 @@
 
             <!-- Gerenciar Usuários Button -->
             <Button
-                android:id="@+id/button_manage_users"
+                android:id="@+id/btnBaixarUsuarios"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
