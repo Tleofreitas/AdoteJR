@@ -101,14 +101,14 @@ class CartaoActivity : AppCompatActivity() {
             }
         }
 
-        gerarCartao()
+        gerarCartao(nCartao)
     }
 
-    private fun gerarCartao() {
+    private fun gerarCartao(nCartao: String) {
         exibirMensagem("Gerando cartão, aguarde...")
         val bitmap = capturarScreenshot()
         // salvarImagemFirebase(bitmap, idDetalhar, ano)
-        salvarPdfFirebase(bitmap, idDetalhar, ano)
+        salvarPdfFirebase(bitmap, idDetalhar, ano, nCartao)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,7 +135,12 @@ class CartaoActivity : AppCompatActivity() {
         return bitmap
     }
 
-    private fun salvarPdfFirebase(bitmapImagemSelecionada: Bitmap, idDetalhar: String?, ano: Int) {
+    private fun salvarPdfFirebase(
+        bitmapImagemSelecionada: Bitmap,
+        idDetalhar: String?,
+        ano: Int,
+        nCartao: String
+    ) {
         val pdfDocument = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(bitmapImagemSelecionada.width, bitmapImagemSelecionada.height, 1).create()
         val page = pdfDocument.startPage(pageInfo)
@@ -157,7 +162,7 @@ class CartaoActivity : AppCompatActivity() {
         if (idCrianca != null) {
             storage.getReference("cartoes")
                 .child(ano.toString())
-                .child("Cartao$idCrianca.pdf") // Agora salvamos como PDF
+                .child("$nCartao-Cartao$idCrianca.pdf") // Agora salvamos como PDF
                 .putBytes(pdfBytes)
                 .addOnSuccessListener {
                     exibirMensagem("Cartão em PDF gerado com sucesso!")

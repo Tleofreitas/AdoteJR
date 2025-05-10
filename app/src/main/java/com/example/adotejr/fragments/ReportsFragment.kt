@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.model.Usuario
+import com.example.adotejr.utils.ExportadorCadastros
 import com.example.adotejr.utils.ExportadorUsuarios
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
@@ -35,7 +36,6 @@ class ReportsFragment : Fragment() {
             inflater, container, false
         )
 
-        // Adiciona um botão para exportar os dados em Excel
         binding.btnBaixarUsuarios.setOnClickListener {
             if (NetworkUtils.conectadoInternet(requireContext())) {
                 // solicitarLocalParaSalvarExcel()
@@ -47,6 +47,15 @@ class ReportsFragment : Fragment() {
             }
         }
 
+        binding.btnBaixarCadastros.setOnClickListener {
+            if (NetworkUtils.conectadoInternet(requireContext())) {
+                solicitarLocalParaSalvarExcel { uri ->
+                    ExportadorCadastros(requireContext()).exportarComDados(uri)
+                }
+            } else {
+                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+            }
+        }
         return binding.root
     }
 
