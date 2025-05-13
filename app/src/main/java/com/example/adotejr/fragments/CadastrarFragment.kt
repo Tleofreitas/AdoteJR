@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioButton
@@ -25,12 +26,14 @@ import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentCadastrarBinding
 import com.example.adotejr.model.Crianca
+import com.example.adotejr.model.Responsavel
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
@@ -118,6 +121,7 @@ class CadastrarFragment : Fragment() {
     var limiteNormal = ""
     var limitePCD = ""
     private var qtdCadastrosFeitos: Int = 0
+    private var listaResponsaveisFiltrada = listOf<Responsavel>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -368,6 +372,73 @@ class CadastrarFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        // Adiciona um TextWatcher para preencher dados do responsavel automaticamente
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val cpfResponsavel = s.toString()
+
+                if (cpfResponsavel.length == 11) { // Verifica se o formato está completo
+                    responsavelCadastrado(cpfResponsavel) { cadastrado ->
+                        if (cadastrado) {
+                            // Log.d("DEBUG_Resp", "Responsável encontrado no sistema!")
+                            // Toast.makeText(requireContext(), "$listaResponsaveisFiltrada", Toast.LENGTH_LONG).show()
+
+                            // Preenchendo os campos automaticamente
+                            binding.includeDadosResponsavel.editTextNomeResponsavel.setText(
+                                listaResponsaveisFiltrada[0].responsavel)
+                            binding.includeDadosResponsavel.editTextVinculo.setText(
+                                listaResponsaveisFiltrada[0].vinculoResponsavel)
+                            binding.includeDadosResponsavel.editTextTel1.setText(
+                                listaResponsaveisFiltrada[0].telefone1)
+                            binding.includeDadosResponsavel.editTextTel2.setText(
+                                listaResponsaveisFiltrada[0].telefone1)
+                            // Campos de endereço
+                            binding.includeEndereco.editTextCep.setText(
+                                listaResponsaveisFiltrada[0].cep)
+                            binding.includeEndereco.editTextNumero.setText(
+                                listaResponsaveisFiltrada[0].numero)
+                            binding.includeEndereco.editTextRua.setText(
+                                listaResponsaveisFiltrada[0].logradouro)
+                            binding.includeEndereco.editTextComplemento.setText(
+                                listaResponsaveisFiltrada[0].complemento)
+                            binding.includeEndereco.editTextBairro.setText(
+                                listaResponsaveisFiltrada[0].bairro)
+                            binding.includeEndereco.editTextCidade.setText(
+                                listaResponsaveisFiltrada[0].cidade)
+
+                            val indicacao = listaResponsaveisFiltrada[0].indicacao
+                            definirIndicacaoNoSpinner(indicacao)
+                        } else {
+                            // Log.d("DEBUG_Resp", "Responsável não encontrado!")
+
+                            // Limpar
+                            // Preenchendo os campos automaticamente
+                            binding.includeDadosResponsavel.editTextNomeResponsavel.setText("")
+                            binding.includeDadosResponsavel.editTextVinculo.setText("")
+                            binding.includeDadosResponsavel.editTextTel1.setText("")
+                            binding.includeDadosResponsavel.editTextTel2.setText("")
+                            // Campos de endereço
+                            binding.includeEndereco.editTextCep.setText("")
+                            binding.includeEndereco.editTextNumero.setText("")
+                            binding.includeEndereco.editTextRua.setText("")
+                            binding.includeEndereco.editTextComplemento.setText("")
+                            binding.includeEndereco.editTextBairro.setText("")
+                            binding.includeEndereco.editTextCidade.setText("")
+
+                            definirIndicacaoNoSpinner(0.toString())
+                        }
+                    }
+                } else {
+                    // binding.editTextIdade.setText("") // Limpa o campo de idade
+                    binding.includeDadosResponsavel.editTextVinculoFamiliar.error =
+                        "CPF incompleto ou inválido"
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
         // Configurando o listener para mudanças no RadioGroup PCD
         binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
             // Atualiza a variável "especial"
@@ -404,6 +475,16 @@ class CadastrarFragment : Fragment() {
         FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         inicializarEventosClique()
+    }
+
+    private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
+        val adapter = binding.selecaoIndicacao.adapter as ArrayAdapter<String>
+        val position = adapter.getPosition(valorIndicacao)
+        if (position >= 0) {
+            binding.selecaoIndicacao.setSelection(position)
+        } else {
+            binding.selecaoIndicacao.setSelection(0)
+        }
     }
 
     private fun verificarCpfNoFirestore(cpf: String) {
@@ -721,6 +802,24 @@ class CadastrarFragment : Fragment() {
                                             // Atualiza o valor do número do cartão
                                             var numeroCartao = novoId.toString()
 
+
+                                            val dadosResponsavel = Responsavel(
+                                                vinculoFamiliar,
+                                                responsavel,
+                                                vinculoResponsavel,
+                                                telefone1,
+                                                telefone2,
+                                                logradouro,
+                                                numero,
+                                                complemento,
+                                                bairro,
+                                                cidade,
+                                                uf,
+                                                cep,
+                                                indicacao
+                                            )
+                                            salvarDadosResponsavel(dadosResponsavel)
+
                                             val crianca = Crianca(
                                                 id,
                                                 cpfOriginal,
@@ -865,6 +964,24 @@ class CadastrarFragment : Fragment() {
         }
     }
 
+    private fun salvarDadosResponsavel(dadosResponsavel: Responsavel) {
+        firestore.collection("Responsaveis")
+            .document(dadosResponsavel.vinculoFamiliar)
+            .set(dadosResponsavel)
+            /*
+            .addOnSuccessListener {
+                Toast.makeText(
+                    requireContext(),
+                    "Dados Responsável cadastrado com sucesso",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG)
+                    .show()
+            } */
+    }
+
     private fun obterDataHoraBrasil(): String {
         val zonaBrasil = ZoneId.of("America/Sao_Paulo") // Zona do Brasil
         val dataHoraAtual = ZonedDateTime.now(zonaBrasil) // Data e hora com fuso horário
@@ -1001,6 +1118,32 @@ class CadastrarFragment : Fragment() {
         } catch (e: Exception) {
             false // Retorna falso se a data for inválida
         }
+    }
+
+    private fun responsavelCadastrado(responsavelP: String, callback: (Boolean) -> Unit) {
+        val listaResponsaveis = mutableListOf<Responsavel>()
+
+        firestore.collection("Responsaveis")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                listaResponsaveis.clear()
+                querySnapshot.documents.forEach { documentSnapshot ->
+                    val responsavel = documentSnapshot.toObject(Responsavel::class.java)
+                    if (responsavel != null) {
+                        listaResponsaveis.add(responsavel)
+                    }
+                }
+
+                // Filtra os dados APÓS o carregamento estar completo
+                listaResponsaveisFiltrada = listaResponsaveis.filter { responsavel ->
+                    responsavel.vinculoFamiliar.contains(responsavelP, ignoreCase = true)
+                }
+
+                callback(listaResponsaveisFiltrada.isNotEmpty()) // Retorna o resultado no callback
+            }
+            .addOnFailureListener {
+                callback(false) // Em caso de erro, retorna false
+            }
     }
 
     // --- SALVAR NO BANCO DE DADOS ---

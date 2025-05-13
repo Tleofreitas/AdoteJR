@@ -10,22 +10,17 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.FragmentReportsBinding
-import com.example.adotejr.model.Usuario
 import com.example.adotejr.utils.ExportadorCadastros
 import com.example.adotejr.utils.ExportadorUsuarios
 import com.example.adotejr.utils.NetworkUtils
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import java.time.LocalDate
 
 class ReportsFragment : Fragment() {
     private lateinit var binding: FragmentReportsBinding
-    private val listaUsuarios = mutableListOf<Usuario>()
-
     private var callbackExcel: ((Uri) -> Unit)? = null // Variável para armazenar o callback
-
-    // Banco de dados Firestore
-    private val firestore by lazy {
-        FirebaseFirestore.getInstance()
-    }
+    private var ano = LocalDate.now().year
+    private val REQUEST_FOLDER = 1001
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -56,6 +51,16 @@ class ReportsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
             }
         }
+
+        /*
+        binding.btnBaixarCartoes.setOnClickListener {
+            if (NetworkUtils.conectadoInternet(requireContext())) {
+                val caminho = "cartoes/$ano"
+                // Configurar
+            } else {
+                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+            }
+        } */
         return binding.root
     }
 

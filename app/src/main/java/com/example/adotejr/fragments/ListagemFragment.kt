@@ -31,11 +31,6 @@ class ListagemFragment : Fragment() {
     private lateinit var txtEvolucaoCadastro: TextView
     private lateinit var progressDialog: ProgressDialog
 
-    // Autenticação
-    private val firebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
-
     // Banco de dados Firestore
     private val firestore by lazy {
         FirebaseFirestore.getInstance()
@@ -54,19 +49,6 @@ class ListagemFragment : Fragment() {
         binding = FragmentListagemBinding.inflate(
             inflater, container, false
         )
-
-        /*
-        val firestore = FirebaseFirestore.getInstance()
-        firestore.collection("Definicoes")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                for (document in querySnapshot.documents) {
-                    Log.d("Firebase", "ID: ${document.id}, Dados: ${document.data}")
-                }
-            }
-            .addOnFailureListener { exception ->
-                // Log.e("Firebase", "Erro ao obter documentos: ", exception)
-            } */
 
         /*
         val spinner = binding.spinnerAno
