@@ -1,8 +1,6 @@
 package com.example.adotejr
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -11,13 +9,12 @@ import android.widget.EditText
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
+import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
-import java.time.LocalDate
 
 class DadosCriancaActivity : AppCompatActivity() {
     private val binding by lazy {
@@ -259,8 +256,8 @@ class DadosCriancaActivity : AppCompatActivity() {
         // blackListNao.isEnabled = false
 
         val editTexts = listOf(editTextCpf, editTextDataNascimento, editTextIdade,
-            editTextPcd, editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
-            editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
+            editTextPcd, editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo,
+            editTextCEP, editTextNumero, editTextRua, editTextComplemento,
             editTextBairro, editTextCidade, editTextAno)
 
         // Iterar sobre cada um e desativar
@@ -288,6 +285,12 @@ class DadosCriancaActivity : AppCompatActivity() {
                 binding.includeRegistro.editMotivoStatus.setText("")
             }
         }
+
+        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
+        FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
+
+        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
+        FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         // Pegar ID passado
         val bundle = intent.extras
@@ -377,6 +380,8 @@ class DadosCriancaActivity : AppCompatActivity() {
             if( validarCampos() ) {
                 // Descrição de Status
                 var descricaoAtivo = editTextMotivoStatus.text.toString()
+                var telPrincipal = editTextTelefonePrincipal.text.toString()
+                var tel2 = editTextTelefone2.text.toString()
 
                 if (indicacao == "-- Selecione --") {
                     exibirMensagem("Selecione quem indicou!")
@@ -388,6 +393,17 @@ class DadosCriancaActivity : AppCompatActivity() {
                     exibirMensagem("Descreva as condições especiais...")
                     binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
                     binding.btnAtualizarDadosCrianca.isEnabled = true
+
+                } else if (telPrincipal.length<14) {
+                    exibirMensagem("Telefone Principal inválido...")
+                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                    binding.btnAtualizarDadosCrianca.isEnabled = true
+
+                } else if (tel2.isNotEmpty() && tel2.length<14) {
+                    exibirMensagem("Telefone 2 inválido...")
+                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                    binding.btnAtualizarDadosCrianca.isEnabled = true
+
                 } else {
                     binding.includeRegistro.InputMotivoStatus.error = null
 
@@ -413,8 +429,6 @@ class DadosCriancaActivity : AppCompatActivity() {
                     // Gostos Pessoais
                     editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
                     var gostosPessoais = editTextGostosPessoais.text.toString()
-
-                    var telefone1 = binding.includeDadosResponsavel.editTextTel1.text.toString()
 
                     selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
                     var indicacao = selecaoIndicacao
@@ -466,7 +480,8 @@ class DadosCriancaActivity : AppCompatActivity() {
                                             calca,
                                             sapato,
                                             gostosPessoais,
-                                            telefone1,
+                                            telPrincipal,
+                                            tel2,
                                             indicacao,
                                             validadoPor,
                                             fotoValidadoPor,
@@ -487,6 +502,9 @@ class DadosCriancaActivity : AppCompatActivity() {
                         exibirMensagem("Verifique a conexão com a internet e tente novamente!")
                     }
                 }
+            } else {
+                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                binding.btnAtualizarDadosCrianca.isEnabled = true
             }
         }
 
@@ -505,6 +523,7 @@ class DadosCriancaActivity : AppCompatActivity() {
         sapato: String,
         gostosPessoais: String,
         telefone1: String,
+        telefone2: String,
         indicacao: String,
         validadoPor: String,
         fotoValidadoPor: String,
@@ -522,6 +541,7 @@ class DadosCriancaActivity : AppCompatActivity() {
             "sapato" to sapato,
             "gostosPessoais" to gostosPessoais,
             "telefone1" to telefone1,
+            "telefone2" to telefone2,
             "indicacao" to indicacao,
             "fotoValidadoPor" to fotoValidadoPor,
             "ativo" to status,
@@ -542,7 +562,8 @@ class DadosCriancaActivity : AppCompatActivity() {
             binding.includeDadosCriancaSacola.InputBlusa,
             binding.includeDadosCriancaSacola.InputCalca,
             binding.includeDadosCriancaSacola.InputSapato,
-            binding.includeDadosCriancaSacola.InputGostos
+            binding.includeDadosCriancaSacola.InputGostos,
+            binding.includeDadosResponsavel.InputTel1
         )
 
         for (textInput in textInputs) {

@@ -30,6 +30,7 @@ import com.example.adotejr.model.Responsavel
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
+import com.example.adotejr.utils.exibirMensagem
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -736,6 +737,24 @@ class CadastrarFragment : Fragment() {
                         Toast.LENGTH_LONG
                     ).show()
 
+                } else if (telefone1.length<14) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Telefone Principal inválido...",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    binding.btnCadastrarCrianca.text = "Cadastrar"
+                    binding.btnCadastrarCrianca.isEnabled = true
+
+                } else if (telefone2.isNotEmpty() && telefone2.length<14) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Telefone 2 inválido...",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    binding.btnCadastrarCrianca.text = "Cadastrar"
+                    binding.btnCadastrarCrianca.isEnabled = true
+
                 } else {
                     binding.InputDtNascimento.error = null
                     binding.includeDadosPCD.InputDescricaoPcd.error = null
@@ -1152,6 +1171,9 @@ class CadastrarFragment : Fragment() {
             .document(crianca.id)
             .set(crianca)
             .addOnSuccessListener {
+                // Altera o texto do botão para "Cadastrar"
+                binding.btnCadastrarCrianca.text = "Cadastrado"
+
                 Toast.makeText(
                     requireContext(),
                     "Cadastro realizado com sucesso",
