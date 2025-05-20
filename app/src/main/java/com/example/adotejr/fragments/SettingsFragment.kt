@@ -30,6 +30,7 @@ class SettingsFragment : Fragment() {
         FirebaseFirestore.getInstance()
     }
 
+    private var nivelDoUser = ""
     private lateinit var editTextDataInicio: EditText
     private lateinit var editTextDataFinal: EditText
     private lateinit var editTextQuantidadeCrianca: EditText
@@ -45,6 +46,8 @@ class SettingsFragment : Fragment() {
         binding = FragmentSettingsBinding.inflate(
             inflater, container, false
         )
+
+        nivelDoUser = arguments?.getString("nivel").toString() // Obtendo o valor passado
 
         return binding.root
     }
@@ -69,7 +72,12 @@ class SettingsFragment : Fragment() {
 
     private fun inicializarEventosClique() {
         binding.btnEditarDefinicoes.setOnClickListener {
-            mostrarDialogoPermissao()
+            if(validarNivel()){
+                editarCampos()
+                Toast.makeText(requireContext(), "Campos liberados para alteração", Toast.LENGTH_LONG).show()
+            } else {
+                mostrarDialogoPermissao()
+            }
         }
 
         binding.btnAtualizarDefinicoes.setOnClickListener {
@@ -110,6 +118,14 @@ class SettingsFragment : Fragment() {
                     ).show()
                 }
             }
+        }
+    }
+
+    private fun validarNivel(): Boolean {
+        if(nivelDoUser == "Admin"){
+            return true
+        } else {
+            return false
         }
     }
 
