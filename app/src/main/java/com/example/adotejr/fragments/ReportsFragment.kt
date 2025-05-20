@@ -16,16 +16,85 @@ import com.example.adotejr.utils.ExportadorCadastros
 import com.example.adotejr.utils.ExportadorUsuarios
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.storage
 import java.io.File
 import java.time.LocalDate
 
 class ReportsFragment : Fragment() {
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
+    }
+
     private lateinit var binding: FragmentReportsBinding
+    private var nivelDoUser = ""
     private var callbackExcel: ((Uri) -> Unit)? = null // Variável para armazenar o callback
     private var ano = LocalDate.now().year
     val REQUEST_FOLDER = 1001
     val CREATE_DOCUMENT_REQUEST_CODE = 1002
+
+    override fun onStart() {
+        super.onStart()
+        // Recupera os dados de nivel e espera o retorno antes de atualizar a variavel
+        recuperarDadosDefinicoes { nivel ->
+            nivelDoUser = nivel
+            // atualizarEvolucaoCadastro() // Atualiza a interface após obter os dados
+        }
+    }
+
+    private fun recuperarDadosDefinicoes(callback: (String) -> Unit) {
+        if (NetworkUtils.conectadoInternet(requireContext())) {
+            val idUsuario = firebaseAuth.currentUser?.uid
+            if (idUsuario != null){
+                firestore.collection("Usuarios")
+                    .document( idUsuario )
+                    .get()
+                    .addOnSuccessListener { documentSnapshot ->
+                        val dadosUser = documentSnapshot.data
+                        if (dadosUser != null) {
+                            val nivel = dadosUser["nivel"] as String
+
+                            nivelDoUser = nivel // Atualiza a variável global
+                            // atualizarNivel() // Atualiza a UI
+
+                            callback(nivel) // Retorna o valor pelo callback
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.e("Firestore", "Erro ao obter nivel: ", exception)
+                        callback("User") // Retorna "0" em caso de falha
+                    }
+            }
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Verifique a conexão com a internet e tente novamente!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    /*
+    private fun atualizarNivel() {
+        if(quantidadeCriancasTotal != ""){
+            val qtdCadastrosFeitosD = qtdCadastrosFeitos
+            val quantidadeCriancasTotalD = quantidadeCriancasTotal.toDouble()
+
+            val percentual = if (quantidadeCriancasTotalD > 0) {
+                (qtdCadastrosFeitosD * 100) / quantidadeCriancasTotalD
+            } else {
+                0.0 // Evita erro de divisão por zero
+            }
+
+            val percentualArredondado = String.format("%.2f", percentual).replace(",", ".")
+
+            txtEvolucaoCadastro.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentualArredondado%)"
+        }
+    } */
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,33 +106,48 @@ class ReportsFragment : Fragment() {
         )
 
         binding.btnBaixarUsuarios.setOnClickListener {
-            if (NetworkUtils.conectadoInternet(requireContext())) {
-                solicitarLocalParaSalvarExcel { uri ->
-                    ExportadorUsuarios(requireContext()).exportarComDados(uri)
+            if(validarNivel()){
+                if (NetworkUtils.conectadoInternet(requireContext())) {
+                    solicitarLocalParaSalvarExcel { uri ->
+                        ExportadorUsuarios(requireContext()).exportarComDados(uri)
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
                 }
-            } else {
-                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
             }
         }
 
         binding.btnBaixarCadastros.setOnClickListener {
-            if (NetworkUtils.conectadoInternet(requireContext())) {
-                solicitarLocalParaSalvarExcel { uri ->
-                    ExportadorCadastros(requireContext()).exportarComDados(uri)
+            if(validarNivel()){
+                if (NetworkUtils.conectadoInternet(requireContext())) {
+                    solicitarLocalParaSalvarExcel { uri ->
+                        ExportadorCadastros(requireContext()).exportarComDados(uri)
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
                 }
-            } else {
-                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
             }
         }
 
         binding.btnBaixarCartoes.setOnClickListener {
-            if (NetworkUtils.conectadoInternet(requireContext())) {
-                selecionarPasta()
-            } else {
-                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+            if(validarNivel()){
+                if (NetworkUtils.conectadoInternet(requireContext())) {
+                    selecionarPasta()
+                } else {
+                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+                }
             }
         }
         return binding.root
+    }
+
+    private fun validarNivel(): Boolean {
+        if(nivelDoUser == "Admin"){
+            return true
+        } else {
+            Toast.makeText(requireContext(), "Download de arquivos não permitido para seu usuário", Toast.LENGTH_LONG).show()
+            return false
+        }
     }
 
     // Método para abrir o seletor de pasta

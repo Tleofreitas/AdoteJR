@@ -74,7 +74,7 @@ class CadastroActivity : AppCompatActivity() {
                 val idUsuario = resultado.result.user?.uid
                 if ( idUsuario != null ){
                     val usuario = Usuario(
-                        idUsuario, nome, email
+                        idUsuario, nome, email, "User"
                     )
                     salvarUsuarioFirestore( usuario )
                 }
