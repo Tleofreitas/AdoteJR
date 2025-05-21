@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -49,6 +50,10 @@ class ContaFragment : Fragment() {
         FirebaseFirestore.getInstance()
     }
 
+    private var nomeDoUser = ""
+    private var fotoDoUser = ""
+    private var emailDoUser = ""
+
     // Gerenciador de permissões
     private val gerenciadorPermissoes = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -67,6 +72,16 @@ class ContaFragment : Fragment() {
     ): View {
         // Inflate the layout using the binding
         _binding = FragmentContaBinding.inflate(inflater, container, false)
+
+        val dados = arguments?.getString("dados").toString()
+        if(dados != "0"){
+            val partes = dados.split("|")
+
+            nomeDoUser = partes[0]
+            fotoDoUser = partes[1]
+            emailDoUser = partes[2]
+        }
+
         return binding.root
     }
 
@@ -84,41 +99,19 @@ class ContaFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         binding.progressBar.visibility = View.VISIBLE // Exibe o indicador de carregamento
-        recuperarDadosIniciaisUsuario()
+        definirInformacoesUser()
     }
 
-    // Recuperar dados do user no firebase
-    private var emailLogado: String? = null
-    private fun recuperarDadosIniciaisUsuario() {
+    private fun definirInformacoesUser() {
         if (NetworkUtils.conectadoInternet(requireContext())) {
-            val idUsuario = firebaseAuth.currentUser?.uid
-            if (idUsuario != null){
-                firestore.collection("Usuarios")
-                    .document( idUsuario )
-                    .get()
-                    .addOnSuccessListener { documentSnapshot ->
-                        val dadosUsuario = documentSnapshot.data
-                        if ( dadosUsuario != null ){
-                            val nome = dadosUsuario["nome"] as String
-                            val foto = dadosUsuario["foto"] as String
-
-                            if (foto.isNotEmpty()) {
-                                Picasso.get()
-                                    .load( foto )
-                                    .into( binding.includeFotoPerfil.imagePerfil )
-                            }
-
-                            binding.editNomePerfil.setText( nome )
-                            emailLogado = firebaseAuth.currentUser?.email
-                            binding.editEmailPerfil.setText( emailLogado )
-                        }
-                        binding.progressBar.visibility = View.GONE // Esconde o loader quando terminar
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e("Firestore", "Erro ao obter documentos: ", exception)
-                        binding.progressBar.visibility = View.GONE // Garante que esconde mesmo em erro
-                    }
+            if (fotoDoUser!="semFoto") {
+                Picasso.get()
+                    .load( fotoDoUser )
+                    .into( binding.includeFotoPerfil.imagePerfil )
             }
+            binding.editNomePerfil.setText( nomeDoUser )
+            binding.editEmailPerfil.setText( emailDoUser )
+            binding.progressBar.visibility = View.GONE // Esconde se não houver conexão
         } else {
             Toast.makeText(
                 requireContext(),
@@ -159,7 +152,7 @@ class ContaFragment : Fragment() {
 
         binding.btnAlterarSenhaPerfil.setOnClickListener {
             val intent = Intent(activity, RedefinirSenhaDeslogadoActivity::class.java)
-            intent.putExtra("email", emailLogado)
+            intent.putExtra("email", emailDoUser)
             startActivity(intent)
         }
 
@@ -174,15 +167,26 @@ class ContaFragment : Fragment() {
         alertBuilder.setTitle("Logout")
         alertBuilder.setMessage("Deseja realmente se deslogar e sair?")
 
-        alertBuilder.setPositiveButton("Sim"){_, _ ->
+        val customView = LayoutInflater.from(requireContext()).inflate(R.layout.botao_alerta_sn, null)
+        alertBuilder.setView(customView)
+
+        val dialog = alertBuilder.create()
+
+        // Configurar o botão personalizado
+        val btnFechar: Button = customView.findViewById(R.id.btnNao)
+        btnFechar.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        val btnSair: Button = customView.findViewById(R.id.btnSim)
+        btnSair.setOnClickListener {
             firebaseAuth.signOut()
             Toast.makeText(requireContext(), "Deus abençoe e até breve =D", Toast.LENGTH_LONG).show()
             val intent = Intent(activity, LoginActivity::class.java)
             startActivity(intent)
         }
-        alertBuilder.setNeutralButton("Não"){_, _ ->}
 
-        alertBuilder.create().show()
+        dialog.show()
     }
 
     private fun verificarPermissoes() {

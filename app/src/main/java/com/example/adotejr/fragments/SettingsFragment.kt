@@ -16,7 +16,6 @@ import com.example.adotejr.databinding.FragmentSettingsBinding
 import com.example.adotejr.model.Definicoes
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
-import com.example.adotejr.utils.exibirMensagem
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate

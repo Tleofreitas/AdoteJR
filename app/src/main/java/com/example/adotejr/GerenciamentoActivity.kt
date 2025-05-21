@@ -2,7 +2,6 @@ package com.example.adotejr
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
@@ -33,14 +32,24 @@ class GerenciamentoActivity : AppCompatActivity() {
         ActivityGerenciamentoBinding.inflate(layoutInflater)
     }
 
+    private var nomeDoUser = ""
+    private var fotoDoUser = ""
+    private var emailDoUser = ""
     private var nivelDoUser = ""
     private lateinit var bottomNavigationView: BottomNavigationView
 
     override fun onStart() {
         super.onStart()
         // Recupera os dados de nivel e espera o retorno antes de atualizar a variavel
-        recuperarDadosDefinicoes { nivel ->
-            nivelDoUser = nivel
+        recuperarDadosDefinicoes { dados ->
+            if(dados != "0"){
+                val partes = dados.split("|")
+
+                nomeDoUser = partes[0]
+                fotoDoUser = partes[1]
+                nivelDoUser = partes[2]
+                emailDoUser = partes[3]
+            }
         }
     }
 
@@ -55,16 +64,25 @@ class GerenciamentoActivity : AppCompatActivity() {
                         val dadosUser = documentSnapshot.data
                         if (dadosUser != null) {
                             val nivel = dadosUser["nivel"] as String
+                            var foto = dadosUser["foto"] as String
+                            val nome = dadosUser["nome"] as String
+                            val email = dadosUser["email"] as String
 
-                            nivelDoUser = nivel // Atualiza a variável global
-                            // atualizarNivel() // Atualiza a UI
+                            if(foto.isEmpty()){
+                                foto = "semFoto"
+                            }
 
-                            callback(nivel) // Retorna o valor pelo callback
+                            // Atualiza as variáveis globais
+                            nomeDoUser = nome
+                            fotoDoUser = foto
+                            nivelDoUser = nivel
+                            emailDoUser = email
+                            callback("$nome|$foto|$nivel|$email") // Retorna o valor pelo callback
                         }
                     }
                     .addOnFailureListener { exception ->
                         Log.e("Firestore", "Erro ao obter nivel: ", exception)
-                        callback("User") // Retorna "0" em caso de falha
+                        callback("0") // Retorna "0" em caso de falha
                     }
             }
         } else {
@@ -90,7 +108,6 @@ class GerenciamentoActivity : AppCompatActivity() {
             val bundle = Bundle() // Criando o Bundle para passar dados
 
             when (item.itemId) {
-                // R.id.navigation_reports -> selectedFragment = ReportsFragment()
                 R.id.navigation_reports -> {
                     selectedFragment = ReportsFragment()
                     bundle.putString("nivel", nivelDoUser)
@@ -101,7 +118,11 @@ class GerenciamentoActivity : AppCompatActivity() {
                 }
                 R.id.navigation_listagem -> selectedFragment = ListagemFragment()
                 R.id.navigation_cadastrar -> selectedFragment = CadastrarFragment()
-                R.id.navigation_perfil -> selectedFragment = ContaFragment()
+
+                R.id.navigation_perfil -> {
+                    selectedFragment = ContaFragment()
+                    bundle.putString("dados", "$nomeDoUser|$fotoDoUser|$emailDoUser")
+                }
             }
 
             if (selectedFragment != null) {
