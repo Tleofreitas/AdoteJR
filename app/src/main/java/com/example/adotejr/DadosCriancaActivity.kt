@@ -151,6 +151,10 @@ class DadosCriancaActivity : AppCompatActivity() {
         val gerouCartao = dados["gerouCartao"] as? String ?: return
         binding.includeRegistro.radioButtonCartaoSim.isChecked = gerouCartao == "Sim"
         binding.includeRegistro.radioButtonCartaoNao.isChecked = gerouCartao == "Não"
+
+        val chegouKit = dados["chegouKit"] as? String ?: return
+        binding.includeRegistro.radioButtonCKSim.isChecked = chegouKit == "Sim"
+        binding.includeRegistro.radioButtonCKNao.isChecked = chegouKit == "Não"
     }
 
     private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
@@ -451,6 +455,12 @@ class DadosCriancaActivity : AppCompatActivity() {
                         else -> "Nenhum"
                     }
 
+                    var chegouKit = when {
+                        binding.includeRegistro.radioButtonCKSim.isChecked -> "Sim"
+                        binding.includeRegistro.radioButtonCKNao.isChecked -> "Não"
+                        else -> "Nenhum"
+                    }
+
                     // Dados de quem validou o cadastro
                     var validadoPor: String = ""
                     var fotoValidadoPor: String = ""
@@ -489,7 +499,8 @@ class DadosCriancaActivity : AppCompatActivity() {
                                             descricaoAtivo,
                                             senha,
                                             kit,
-                                            blackList
+                                            blackList,
+                                            chegouKit
                                         )
                                     }
                                 }.addOnFailureListener { exception ->
@@ -531,7 +542,8 @@ class DadosCriancaActivity : AppCompatActivity() {
         descricaoAtivo: String,
         senha: String,
         kit: String,
-        blackList: String
+        blackList: String,
+        chegouKit: String
     ) {
         val dados = mapOf(
             "nome" to nome,
@@ -549,7 +561,8 @@ class DadosCriancaActivity : AppCompatActivity() {
             "validadoPor" to validadoPor,
             "retirouSenha" to senha,
             "retirouSacola" to kit,
-            "blackList" to blackList
+            "blackList" to blackList,
+            "chegouKit" to chegouKit
         )
 
         atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco

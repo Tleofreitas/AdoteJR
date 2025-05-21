@@ -57,5 +57,6 @@ data class Crianca (
     var retirouSenha: String = "",
     var numeroCartao: String = "",
     var gerouCartao: String = "",
-    var dataCadastro: String = ""
+    var dataCadastro: String = "",
+    var chegouKit: String = ""
 )

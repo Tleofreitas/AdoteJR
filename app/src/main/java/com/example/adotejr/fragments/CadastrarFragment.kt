@@ -682,6 +682,7 @@ class CadastrarFragment : Fragment() {
             var retirouSenha: String = "Não"
             var gerouCartao: String = "Não"
             var dataCadastro = obterDataHoraBrasil()
+            var chegouKit: String = "Não"
 
             // Lista de valores obrigatórios a serem validados
             val textInputs = listOf(
@@ -821,7 +822,6 @@ class CadastrarFragment : Fragment() {
                                             // Atualiza o valor do número do cartão
                                             var numeroCartao = novoId.toString()
 
-
                                             val dadosResponsavel = Responsavel(
                                                 vinculoFamiliar,
                                                 responsavel,
@@ -879,7 +879,8 @@ class CadastrarFragment : Fragment() {
                                                 retirouSenha,
                                                 numeroCartao,
                                                 gerouCartao,
-                                                dataCadastro
+                                                dataCadastro,
+                                                chegouKit
                                             )
                                             salvarCriancaFirestore(crianca,idGerado)
 
