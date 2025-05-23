@@ -148,10 +148,6 @@ class DadosCriancaActivity : AppCompatActivity() {
         binding.includeRegistro.radioButtonBLSim.isChecked = blackList == "Sim"
         binding.includeRegistro.radioButtonBLNao.isChecked = blackList == "Não"
 
-        val gerouCartao = dados["gerouCartao"] as? String ?: return
-        binding.includeRegistro.radioButtonCartaoSim.isChecked = gerouCartao == "Sim"
-        binding.includeRegistro.radioButtonCartaoNao.isChecked = gerouCartao == "Não"
-
         val chegouKit = dados["chegouKit"] as? String ?: return
         binding.includeRegistro.radioButtonCKSim.isChecked = chegouKit == "Sim"
         binding.includeRegistro.radioButtonCKNao.isChecked = chegouKit == "Não"

@@ -51,11 +51,11 @@ class ExportadorCadastros(override val context: Context) : ExportadorExcel(conte
         headerRow.createCell(30).setCellValue("Ativo")
         headerRow.createCell(31).setCellValue("Motivo Status")
         headerRow.createCell(32).setCellValue("N° Cartão")
-        headerRow.createCell(33).setCellValue("Gerou Cartão")
-        headerRow.createCell(34).setCellValue("Padrinho")
-        headerRow.createCell(35).setCellValue("Retirou Senha")
-        headerRow.createCell(36).setCellValue("Retiro Kit (Sacola)")
-        headerRow.createCell(37).setCellValue("Black List")
+        headerRow.createCell(33).setCellValue("Padrinho")
+        headerRow.createCell(34).setCellValue("Retirou Senha")
+        headerRow.createCell(35).setCellValue("Retiro Kit (Sacola)")
+        headerRow.createCell(36).setCellValue("Black List")
+        headerRow.createCell(37).setCellValue("Chegou Kit (Sacola)")
 
         // Preenche as linhas da planilha com os dados
         listaCadastro.forEachIndexed { index, crianca ->
@@ -93,11 +93,11 @@ class ExportadorCadastros(override val context: Context) : ExportadorExcel(conte
             row.createCell(30).setCellValue(crianca.ativo)
             row.createCell(31).setCellValue(crianca.motivoStatus)
             row.createCell(32).setCellValue(crianca.numeroCartao)
-            row.createCell(33).setCellValue(crianca.gerouCartao)
-            row.createCell(34).setCellValue(crianca.padrinho)
-            row.createCell(35).setCellValue(crianca.retirouSenha)
-            row.createCell(36).setCellValue(crianca.retirouSacola)
-            row.createCell(37).setCellValue(crianca.blackList)
+            row.createCell(33).setCellValue(crianca.padrinho)
+            row.createCell(34).setCellValue(crianca.retirouSenha)
+            row.createCell(35).setCellValue(crianca.retirouSacola)
+            row.createCell(36).setCellValue(crianca.blackList)
+            row.createCell(37).setCellValue(crianca.chegouKit)
         }
     }
 

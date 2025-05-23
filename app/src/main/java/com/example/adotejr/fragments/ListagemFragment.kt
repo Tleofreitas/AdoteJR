@@ -109,21 +109,7 @@ class ListagemFragment : Fragment() {
                 // Não necessário para esta lógica, mas obrigatório implementar
             }
         })
-
-        // inicializarEventosClique()
     }
-
-    /* private fun inicializarEventosClique() {
-        binding.fabRefrese.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                "Carregando...",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            onStart()
-        }
-    } */
 
     private fun filtrarListaCriancas(texto: String, filtroId: Int) {
         // Filtra a lista com base no critério selecionado pelo usuário (Nome ou CPF)
@@ -131,6 +117,9 @@ class ListagemFragment : Fragment() {
             if (filtroId == binding.rbNome.id) {
                 // Filtra pelo nome, ignorando maiúsculas e minúsculas
                 crianca.nome.contains(texto, ignoreCase = true)
+            } else if (filtroId == binding.rbNCartao.id) {
+                // Filtra pelo Número do Cartão (mantendo exata correspondência)
+                crianca.numeroCartao.contains(texto)
             } else {
                 // Filtra pelo CPF (mantendo exata correspondência)
                 crianca.id.contains(ano.toString()+texto)

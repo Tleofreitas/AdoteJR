@@ -167,7 +167,7 @@ class CadastrarFragment : Fragment() {
                             // Toast.makeText(requireContext(), "A data vigente está no intervalo? $estaNoIntervalo", Toast.LENGTH_LONG).show()
                         }
 
-                        if((quantidadeCriancasTotal.toInt()-qtdCadastrosFeitos) == 50 ) {
+                        if((quantidadeCriancasTotal.toInt()-qtdCadastrosFeitos) <= 50 ) {
                             alertaDefinicoes("CHEGANDOLIMITE",qtdCadastrosFeitos,quantidadeCriancasTotal)
                         }
 
@@ -245,7 +245,7 @@ class CadastrarFragment : Fragment() {
 
         if(tipo == "DEF"){
             alertBuilder.setMessage("Não há datas liberadas para realização de cadastros." +
-                    "\nAdicione os campos no menu Definições ou fale com a administração do do Adote.")
+                    "\nAdicione os campos no menu Definições ou fale com a administração do Adote.")
 
         } else if(tipo == "DATA"){
             alertBuilder.setMessage("Período de cadastro finalizado." +
@@ -680,7 +680,6 @@ class CadastrarFragment : Fragment() {
             var blackList: String = "Não"
 
             var retirouSenha: String = "Não"
-            var gerouCartao: String = "Não"
             var dataCadastro = obterDataHoraBrasil()
             var chegouKit: String = "Não"
 
@@ -878,7 +877,6 @@ class CadastrarFragment : Fragment() {
                                                 fotoValidadoPor,
                                                 retirouSenha,
                                                 numeroCartao,
-                                                gerouCartao,
                                                 dataCadastro,
                                                 chegouKit
                                             )

@@ -25,6 +25,8 @@ class CriancasAdapter(
 
         fun bind( crianca: Crianca ){
             binding.textNomeCrianca.text = crianca.nome
+            binding.textIdadeCrianca.text = "Idade: ${crianca.idade} anos"
+            binding.textNumCartao.text = "Cartão: ${crianca.numeroCartao}"
             // binding.textCpfCrianca.text = "CPF: "+crianca.cpf
             Picasso.get()
                 .load( crianca.foto )
