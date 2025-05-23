@@ -115,6 +115,7 @@ class DadosCriancaActivity : AppCompatActivity() {
                 .into( binding.includeRegistro.imgPerfilValidacao )
         }
 
+        binding.includeRegistro.editPadrinho.setText(dados["padrinho"].toString() as? String ?: "")
         binding.includeRegistro.editNumeroCartao.setText(dados["numeroCartao"].toString() as? String ?: "")
 
         // Radio buttons
@@ -408,6 +409,7 @@ class DadosCriancaActivity : AppCompatActivity() {
                     binding.includeRegistro.InputMotivoStatus.error = null
 
                     val nome = binding.editTextNome.text.toString()
+                    val padrinho = binding.includeRegistro.editPadrinho.text.toString()
                     // Sexo
                     var sexo = when {
                         binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked -> "Masculino"
@@ -496,7 +498,8 @@ class DadosCriancaActivity : AppCompatActivity() {
                                             senha,
                                             kit,
                                             blackList,
-                                            chegouKit
+                                            chegouKit,
+                                            padrinho
                                         )
                                     }
                                 }.addOnFailureListener { exception ->
@@ -539,7 +542,8 @@ class DadosCriancaActivity : AppCompatActivity() {
         senha: String,
         kit: String,
         blackList: String,
-        chegouKit: String
+        chegouKit: String,
+        padrinho: String
     ) {
         val dados = mapOf(
             "nome" to nome,
@@ -558,7 +562,8 @@ class DadosCriancaActivity : AppCompatActivity() {
             "retirouSenha" to senha,
             "retirouSacola" to kit,
             "blackList" to blackList,
-            "chegouKit" to chegouKit
+            "chegouKit" to chegouKit,
+            "padrinho" to padrinho
         )
 
         atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
