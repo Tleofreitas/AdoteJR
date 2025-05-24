@@ -165,17 +165,14 @@ class CadastrarFragment : Fragment() {
                             binding.btnChecarCpf.isEnabled = false
                             alertaDefinicoes("DATA", 0, 0.toString())
                             // Toast.makeText(requireContext(), "A data vigente está no intervalo? $estaNoIntervalo", Toast.LENGTH_LONG).show()
-                        }
-
-                        if((quantidadeCriancasTotal.toInt()-qtdCadastrosFeitos) <= 50 ) {
-                            alertaDefinicoes("CHEGANDOLIMITE",qtdCadastrosFeitos,quantidadeCriancasTotal)
-                        }
-
-                        if(qtdCadastrosFeitos >= quantidadeCriancasTotal.toInt()){
+                        } else if(qtdCadastrosFeitos >= quantidadeCriancasTotal.toInt()){
                             // Desabilita os campos para evitar qualquer tentativa de cadastro
                             binding.editTextCpf.isEnabled = false
                             binding.btnChecarCpf.isEnabled = false
                             alertaDefinicoes("LIMITE", 0, 0.toString())
+                        } else if((qtdCadastrosFeitos<quantidadeCriancasTotal.toInt()) &&
+                            (quantidadeCriancasTotal.toInt()-qtdCadastrosFeitos) <= 50 ) {
+                            alertaDefinicoes("CHEGANDOLIMITE",qtdCadastrosFeitos,quantidadeCriancasTotal)
                         }
                     } else {
                         // Desabilita os campos para evitar qualquer tentativa de cadastro
