@@ -7,5 +7,6 @@ data class Definicoes(
     var quantidadeDeCriancas: String = "",
     var limiteIdadeNormal: String = "",
     var limiteIdadePCD: String = "",
-    var idCartao: Int = 0
+    var idCartao: Int = 0,
+    var varianteDeSenha: String = ""
 )

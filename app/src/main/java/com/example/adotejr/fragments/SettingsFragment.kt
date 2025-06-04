@@ -36,6 +36,7 @@ class SettingsFragment : Fragment() {
     private lateinit var editTextLimiteComum: EditText
     private lateinit var editTextLimitePcd: EditText
     private var idCartao : String = ""
+    private lateinit var editTextVariante: EditText
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -66,7 +67,26 @@ class SettingsFragment : Fragment() {
 
         editTextLimitePcd = binding.editTextLimitePCD
 
+        editTextVariante = binding.editTextVariante
+
+        if(nivelDoUser != "Admin"){
+            ocultarSenha()
+        }
+
         inicializarEventosClique()
+    }
+
+    private fun ocultarSenha() {
+        // Ocultar titulo
+        binding.textVariante.apply {
+            visibility = View.GONE
+        }
+
+        // Ocultar e desabilitar Input
+        binding.InputVariante.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
     }
 
     private fun inicializarEventosClique() {
@@ -75,47 +95,60 @@ class SettingsFragment : Fragment() {
                 editarCampos()
                 Toast.makeText(requireContext(), "Campos liberados para alteração", Toast.LENGTH_LONG).show()
             } else {
-                mostrarDialogoPermissao()
+                // mostrarDialogoPermissao()
+                Toast.makeText(requireContext(), "Edição NÃO PERMITIDA para seu usuário", Toast.LENGTH_LONG).show()
             }
         }
 
         binding.btnAtualizarDefinicoes.setOnClickListener {
-            editTextDataInicio = binding.editTextDataInicial
-            var dtInicio = editTextDataInicio.text.toString()
+            if(validarNivel()){
+                editTextDataInicio = binding.editTextDataInicial
+                var dtInicio = editTextDataInicio.text.toString()
 
-            editTextDataFinal = binding.editTextDataFinal
-            var dtFim = editTextDataFinal.text.toString()
+                editTextDataFinal = binding.editTextDataFinal
+                var dtFim = editTextDataFinal.text.toString()
 
-            editTextQuantidadeCrianca = binding.editTextQtdCriancas
-            var qtdCriancas = editTextQuantidadeCrianca.text.toString()
+                editTextQuantidadeCrianca = binding.editTextQtdCriancas
+                var qtdCriancas = editTextQuantidadeCrianca.text.toString()
 
-            editTextLimiteComum = binding.editTextLimiteNormal
-            var limiteComum = editTextLimiteComum.text.toString()
+                editTextLimiteComum = binding.editTextLimiteNormal
+                var limiteComum = editTextLimiteComum.text.toString()
 
-            editTextLimitePcd = binding.editTextLimitePCD
-            var limitePcd = editTextLimitePcd.text.toString()
+                editTextLimitePcd = binding.editTextLimitePCD
+                var limitePcd = editTextLimitePcd.text.toString()
 
-            val datasValidas = verificarDatas(binding.InputDataInical, binding.InputDataFinal)
-            val quantidadeCriancasValida = verificarQuantidade(binding.InputQtdCriancas)
-            val idadeComum = verificarIdadeComum(binding.InputLimiteNormal)
-            val idadePcd = verificarIdadePCD(binding.InputLimitePCD)
+                editTextVariante = binding.editTextVariante
+                var variante = editTextVariante.text.toString()
 
-            if (datasValidas && quantidadeCriancasValida && idadeComum && idadePcd) {
-                if (NetworkUtils.conectadoInternet(requireContext())) {
-                    if(idCartao == ""){
-                        idCartao = "0"
+                val datasValidas = verificarDatas(binding.InputDataInical, binding.InputDataFinal)
+                val quantidadeCriancasValida = verificarQuantidade(binding.InputQtdCriancas)
+                val idadeComum = verificarIdadeComum(binding.InputLimiteNormal)
+                val idadePcd = verificarIdadePCD(binding.InputLimitePCD)
+
+                if (datasValidas && quantidadeCriancasValida && idadeComum && idadePcd) {
+                    if (NetworkUtils.conectadoInternet(requireContext())) {
+                        if(idCartao == ""){
+                            idCartao = "0"
+                        }
+                        val definicoes = Definicoes(
+                            ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd,
+                            idCartao.toInt(), variante
+                        )
+                        salvarDadosFirestore( definicoes )
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "Verifique a conexão com a internet e tente novamente!",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
-                    val definicoes = Definicoes(
-                        ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd, idCartao.toInt()
-                    )
-                    salvarDadosFirestore( definicoes )
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Verifique a conexão com a internet e tente novamente!",
-                        Toast.LENGTH_LONG
-                    ).show()
                 }
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Acesso Negado!",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -257,11 +290,13 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    /*
     val currentDate = LocalDate.now()
     val formatterMes = DateTimeFormatter.ofPattern("MM")
     val formatterDia = DateTimeFormatter.ofPattern("dd")
     val mes = currentDate.format(formatterMes)
     val dia = currentDate.format(formatterDia)
+
     private val senhaAcesso = "$mes$dia@dote";
     private fun mostrarDialogoPermissao() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_acesso_restrito, null)
@@ -295,7 +330,7 @@ class SettingsFragment : Fragment() {
             dialog.dismiss() // Fecha o Dialog
         }
         dialog.show()
-    }
+    } */
 
     private fun editarCampos() {
         binding.editTextDataInicial.isEnabled = true
@@ -303,6 +338,7 @@ class SettingsFragment : Fragment() {
         binding.editTextQtdCriancas.isEnabled = true
         binding.editTextLimiteNormal.isEnabled = true
         binding.editTextLimitePCD.isEnabled = true
+        binding.editTextVariante.isEnabled = true
     }
 
     override fun onStart() {
@@ -314,6 +350,7 @@ class SettingsFragment : Fragment() {
     private var qtdCriancas: Int? = 0
     private var limiteIdadeNormal: Int? = 12
     private var limiteIdadePcd: Int? = 15
+    private var varianteSenha: String? = ""
     var ano = LocalDate.now().year
     // Teste AlertDialog
     // ano = 2026
@@ -331,6 +368,7 @@ class SettingsFragment : Fragment() {
                         val limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
                         val limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
                         val idCartaoF = dadosDefinicoes["idCartao"] as Long
+                        val variante = dadosDefinicoes["varianteDeSenha"] as String
 
                         if(idCartaoF!= 0.toLong()){
                             idCartao = idCartaoF.toString()
@@ -355,10 +393,15 @@ class SettingsFragment : Fragment() {
                         if(limitePCD!=""){
                             binding.editTextLimitePCD.setText(limitePCD)
                         }
+
+                        if(variante!=""){
+                            binding.editTextVariante.setText(variante)
+                        }
                     } else {
                         binding.editTextQtdCriancas.setText(qtdCriancas.toString())
                         binding.editTextLimiteNormal.setText(limiteIdadeNormal.toString())
                         binding.editTextLimitePCD.setText(limiteIdadePcd.toString())
+                        binding.editTextVariante.setText(varianteSenha)
                         alertaDefinicoes(ano)
                     }
                 } .addOnFailureListener { exception ->
