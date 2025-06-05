@@ -39,6 +39,7 @@ class ChecarAcessoActivity : AppCompatActivity() {
     val mes = currentDate.format(formatterMes)
     val dia = currentDate.format(formatterDia)
     private val senhaAcesso = "@dote$mes$dia";
+    // Alterar senha para @dote + variante
 
     private fun inicializarEventosClique() {
         binding.btnChecarSenhaInterna.setOnClickListener {

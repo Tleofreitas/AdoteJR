@@ -338,7 +338,6 @@ class SettingsFragment : Fragment() {
         binding.editTextQtdCriancas.isEnabled = true
         binding.editTextLimiteNormal.isEnabled = true
         binding.editTextLimitePCD.isEnabled = true
-        binding.editTextVariante.isEnabled = true
     }
 
     override fun onStart() {
@@ -394,9 +393,13 @@ class SettingsFragment : Fragment() {
                             binding.editTextLimitePCD.setText(limitePCD)
                         }
 
-                        if(variante!=""){
-                            binding.editTextVariante.setText(variante)
-                        }
+                        val currentDate = LocalDate.now()
+                        val formatterMes = DateTimeFormatter.ofPattern("MM")
+                        val formatterDia = DateTimeFormatter.ofPattern("dd")
+                        val mes = currentDate.format(formatterMes)
+                        val dia = currentDate.format(formatterDia)
+                        binding.editTextVariante.setText("$mes$dia")
+
                     } else {
                         binding.editTextQtdCriancas.setText(qtdCriancas.toString())
                         binding.editTextLimiteNormal.setText(limiteIdadeNormal.toString())
