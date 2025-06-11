@@ -9,16 +9,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.adotejr.DadosCriancaActivity
+import com.example.adotejr.R
+import com.example.adotejr.ValidarCriancaActivity
 import com.example.adotejr.adapters.CriancasAdapter
 import com.example.adotejr.databinding.FragmentListagemBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.utils.NetworkUtils
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import java.time.LocalDate
@@ -65,10 +67,7 @@ class ListagemFragment : Fragment() {
 
         criancasAdapter = CriancasAdapter{ crianca ->
             if (NetworkUtils.conectadoInternet(requireContext())) {
-                val intent = Intent(context, DadosCriancaActivity::class.java)
-                intent.putExtra("id", crianca.id)
-                intent.putExtra("origem", "listagem")
-                startActivity(intent)
+                mostrarDialogoListagem(crianca.id, crianca.nome)
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -81,6 +80,45 @@ class ListagemFragment : Fragment() {
         binding.rvCadastros.layoutManager = LinearLayoutManager(context)
 
         return binding.root
+    }
+
+    private fun mostrarDialogoListagem(id: String, nome: String) {
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_op_listagem, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setView(view)
+            .create()
+
+        view.findViewById<TextView>(R.id.textNomeDialogListagem).text = nome
+
+        view.findViewById<Button>(R.id.btnCadastroCompleto).setOnClickListener {
+            val intent = Intent(context, DadosCriancaActivity::class.java)
+            intent.putExtra("id", id)
+            intent.putExtra("origem", "listagem")
+            startActivity(intent)
+            dialog.dismiss()
+        }
+
+        view.findViewById<Button>(R.id.btnValidarCadastro).setOnClickListener {
+            val intent = Intent(context, ValidarCriancaActivity::class.java)
+            intent.putExtra("id", id)
+            startActivity(intent)
+            dialog.dismiss()
+        }
+
+        view.findViewById<Button>(R.id.btnValidarListas).setOnClickListener {
+            // Fazer este
+            // Depois ajustar listagem completa
+            // Depois alterar a chamada do cadastro para essa mais enxuta, com tudo bloqueado
+            /*
+            // MONTAR 
+            val intent = Intent(context, DadosCriancaActivity::class.java)
+            intent.putExtra("id", id)
+            intent.putExtra("origem", "listagem")
+            startActivity(intent) */
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
