@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textNomeDialogListagem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nome da criança"
+        android:textAlignment="center"
+        android:textColor="@color/azulEscuro"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnCadastroCompleto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_pesquisar"
+        android:drawableTint="@color/white"
+        android:text="Visualizar Cadastro Completo"
+        app:iconTint="@color/white" />
+
+    <Button
+        android:id="@+id/btnValidarCadastro"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:drawableLeft="@drawable/ic_check_2"
+        android:drawableTint="@color/white"
+        android:text="Validar Cadastro" />
+
+    <Button
+        android:id="@+id/btnValidarListas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:drawableLeft="@drawable/ic_check_list"
+        android:drawableTint="@color/white"
+        android:text="Registro / Padrinho\nValidar Presença / Sacola (KIT)" />
+</LinearLayout>
