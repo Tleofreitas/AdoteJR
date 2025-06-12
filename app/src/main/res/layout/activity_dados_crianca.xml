@@ -176,30 +176,17 @@
             app:layout_constraintTop_toBottomOf="@+id/includeEndereco" />
 
         <Button
-            android:id="@+id/btnAtualizarDadosCrianca"
+            android:id="@+id/btnFecharCadastro"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="32dp"
-            android:backgroundTint="@color/azul"
-            android:text="Salvar / Validar"
+            android:backgroundTint="@color/vermelhoCarmim"
+            android:text="Fechar"
             app:cornerRadius="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/includeRegistro" />
-
-        <Button
-            android:id="@+id/btnNovoCadastro"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="32dp"
-            android:text="Novo cadastro"
-            app:cornerRadius="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/includeRegistro" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

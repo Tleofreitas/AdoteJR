@@ -9,10 +9,8 @@ import android.widget.EditText
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
-import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 
@@ -21,18 +19,12 @@ class DadosCriancaActivity : AppCompatActivity() {
         ActivityDadosCriancaBinding.inflate(layoutInflater)
     }
 
-    // Autenticação
-    private val firebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
-
     // Banco de dados Firestore
     private val firestore by lazy {
         FirebaseFirestore.getInstance()
     }
 
     private var idDetalhar: String? = null
-    private var status: String = ""
 
     override fun onStart() {
         super.onStart()
@@ -97,7 +89,7 @@ class DadosCriancaActivity : AppCompatActivity() {
 
         var indicacao = dados["indicacao"] as? String ?: ""
         definirIndicacaoNoSpinner(indicacao)
-        // bloquearSpinner()
+        bloquearSpinner()
 
         binding.includeRegistro.NomePerfilCadastro.text = dados["cadastradoPor"].toString() as? String ?: ""
         val foto = dados["fotoCadastradoPor"] as? String ?: ""
@@ -130,11 +122,7 @@ class DadosCriancaActivity : AppCompatActivity() {
         val statusfirebase = dados["ativo"] as? String ?: return
         binding.includeRegistro.radioButtonStatusAtivo.isChecked = statusfirebase == "Sim"
         binding.includeRegistro.radioButtonStatusInativo.isChecked = statusfirebase == "Não"
-        status = statusfirebase
 
-        if(statusfirebase == "Não"){
-            binding.includeRegistro.editMotivoStatus.isEnabled = true
-        }
         binding.includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
 
         val senha = dados["retirouSenha"] as? String ?: return
@@ -162,9 +150,9 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
     }
 
-    /* private fun bloquearSpinner() {
-        binding.includeRegistro.selecaoIndicacao.isEnabled = false
-    } */
+    private fun bloquearSpinner() {
+        binding.includeDadosResponsavel.selecaoIndicacao.isEnabled = false
+    }
 
     private lateinit var editTextNome: EditText
     private lateinit var editTextCpf: EditText
@@ -194,7 +182,6 @@ class DadosCriancaActivity : AppCompatActivity() {
     private lateinit var statusInativo: RadioButton
     private lateinit var editTextMotivoStatus: EditText
     private lateinit var editTextAno: EditText
-    private lateinit var selecaoIndicacao: String
     private lateinit var editTextCartao: EditText
     private lateinit var senhaSim: RadioButton
     private lateinit var senhaNao: RadioButton
@@ -202,6 +189,9 @@ class DadosCriancaActivity : AppCompatActivity() {
     private lateinit var kitNão: RadioButton
     private lateinit var blackListSim: RadioButton
     private lateinit var blackListNao: RadioButton
+    private lateinit var chegouKitSim: RadioButton
+    private lateinit var chegouKitNao: RadioButton
+    private lateinit var editTextPadrinho: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -213,9 +203,9 @@ class DadosCriancaActivity : AppCompatActivity() {
         editTextDataNascimento = binding.editTextDtNascimento
         editTextIdade = binding.editTextIdade
         LLSexoBtnMasculino = binding.includeDadosCriancaSacola.radioButtonMasculino
-        // LLSexoBtnMasculino.isEnabled = false
+        LLSexoBtnMasculino.isEnabled = false
         LLSexoBtnFeminino = binding.includeDadosCriancaSacola.radioButtonFeminino
-        // LLSexoBtnFeminino.isEnabled = false
+        LLSexoBtnFeminino.isEnabled = false
         editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
         editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
         editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
@@ -237,61 +227,41 @@ class DadosCriancaActivity : AppCompatActivity() {
         editTextBairro = binding.includeEndereco.editTextBairro
         editTextCidade = binding.includeEndereco.editTextCidade
         statusAtivo = binding.includeRegistro.radioButtonStatusAtivo
-        // statusAtivo.isEnabled = false
+        statusAtivo.isEnabled = false
         statusInativo = binding.includeRegistro.radioButtonStatusInativo
-        // statusInativo.isEnabled = false
+        statusInativo.isEnabled = false
         editTextMotivoStatus = binding.includeRegistro. editMotivoStatus
         editTextAno = binding.includeRegistro.editTextAno
         editTextCartao = binding.includeRegistro.editNumeroCartao
         senhaSim = binding.includeRegistro.radioButtonSenhaSim
-        // senhaSim.isEnabled = false
+        senhaSim.isEnabled = false
         senhaNao = binding.includeRegistro.radioButtonSenhaNao
-        // senhaNao.isEnabled = false
+        senhaNao.isEnabled = false
         kitSim = binding.includeRegistro.radioButtonRetiradaSim
-        // kitSim.isEnabled = false
+        kitSim.isEnabled = false
         kitNão = binding.includeRegistro.radioButtonRetiradaNao
-        // kitNão.isEnabled = false
+        kitNão.isEnabled = false
         blackListSim = binding.includeRegistro.radioButtonBLSim
-        // blackListSim.isEnabled = false
+        blackListSim.isEnabled = false
         blackListNao = binding.includeRegistro.radioButtonBLNao
-        // blackListNao.isEnabled = false
+        blackListNao.isEnabled = false
+        chegouKitSim = binding.includeRegistro.radioButtonCKSim
+        chegouKitSim.isEnabled = false
+        chegouKitNao = binding.includeRegistro.radioButtonCKNao
+        chegouKitNao.isEnabled = false
+        editTextPadrinho = binding.includeRegistro.editPadrinho
 
-        val editTexts = listOf(editTextCpf, editTextDataNascimento, editTextIdade,
+        val editTexts = listOf(editTextNome, editTextCpf, editTextDataNascimento, editTextIdade,
             editTextPcd, editTextVinculoFamiliar, editTextNomeResponsavel, editTextVinculo,
-            editTextCEP, editTextNumero, editTextRua, editTextComplemento,
-            editTextBairro, editTextCidade, editTextAno)
+            editTextCEP, editTextNumero, editTextRua, editTextComplemento, editTextBairro,
+            editTextCidade, editTextAno, editTextBlusa, editTextCalca, editTextSapato,
+            editTextGostosPessoais, editTextTelefonePrincipal, editTextTelefone2,
+            editTextMotivoStatus, editTextCartao, editTextPadrinho)
 
         // Iterar sobre cada um e desativar
         for (editText in editTexts) {
             editText.isEnabled = false
         }
-
-        // Configurando o listener para mudanças no RadioGroup Status
-        binding.includeRegistro.radioGroupStatus.setOnCheckedChangeListener { _, checkedId ->
-            // Atualiza a variável "especial"
-            status =
-                if (checkedId == binding.includeRegistro.radioButtonStatusAtivo.id) "Sim" else "Não"
-
-            // Verifica se o campo deve ser habilitado ou não
-            val habilitarCampo = checkedId == binding.includeRegistro.radioButtonStatusInativo.id
-
-            // Habilita ou desabilita a descrição com base na seleção
-            binding.includeRegistro.InputMotivoStatus.isEnabled = habilitarCampo
-            binding.includeRegistro.editMotivoStatus.isEnabled = habilitarCampo
-
-            // Se voltar para "Ativo", define texto "Apto para contemplação"
-            if (!habilitarCampo) {
-                binding.includeRegistro.editMotivoStatus.setText("Apto para contemplação")
-            } else {
-                binding.includeRegistro.editMotivoStatus.setText("")
-            }
-        }
-
-        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
-        FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
-
-        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
-        FormatadorUtil.formatarTelefone(editTextTelefone2)
 
         // Pegar ID passado
         val bundle = intent.extras
@@ -302,6 +272,13 @@ class DadosCriancaActivity : AppCompatActivity() {
             // idDetalhar = 202544290378846.toString()
         }
 
+        // Ocultar e desabilitar botão de foto
+        binding.includeFotoCrianca.fabSelecionar.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+
+        /*
         // Identificar telas para manipular botões
         var origem = intent.getStringExtra("origem")
 
@@ -313,11 +290,13 @@ class DadosCriancaActivity : AppCompatActivity() {
             "cadastro" -> configurarBotoesParaCadastro()
             "listagem" -> configurarBotoesParaListagem()
         }
+        */
 
         incializarToolbar()
         inicializarEventosClique()
     }
 
+    /*
     private fun configurarBotoesParaCadastro() {
         // Ocultar e desabilitar botão de foto
         binding.includeFotoCrianca.fabSelecionar.apply {
@@ -326,7 +305,7 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
 
         // Ocultar e desabilitar botões de editar e salvar
-        binding.btnAtualizarDadosCrianca.apply {
+        binding.btnFecharCadastro.apply {
             visibility = View.GONE
             isEnabled = false
         }
@@ -352,11 +331,12 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
 
         // Exibir e habilitar botões de editar e salvar
-        binding.btnAtualizarDadosCrianca.apply {
+        binding.btnFecharCadastro.apply {
             visibility = View.VISIBLE
             isEnabled = true
         }
     }
+    */
 
     private fun incializarToolbar() {
         val toolbar = binding.includeToolbar.tbPrincipal
@@ -368,245 +348,12 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun inicializarEventosClique() {
-        binding.btnAtualizarDadosCrianca.setOnClickListener {
-            // Altera o texto do botão para "Aguarde"
-            binding.btnAtualizarDadosCrianca.text = "Aguarde..."
-
-            // Desabilita o botão para evitar novos cliques
-            binding.btnAtualizarDadosCrianca.isEnabled = false
-
-            selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
-            var indicacao = selecaoIndicacao
-
-            if( validarCampos() ) {
-                // Descrição de Status
-                var descricaoAtivo = editTextMotivoStatus.text.toString()
-                var telPrincipal = editTextTelefonePrincipal.text.toString()
-                var tel2 = editTextTelefone2.text.toString()
-
-                if (indicacao == "-- Selecione --") {
-                    exibirMensagem("Selecione quem indicou!")
-                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                    binding.btnAtualizarDadosCrianca.isEnabled = true
-
-                } else if (status == "Não" && descricaoAtivo.isEmpty()) {
-                    binding.includeRegistro.InputMotivoStatus.error = "Descreva o motivo da inativação..."
-                    exibirMensagem("Descreva as condições especiais...")
-                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                    binding.btnAtualizarDadosCrianca.isEnabled = true
-
-                } else if (telPrincipal.length<14) {
-                    exibirMensagem("Telefone Principal inválido...")
-                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                    binding.btnAtualizarDadosCrianca.isEnabled = true
-
-                } else if (tel2.isNotEmpty() && tel2.length<14) {
-                    exibirMensagem("Telefone 2 inválido...")
-                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                    binding.btnAtualizarDadosCrianca.isEnabled = true
-
-                } else {
-                    binding.includeRegistro.InputMotivoStatus.error = null
-
-                    val nome = binding.editTextNome.text.toString()
-                    val padrinho = binding.includeRegistro.editPadrinho.text.toString()
-                    // Sexo
-                    var sexo = when {
-                        binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked -> "Masculino"
-                        binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked -> "Feminino"
-                        else -> "Nenhum"
-                    }
-                    // Blusa
-                    editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
-                    var blusa = editTextBlusa.text.toString()
-
-                    // Calça
-                    editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
-                    var calca = editTextCalca.text.toString()
-
-                    // Sapato
-                    editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
-                    var sapato = editTextSapato.text.toString()
-
-                    // Gostos Pessoais
-                    editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
-                    var gostosPessoais = editTextGostosPessoais.text.toString()
-
-                    selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
-                    var indicacao = selecaoIndicacao
-
-                    var senha = when {
-                        binding.includeRegistro.radioButtonSenhaSim.isChecked -> "Sim"
-                        binding.includeRegistro.radioButtonSenhaNao.isChecked -> "Não"
-                        else -> "Nenhum"
-                    }
-
-                    var kit = when {
-                        binding.includeRegistro.radioButtonRetiradaSim.isChecked -> "Sim"
-                        binding.includeRegistro.radioButtonRetiradaNao.isChecked -> "Não"
-                        else -> "Nenhum"
-                    }
-
-                    var blackList = when {
-                        binding.includeRegistro.radioButtonBLSim.isChecked -> "Sim"
-                        binding.includeRegistro.radioButtonBLNao.isChecked -> "Não"
-                        else -> "Nenhum"
-                    }
-
-                    var chegouKit = when {
-                        binding.includeRegistro.radioButtonCKSim.isChecked -> "Sim"
-                        binding.includeRegistro.radioButtonCKNao.isChecked -> "Não"
-                        else -> "Nenhum"
-                    }
-
-                    // Dados de quem validou o cadastro
-                    var validadoPor: String = ""
-                    var fotoValidadoPor: String = ""
-
-                    if (NetworkUtils.conectadoInternet(this)) {
-                        val idUsuario = firebaseAuth.currentUser?.uid
-                        if (idUsuario != null){
-                            firestore.collection("Usuarios")
-                                .document( idUsuario )
-                                .get()
-                                .addOnSuccessListener { documentSnapshot ->
-                                    val dadosUsuario = documentSnapshot.data
-                                    if ( dadosUsuario != null ){
-                                        val nomeUser = dadosUsuario["nome"] as String
-                                        validadoPor = nomeUser
-
-                                        val foto = dadosUsuario["foto"] as String
-
-                                        if (foto.isNotEmpty()) {
-                                            fotoValidadoPor = foto
-                                        }
-                                        // Após obter os dados do Firestore, processa os dados
-                                        processarDados(
-                                            nome,
-                                            sexo,
-                                            blusa,
-                                            calca,
-                                            sapato,
-                                            gostosPessoais,
-                                            telPrincipal,
-                                            tel2,
-                                            indicacao,
-                                            validadoPor,
-                                            fotoValidadoPor,
-                                            status,
-                                            descricaoAtivo,
-                                            senha,
-                                            kit,
-                                            blackList,
-                                            chegouKit,
-                                            padrinho
-                                        )
-                                    }
-                                }.addOnFailureListener { exception ->
-                                    Log.e("Firestore", "Error getting documents: ", exception)
-                                }
-                        }
-                    } else {
-                        binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                        binding.btnAtualizarDadosCrianca.isEnabled = true
-                        exibirMensagem("Verifique a conexão com a internet e tente novamente!")
-                    }
-                }
-            } else {
-                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                binding.btnAtualizarDadosCrianca.isEnabled = true
-            }
-        }
-
-        binding.btnNovoCadastro.setOnClickListener {
+        binding.btnFecharCadastro.setOnClickListener {
             startActivity(
-                Intent(this, GerenciamentoActivity::class.java)
+                Intent(this, GerenciamentoActivity::class.java).apply {
+                    putExtra("botao_selecionado", R.id.navigation_listagem)
+                }
             )
         }
-    }
-
-    private fun processarDados(
-        nome: String,
-        sexo: String,
-        blusa: String,
-        calca: String,
-        sapato: String,
-        gostosPessoais: String,
-        telefone1: String,
-        telefone2: String,
-        indicacao: String,
-        validadoPor: String,
-        fotoValidadoPor: String,
-        status: String,
-        descricaoAtivo: String,
-        senha: String,
-        kit: String,
-        blackList: String,
-        chegouKit: String,
-        padrinho: String
-    ) {
-        val dados = mapOf(
-            "nome" to nome,
-            "sexo" to sexo,
-            "blusa" to blusa,
-            "calca" to calca,
-            "sapato" to sapato,
-            "gostosPessoais" to gostosPessoais,
-            "telefone1" to telefone1,
-            "telefone2" to telefone2,
-            "indicacao" to indicacao,
-            "fotoValidadoPor" to fotoValidadoPor,
-            "ativo" to status,
-            "motivoStatus" to descricaoAtivo,
-            "validadoPor" to validadoPor,
-            "retirouSenha" to senha,
-            "retirouSacola" to kit,
-            "blackList" to blackList,
-            "chegouKit" to chegouKit,
-            "padrinho" to padrinho
-        )
-
-        atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
-    }
-
-    private fun validarCampos(): Boolean {
-        // Lista de valores obrigatórios a serem validados
-        val textInputs = listOf(
-            binding.InputNome,
-            binding.includeDadosCriancaSacola.InputBlusa,
-            binding.includeDadosCriancaSacola.InputCalca,
-            binding.includeDadosCriancaSacola.InputSapato,
-            binding.includeDadosCriancaSacola.InputGostos,
-            binding.includeDadosResponsavel.InputTel1
-        )
-
-        for (textInput in textInputs) {
-            val editText = textInput.editText // Obtém o EditText associado
-            if (editText?.text.toString().trim().isEmpty()) {
-                textInput.error = "Campo obrigatório"
-                return false
-            } else {
-                textInput.error = null // Remove o erro caso o campo esteja preenchido
-            }
-        }
-        return true
-    }
-
-    private fun atualizarDadosPerfil(id: String, dados: Map<String, String>) {
-        firestore.collection("Criancas")
-            .document( id )
-            .update( dados )
-            .addOnSuccessListener {
-                onStart()
-                exibirMensagem("Validado com Sucesso.")
-                val intent = Intent(this, CartaoActivity::class.java)
-                intent.putExtra("id", id)
-                startActivity(intent)
-            }
-            .addOnFailureListener {
-                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
-                binding.btnAtualizarDadosCrianca.isEnabled = true
-                exibirMensagem("Erro ao atualizar perfil. Tente novamente.")
-            }
     }
 }

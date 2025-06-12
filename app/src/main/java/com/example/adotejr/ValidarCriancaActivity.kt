@@ -155,6 +155,8 @@ class ValidarCriancaActivity : AppCompatActivity() {
             isEnabled = false
         }
 
+        // USAR BASE DO DadosCriancaActivity
+
         incializarToolbar()
         inicializarEventosClique()
     }
@@ -181,7 +183,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
 
             if (indicacao == "-- Selecione --") {
                 exibirMensagem("Selecione quem indicou!")
-                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                binding.btnAtualizarDadosCrianca.text = "Validar"
                 binding.btnAtualizarDadosCrianca.isEnabled = true
 
             } else if( validarCampos() ) {
@@ -190,12 +192,12 @@ class ValidarCriancaActivity : AppCompatActivity() {
 
                 if (telPrincipal.length<14) {
                     exibirMensagem("Telefone Principal inválido...")
-                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                    binding.btnAtualizarDadosCrianca.text = "Validar"
                     binding.btnAtualizarDadosCrianca.isEnabled = true
 
                 } else if (tel2.isNotEmpty() && tel2.length<14) {
                     exibirMensagem("Telefone 2 inválido...")
-                    binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                    binding.btnAtualizarDadosCrianca.text = "Validar"
                     binding.btnAtualizarDadosCrianca.isEnabled = true
 
                 } else {
@@ -266,13 +268,13 @@ class ValidarCriancaActivity : AppCompatActivity() {
                                 }
                         }
                     } else {
-                        binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                        binding.btnAtualizarDadosCrianca.text = "Validar"
                         binding.btnAtualizarDadosCrianca.isEnabled = true
                         exibirMensagem("Verifique a conexão com a internet e tente novamente!")
                     }
                 }
             } else {
-                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                binding.btnAtualizarDadosCrianca.text = "Validar"
                 binding.btnAtualizarDadosCrianca.isEnabled = true
             }
         }
@@ -324,6 +326,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
             "telefone1" to telefone1,
             "telefone2" to telefone2,
             "indicacao" to indicacao,
+            "validadoPor" to validadoPor,
             "fotoValidadoPor" to fotoValidadoPor
         )
 
@@ -335,17 +338,16 @@ class ValidarCriancaActivity : AppCompatActivity() {
             .document( id )
             .update( dados )
             .addOnSuccessListener {
-                exibirMensagem("Alterado com sucesso!")
-                startActivity(
-                    Intent(this, GerenciamentoActivity::class.java).apply {
-                        putExtra("botao_selecionado", R.id.navigation_listagem)
-                    }
-                )
+                onStart()
+                exibirMensagem("Validado com Sucesso.")
+                val intent = Intent(this, CartaoActivity::class.java)
+                intent.putExtra("id", id)
+                startActivity(intent)
             }
             .addOnFailureListener {
-                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                binding.btnAtualizarDadosCrianca.text = "Validar"
                 binding.btnAtualizarDadosCrianca.isEnabled = true
-                exibirMensagem("Erro ao atualizar perfil. Tente novamente.")
+                exibirMensagem("Erro ao atualizar. Tente novamente.")
             }
     }
 }

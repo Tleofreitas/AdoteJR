@@ -101,13 +101,8 @@ class ListagemFragment : Fragment() {
         view.findViewById<TextView>(R.id.textCartaoDialogListagem).text = "Cartão N° $numeroCartao"
 
         view.findViewById<Button>(R.id.btnCadastroCompleto).setOnClickListener {
-
-            // Depois ajustar listagem completa
-            // Depois alterar a chamada do cadastro para essa mais enxuta, com tudo bloqueado
-
             val intent = Intent(context, DadosCriancaActivity::class.java)
             intent.putExtra("id", id)
-            intent.putExtra("origem", "listagem")
             startActivity(intent)
             dialog.dismiss()
         }
@@ -115,6 +110,7 @@ class ListagemFragment : Fragment() {
         view.findViewById<Button>(R.id.btnValidarCadastro).setOnClickListener {
             val intent = Intent(context, ValidarCriancaActivity::class.java)
             intent.putExtra("id", id)
+            intent.putExtra("origem", "listagem")
             startActivity(intent)
             dialog.dismiss()
         }

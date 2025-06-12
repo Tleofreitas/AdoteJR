@@ -30,11 +30,9 @@ import com.example.adotejr.model.Responsavel
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
-import com.example.adotejr.utils.exibirMensagem
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
@@ -1175,6 +1173,8 @@ class CadastrarFragment : Fragment() {
                     "Cadastro realizado com sucesso",
                     Toast.LENGTH_LONG
                 ).show()
+
+                // Alterar a chamada do cadastro para ValidarCriancaActivity, com tudo bloqueado
                 val intent = Intent(activity, DadosCriancaActivity::class.java).apply {
                     putExtra("id", idGerado)
                     putExtra("origem", "cadastro")
