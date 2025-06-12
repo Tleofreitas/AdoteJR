@@ -155,10 +155,10 @@ class DadosCriancaActivity : AppCompatActivity() {
     }
 
     private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
-        val adapter = binding.includeRegistro.selecaoIndicacao.adapter as ArrayAdapter<String>
+        val adapter = binding.includeDadosResponsavel.selecaoIndicacao.adapter as ArrayAdapter<String>
         val position = adapter.getPosition(valorIndicacao)
         if (position >= 0) {
-            binding.includeRegistro.selecaoIndicacao.setSelection(position)
+            binding.includeDadosResponsavel.selecaoIndicacao.setSelection(position)
         }
     }
 
@@ -375,7 +375,7 @@ class DadosCriancaActivity : AppCompatActivity() {
             // Desabilita o botão para evitar novos cliques
             binding.btnAtualizarDadosCrianca.isEnabled = false
 
-            selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
+            selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
             var indicacao = selecaoIndicacao
 
             if( validarCampos() ) {
@@ -432,7 +432,7 @@ class DadosCriancaActivity : AppCompatActivity() {
                     editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
                     var gostosPessoais = editTextGostosPessoais.text.toString()
 
-                    selecaoIndicacao = binding.includeRegistro.selecaoIndicacao.selectedItem.toString()
+                    selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
                     var indicacao = selecaoIndicacao
 
                     var senha = when {

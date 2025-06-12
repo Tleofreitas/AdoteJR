@@ -22,8 +22,15 @@
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
         <activity
+            android:name=".ValidarCriancaOutrosActivity"
+            android:exported="false"
+            android:parentActivityName=".GerenciamentoActivity"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
             android:name=".ValidarCriancaActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".GerenciamentoActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".CartaoActivity"
             android:exported="false" />

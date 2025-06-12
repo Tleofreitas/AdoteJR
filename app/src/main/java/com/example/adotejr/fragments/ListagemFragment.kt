@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -17,12 +18,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
 import com.example.adotejr.ValidarCriancaActivity
+import com.example.adotejr.ValidarCriancaOutrosActivity
 import com.example.adotejr.adapters.CriancasAdapter
 import com.example.adotejr.databinding.FragmentListagemBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.squareup.picasso.Picasso
 import java.time.LocalDate
 
 class ListagemFragment : Fragment() {
@@ -67,7 +70,7 @@ class ListagemFragment : Fragment() {
 
         criancasAdapter = CriancasAdapter{ crianca ->
             if (NetworkUtils.conectadoInternet(requireContext())) {
-                mostrarDialogoListagem(crianca.id, crianca.nome)
+                mostrarDialogoListagem(crianca.id, crianca.nome, crianca.foto, crianca.numeroCartao)
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -82,15 +85,26 @@ class ListagemFragment : Fragment() {
         return binding.root
     }
 
-    private fun mostrarDialogoListagem(id: String, nome: String) {
+    private fun mostrarDialogoListagem(id: String, nome: String, foto: String, numeroCartao: String) {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_op_listagem, null)
         val dialog = android.app.AlertDialog.Builder(requireContext())
             .setView(view)
             .create()
 
+        val imagemPrev = view.findViewById<ImageView>(R.id.imgDialogListagem)
+        if (!foto.isNullOrEmpty()) {
+            Picasso.get()
+                .load( foto )
+                .into(imagemPrev)
+        }
         view.findViewById<TextView>(R.id.textNomeDialogListagem).text = nome
+        view.findViewById<TextView>(R.id.textCartaoDialogListagem).text = "Cartão N° $numeroCartao"
 
         view.findViewById<Button>(R.id.btnCadastroCompleto).setOnClickListener {
+
+            // Depois ajustar listagem completa
+            // Depois alterar a chamada do cadastro para essa mais enxuta, com tudo bloqueado
+
             val intent = Intent(context, DadosCriancaActivity::class.java)
             intent.putExtra("id", id)
             intent.putExtra("origem", "listagem")
@@ -106,15 +120,9 @@ class ListagemFragment : Fragment() {
         }
 
         view.findViewById<Button>(R.id.btnValidarListas).setOnClickListener {
-            // Fazer este
-            // Depois ajustar listagem completa
-            // Depois alterar a chamada do cadastro para essa mais enxuta, com tudo bloqueado
-            /*
-            // MONTAR 
-            val intent = Intent(context, DadosCriancaActivity::class.java)
+            val intent = Intent(context, ValidarCriancaOutrosActivity::class.java)
             intent.putExtra("id", id)
-            intent.putExtra("origem", "listagem")
-            startActivity(intent) */
+            startActivity(intent)
             dialog.dismiss()
         }
 

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
@@ -65,6 +66,11 @@ class ValidarCriancaActivity : AppCompatActivity() {
         }
 
         binding.editTextNome.setText(dados["nome"] as? String ?: "")
+
+        val sexo = dados["sexo"] as? String ?: return
+        binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked = sexo == "Masculino"
+        binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked = sexo == "Feminino"
+
         binding.includeDadosCriancaSacola.editTextBlusa.setText(dados["blusa"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextCalca.setText(dados["calca"] as? String ?: "")
         binding.includeDadosCriancaSacola.editTextSapato.setText(dados["sapato"] as? String ?: "")
@@ -77,10 +83,16 @@ class ValidarCriancaActivity : AppCompatActivity() {
         binding.includeDadosResponsavel.editTextTel1.setText(dados["telefone1"] as? String ?: "")
         binding.includeDadosResponsavel.editTextTel2.setText(dados["telefone2"] as? String ?: "")
 
-        // Radio buttons
-        val sexo = dados["sexo"] as? String ?: return
-        binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked = sexo == "Masculino"
-        binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked = sexo == "Feminino"
+        var indicacao = dados["indicacao"] as? String ?: ""
+        definirIndicacaoNoSpinner(indicacao)
+    }
+
+    private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
+        val adapter = binding.includeDadosResponsavel.selecaoIndicacao.adapter as ArrayAdapter<String>
+        val position = adapter.getPosition(valorIndicacao)
+        if (position >= 0) {
+            binding.includeDadosResponsavel.selecaoIndicacao.setSelection(position)
+        }
     }
 
     private lateinit var editTextNome: EditText
@@ -95,6 +107,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
     private lateinit var editTextVinculo: EditText
     private lateinit var editTextTelefonePrincipal: EditText
     private lateinit var editTextTelefone2: EditText
+    private lateinit var selecaoIndicacao: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -163,8 +176,15 @@ class ValidarCriancaActivity : AppCompatActivity() {
             // Desabilita o botão para evitar novos cliques
             binding.btnAtualizarDadosCrianca.isEnabled = false
 
-            if( validarCampos() ) {
-                // Descrição de Status
+            selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
+            var indicacao = selecaoIndicacao
+
+            if (indicacao == "-- Selecione --") {
+                exibirMensagem("Selecione quem indicou!")
+                binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
+                binding.btnAtualizarDadosCrianca.isEnabled = true
+
+            } else if( validarCampos() ) {
                 var telPrincipal = editTextTelefonePrincipal.text.toString()
                 var tel2 = editTextTelefone2.text.toString()
 
@@ -202,6 +222,9 @@ class ValidarCriancaActivity : AppCompatActivity() {
                     editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
                     var gostosPessoais = editTextGostosPessoais.text.toString()
 
+                    selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
+                    var indicacao = selecaoIndicacao
+
                     // Dados de quem validou o cadastro
                     var validadoPor: String = ""
                     var fotoValidadoPor: String = ""
@@ -233,6 +256,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
                                             gostosPessoais,
                                             telPrincipal,
                                             tel2,
+                                            indicacao,
                                             validadoPor,
                                             fotoValidadoPor
                                         )
@@ -286,6 +310,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
         gostosPessoais: String,
         telefone1: String,
         telefone2: String,
+        indicacao: String,
         validadoPor: String,
         fotoValidadoPor: String
     ) {
@@ -298,6 +323,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
             "gostosPessoais" to gostosPessoais,
             "telefone1" to telefone1,
             "telefone2" to telefone2,
+            "indicacao" to indicacao,
             "fotoValidadoPor" to fotoValidadoPor
         )
 
@@ -309,11 +335,12 @@ class ValidarCriancaActivity : AppCompatActivity() {
             .document( id )
             .update( dados )
             .addOnSuccessListener {
-                onStart()
-                exibirMensagem("Validado com Sucesso.")
-                val intent = Intent(this, CartaoActivity::class.java)
-                intent.putExtra("id", id)
-                startActivity(intent)
+                exibirMensagem("Alterado com sucesso!")
+                startActivity(
+                    Intent(this, GerenciamentoActivity::class.java).apply {
+                        putExtra("botao_selecionado", R.id.navigation_listagem)
+                    }
+                )
             }
             .addOnFailureListener {
                 binding.btnAtualizarDadosCrianca.text = "Salvar / Validar"
