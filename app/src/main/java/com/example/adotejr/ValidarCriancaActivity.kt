@@ -148,6 +148,8 @@ class ValidarCriancaActivity : AppCompatActivity() {
             idDetalhar = bundle.getString("id").toString()
         } else {
             idDetalhar = "null"
+            // Teste
+            idDetalhar = "202551526486873"
         }
 
         binding.includeFotoCrianca.fabSelecionar.apply {
@@ -155,10 +157,58 @@ class ValidarCriancaActivity : AppCompatActivity() {
             isEnabled = false
         }
 
-        // USAR BASE DO DadosCriancaActivity
+        // Identificar telas para manipular botões
+        var origem = intent.getStringExtra("origem")
+        // teste
+        // origem = "cadastro"
+        origem = "listagem"
+        when (origem) {
+            "cadastro" -> configurarParaCadastro()
+            "listagem" -> configurarParaListagem()
+        }
 
         incializarToolbar()
         inicializarEventosClique()
+    }
+
+    private fun configurarParaCadastro() {
+        LLSexoBtnMasculino.isEnabled = false
+        LLSexoBtnFeminino.isEnabled = false
+        binding.includeDadosResponsavel.selecaoIndicacao.isEnabled = false
+
+        val editTextsCadastro = listOf(editTextNome, editTextBlusa, editTextCalca, editTextSapato,
+            editTextGostosPessoais, editTextTelefonePrincipal, editTextTelefone2)
+
+        // Iterar sobre cada um e desativar
+        for (editText in editTextsCadastro) {
+            editText.isEnabled = false
+        }
+
+        // Ocultar e desabilitar botões de Validar
+        binding.btnAtualizarDadosCrianca.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+
+        // Exibir e habilitar botão de novo cadastro
+        binding.btnNovoCadastro.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
+    }
+
+    private fun configurarParaListagem() {
+        // Ocultar e desabilitar botão de novo cadastro
+        binding.btnNovoCadastro.apply {
+            visibility = View.GONE
+            isEnabled = false
+        }
+
+        // Exibir e habilitar botões de editar e salvar
+        binding.btnAtualizarDadosCrianca.apply {
+            visibility = View.VISIBLE
+            isEnabled = true
+        }
     }
 
     private fun incializarToolbar() {
@@ -171,6 +221,20 @@ class ValidarCriancaActivity : AppCompatActivity() {
     }
 
     private fun inicializarEventosClique() {
+        binding.btnNovoCadastro.setOnClickListener {
+            // Altera o texto do botão para "Aguarde"
+            binding.btnNovoCadastro.text = "Aguarde..."
+
+            // Desabilita o botão para evitar novos cliques
+            binding.btnNovoCadastro.isEnabled = false
+
+            startActivity(
+                Intent(this, GerenciamentoActivity::class.java).apply {
+                    putExtra("botao_selecionado", R.id.navigation_cadastrar)
+                }
+            )
+        }
+
         binding.btnAtualizarDadosCrianca.setOnClickListener {
             // Altera o texto do botão para "Aguarde"
             binding.btnAtualizarDadosCrianca.text = "Aguarde..."

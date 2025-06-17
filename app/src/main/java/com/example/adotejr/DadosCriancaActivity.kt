@@ -278,65 +278,9 @@ class DadosCriancaActivity : AppCompatActivity() {
             isEnabled = false
         }
 
-        /*
-        // Identificar telas para manipular botões
-        var origem = intent.getStringExtra("origem")
-
-        // teste
-        // origem = "cadastro"
-        // origem = "listagem"
-
-        when (origem) {
-            "cadastro" -> configurarBotoesParaCadastro()
-            "listagem" -> configurarBotoesParaListagem()
-        }
-        */
-
         incializarToolbar()
         inicializarEventosClique()
     }
-
-    /*
-    private fun configurarBotoesParaCadastro() {
-        // Ocultar e desabilitar botão de foto
-        binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
-
-        // Ocultar e desabilitar botões de editar e salvar
-        binding.btnFecharCadastro.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
-
-        // Exibir e habilitar botão de novo cadastro
-        binding.btnNovoCadastro.apply {
-            visibility = View.VISIBLE
-            isEnabled = true
-        }
-    }
-
-    private fun configurarBotoesParaListagem() {
-        // Ocultar e desabilitar botão de foto
-        binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
-
-        // Ocultar e desabilitar botão de novo cadastro
-        binding.btnNovoCadastro.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
-
-        // Exibir e habilitar botões de editar e salvar
-        binding.btnFecharCadastro.apply {
-            visibility = View.VISIBLE
-            isEnabled = true
-        }
-    }
-    */
 
     private fun incializarToolbar() {
         val toolbar = binding.includeToolbar.tbPrincipal
@@ -349,6 +293,12 @@ class DadosCriancaActivity : AppCompatActivity() {
 
     private fun inicializarEventosClique() {
         binding.btnFecharCadastro.setOnClickListener {
+            // Altera o texto do botão para "Aguarde"
+            binding.btnFecharCadastro.text = "Aguarde..."
+
+            // Desabilita o botão para evitar novos cliques
+            binding.btnFecharCadastro.isEnabled = false
+
             startActivity(
                 Intent(this, GerenciamentoActivity::class.java).apply {
                     putExtra("botao_selecionado", R.id.navigation_listagem)

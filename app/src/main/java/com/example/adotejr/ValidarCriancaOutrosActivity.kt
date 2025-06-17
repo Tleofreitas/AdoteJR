@@ -291,6 +291,8 @@ class ValidarCriancaOutrosActivity : AppCompatActivity() {
         atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
     }
 
+    // Adicionar botão de fechar ao Validar e Validar Outros
+
     private fun atualizarDadosPerfil(id: String, dados: Map<String, String>) {
         firestore.collection("Criancas")
             .document( id )

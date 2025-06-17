@@ -22,8 +22,8 @@ import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
+import com.example.adotejr.ValidarCriancaActivity
 import com.example.adotejr.databinding.FragmentCadastrarBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.model.Responsavel
@@ -1174,8 +1174,7 @@ class CadastrarFragment : Fragment() {
                     Toast.LENGTH_LONG
                 ).show()
 
-                // Alterar a chamada do cadastro para ValidarCriancaActivity, com tudo bloqueado
-                val intent = Intent(activity, DadosCriancaActivity::class.java).apply {
+                val intent = Intent(activity, ValidarCriancaActivity::class.java).apply {
                     putExtra("id", idGerado)
                     putExtra("origem", "cadastro")
                 }
