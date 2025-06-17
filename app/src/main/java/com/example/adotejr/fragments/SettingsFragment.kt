@@ -349,10 +349,16 @@ class SettingsFragment : Fragment() {
     private var qtdCriancas: Int? = 0
     private var limiteIdadeNormal: Int? = 12
     private var limiteIdadePcd: Int? = 15
-    private var varianteSenha: String? = ""
     var ano = LocalDate.now().year
     // Teste AlertDialog
     // ano = 2026
+
+    val currentDate = LocalDate.now()
+    val formatterMes = DateTimeFormatter.ofPattern("MM")
+    val formatterDia = DateTimeFormatter.ofPattern("dd")
+    val mes = currentDate.format(formatterMes)
+    val dia = currentDate.format(formatterDia)
+
     private fun recuperarDadosDefinicoes() {
         if (NetworkUtils.conectadoInternet(requireContext())) {
             firestore.collection("Definicoes")
@@ -360,6 +366,7 @@ class SettingsFragment : Fragment() {
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
                     val dadosDefinicoes = documentSnapshot.data
+
                     if ( dadosDefinicoes != null ){
                         val dataInicial = dadosDefinicoes["dataInicial"] as String
                         val dataFinal = dadosDefinicoes["dataFinal"] as String
@@ -367,7 +374,6 @@ class SettingsFragment : Fragment() {
                         val limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
                         val limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
                         val idCartaoF = dadosDefinicoes["idCartao"] as Long
-                        val variante = dadosDefinicoes["varianteDeSenha"] as String
 
                         if(idCartaoF!= 0.toLong()){
                             idCartao = idCartaoF.toString()
@@ -393,18 +399,13 @@ class SettingsFragment : Fragment() {
                             binding.editTextLimitePCD.setText(limitePCD)
                         }
 
-                        val currentDate = LocalDate.now()
-                        val formatterMes = DateTimeFormatter.ofPattern("MM")
-                        val formatterDia = DateTimeFormatter.ofPattern("dd")
-                        val mes = currentDate.format(formatterMes)
-                        val dia = currentDate.format(formatterDia)
                         binding.editTextVariante.setText("$mes$dia")
 
                     } else {
                         binding.editTextQtdCriancas.setText(qtdCriancas.toString())
                         binding.editTextLimiteNormal.setText(limiteIdadeNormal.toString())
                         binding.editTextLimitePCD.setText(limiteIdadePcd.toString())
-                        binding.editTextVariante.setText(varianteSenha)
+                        binding.editTextVariante.setText("$mes$dia")
                         alertaDefinicoes(ano)
                     }
                 } .addOnFailureListener { exception ->
