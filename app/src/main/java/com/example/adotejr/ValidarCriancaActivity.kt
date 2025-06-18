@@ -161,7 +161,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
         var origem = intent.getStringExtra("origem")
         // teste
         // origem = "cadastro"
-        origem = "listagem"
+        // origem = "listagem"
         when (origem) {
             "cadastro" -> configurarParaCadastro()
             "listagem" -> configurarParaListagem()

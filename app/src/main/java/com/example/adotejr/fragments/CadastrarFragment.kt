@@ -303,7 +303,7 @@ class CadastrarFragment : Fragment() {
         editTextComplemento = binding.includeEndereco.editTextComplemento
         editTextBairro = binding.includeEndereco.editTextBairro
         editTextCidade = binding.includeEndereco.editTextCidade
-        binding.selecaoIndicacao.isEnabled = false
+        binding.includeDadosResponsavel.selecaoIndicacao.isEnabled = false
 
         // Lista com os EditTexts
         editTexts = listOf(editTextNome, editTextDataNascimento, editTextBlusa, editTextCalca,
@@ -474,12 +474,12 @@ class CadastrarFragment : Fragment() {
     }
 
     private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
-        val adapter = binding.selecaoIndicacao.adapter as ArrayAdapter<String>
+        val adapter = binding.includeDadosResponsavel.selecaoIndicacao.adapter as ArrayAdapter<String>
         val position = adapter.getPosition(valorIndicacao)
         if (position >= 0) {
-            binding.selecaoIndicacao.setSelection(position)
+            binding.includeDadosResponsavel.selecaoIndicacao.setSelection(position)
         } else {
-            binding.selecaoIndicacao.setSelection(0)
+            binding.includeDadosResponsavel.selecaoIndicacao.setSelection(0)
         }
     }
 
@@ -523,7 +523,7 @@ class CadastrarFragment : Fragment() {
         LLSexoBtnFeminino.isEnabled = boolean
         pcdBtnSim.isEnabled = boolean
         pcdBtnNao.isEnabled = boolean
-        binding.selecaoIndicacao.isEnabled = boolean
+        binding.includeDadosResponsavel.selecaoIndicacao.isEnabled = boolean
         binding.btnCadastrarCrianca.isEnabled = boolean
     }
 
@@ -634,7 +634,7 @@ class CadastrarFragment : Fragment() {
 
             var uf = "SP"
 
-            selecaoIndicacao = binding.selecaoIndicacao.selectedItem.toString()
+            selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
             var indicacao = selecaoIndicacao
 
             // Dados de quem realizou o cadastro
