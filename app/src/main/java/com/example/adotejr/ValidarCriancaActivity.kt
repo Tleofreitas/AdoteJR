@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityValidarCriancaBinding
+import com.example.adotejr.model.Responsavel
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
@@ -291,6 +292,9 @@ class ValidarCriancaActivity : AppCompatActivity() {
                     selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
                     var indicacao = selecaoIndicacao
 
+                    editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
+                    var vinculoFamiliar = editTextVinculoFamiliar.text.toString()
+
                     // Dados de quem validou o cadastro
                     var validadoPor: String = ""
                     var fotoValidadoPor: String = ""
@@ -312,6 +316,14 @@ class ValidarCriancaActivity : AppCompatActivity() {
                                         if (foto.isNotEmpty()) {
                                             fotoValidadoPor = foto
                                         }
+
+                                        salvarDadosResponsavel(
+                                            vinculoFamiliar,
+                                            telPrincipal,
+                                            tel2,
+                                            indicacao
+                                        )
+
                                         // Após obter os dados do Firestore, processa os dados
                                         processarDados(
                                             nome,
@@ -365,6 +377,45 @@ class ValidarCriancaActivity : AppCompatActivity() {
             }
         }
         return true
+    }
+
+    private fun salvarDadosResponsavel(
+        vinculoFamiliar: String,
+        telefone1: String,
+        telefone2: String,
+        indicacao: String
+    ) {
+        val dados = mapOf(
+            "vinculoFamiliar" to vinculoFamiliar,
+            "telefone1" to telefone1,
+            "telefone2" to telefone2,
+            "indicacao" to indicacao
+        )
+
+        atualizarDadosResponsavel(vinculoFamiliar, dados) // Envia os dados ao banco
+    }
+
+    private fun atualizarDadosResponsavel(id: String, dados: Map<String, String>) {
+        firestore.collection("Responsaveis")
+            .document( id )
+            .update( dados )
+            .addOnSuccessListener {
+                /*onStart()
+                exibirMensagem("Responsavel Validado.")
+                val intent = Intent(this, CartaoActivity::class.java)
+                intent.putExtra("id", id)
+                startActivity(intent)
+                */
+
+                // FOR para filtrar e atualizar todos os filhos
+            }
+            .addOnFailureListener {
+                /*
+                exibirMensagem("Erro ao validar responsavel.")
+                binding.btnAtualizarDadosCrianca.text = "Validar"
+                binding.btnAtualizarDadosCrianca.isEnabled = true
+                */
+            }
     }
 
     private fun processarDados(

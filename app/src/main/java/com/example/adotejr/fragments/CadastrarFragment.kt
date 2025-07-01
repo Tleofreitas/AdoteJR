@@ -373,7 +373,7 @@ class CadastrarFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {
                 val cpfResponsavel = s.toString()
 
-                if (cpfResponsavel.length == 11) { // Verifica se o formato está completo
+                if (cpfResponsavel.trim().length == 11) { // Verifica se o formato está completo
                     responsavelCadastrado(cpfResponsavel) { cadastrado ->
                         if (cadastrado) {
                             // Log.d("DEBUG_Resp", "Responsável encontrado no sistema!")
