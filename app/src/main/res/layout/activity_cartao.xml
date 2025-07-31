@@ -19,10 +19,11 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
-            android:fontFamily="@font/sriracha"
             android:text="ADOTE 2025"
             android:textColor="@color/black"
+            android:fontFamily="@font/noto_sans"
             android:textSize="18sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -32,10 +33,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
-            android:fontFamily="@font/sriracha"
             android:text="Nº: 177"
             android:textColor="@color/black"
+            android:fontFamily="@font/noto_sans"
             android:textSize="18sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -49,6 +51,7 @@
             android:justificationMode="inter_word"
             android:text="Este cartão deve ser colocado dentro da sacola junto com os itens obrigatórios. Por favor escreva o número deste cartão na sacola."
             android:textColor="@color/black"
+            android:fontFamily="@font/noto_sans"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -114,12 +117,14 @@
                     android:id="@+id/idadeCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:background="@color/primaria"
                     android:fontFamily="@font/noto_sans"
                     android:text=" Idade: 15 anos"
                     android:textColor="@color/black"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:textStyle="normal"
+                    app:layout_constraintBottom_toTopOf="@+id/blusaCartao"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
                     app:layout_constraintTop_toTopOf="@+id/fotoCartao" />
@@ -128,49 +133,70 @@
                     android:id="@+id/blusaCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:background="@color/primaria"
                     android:fontFamily="@font/noto_sans"
                     android:text=" Blusa: P adulto"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
+                    app:layout_constraintBottom_toTopOf="@+id/calcaCartao"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
-                    app:layout_constraintTop_toBottomOf="@+id/idadeCartao" />
+                    app:layout_constraintTop_toBottomOf="@+id/idadeCartao"
+                    app:layout_constraintVertical_bias="0.5" />
 
                 <TextView
                     android:id="@+id/calcaCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:background="@color/primaria"
                     android:fontFamily="@font/noto_sans"
                     android:text=" Calça: 34 adulto"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
+                    app:layout_constraintBottom_toTopOf="@+id/sapatoCartao"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toEndOf="@+id/fotoCartao"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
-                    app:layout_constraintTop_toBottomOf="@+id/blusaCartao" />
+                    app:layout_constraintTop_toBottomOf="@+id/blusaCartao"
+                    app:layout_constraintVertical_bias="0.5" />
 
                 <TextView
                     android:id="@+id/sapatoCartao"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:background="@color/primaria"
                     android:fontFamily="@font/noto_sans"
                     android:text=" Sapato: 36 adulto"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
+                    app:layout_constraintBottom_toTopOf="@+id/pcdCartao"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="@+id/guideline2"
-                    app:layout_constraintTop_toBottomOf="@+id/calcaCartao" />
+                    app:layout_constraintTop_toBottomOf="@+id/calcaCartao"
+                    app:layout_constraintVertical_bias="0.5" />
+
+                <TextView
+                    android:id="@+id/pcdCartao"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@color/primaria"
+                    android:fontFamily="@font/noto_sans"
+                    android:text="  PCD - TEA"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="normal"
+                    app:layout_constraintBottom_toBottomOf="@+id/fotoCartao"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/guideline2"
+                    app:layout_constraintTop_toBottomOf="@+id/sapatoCartao" />
 
                 <TextView
                     android:id="@+id/dicaCartao"
@@ -180,28 +206,13 @@
                     android:background="@color/primaria"
                     android:drawableStart="@drawable/ic_check"
                     android:fontFamily="@font/noto_sans"
-                    android:text=" Basketball"
+                    android:text="Carrinho de Controle Remoto"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="normal"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/guideline2"
-                    app:layout_constraintTop_toBottomOf="@+id/sapatoCartao" />
-
-                <TextView
-                    android:id="@+id/pcdCartao"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@color/primaria"
-                    android:fontFamily="@font/noto_sans"
-                    android:text=" PCD - TEA"
-                    android:textColor="@color/black"
-                    android:textSize="16sp"
-                    android:textStyle="normal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/guideline2"
-                    app:layout_constraintTop_toBottomOf="@+id/dicaCartao" />
+                    app:layout_constraintStart_toStartOf="@+id/fotoCartao"
+                    app:layout_constraintTop_toBottomOf="@+id/fotoCartao" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
@@ -260,7 +271,6 @@
                     android:id="@+id/itensOpc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:fontFamily="@font/oswald"
                     android:text="Itens Opcionais"
                     android:textColor="@color/azulEscuro"
@@ -273,7 +283,6 @@
                     android:id="@+id/textView8"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
                     android:fontFamily="@font/noto_sans"
                     android:text="- Escova e pasta de\ndentes\n- Sabonete, Shampoo\n- Desodorante, Toalha\n- Material escolar\n- Fralda, etc."
@@ -308,6 +317,7 @@
             android:justificationMode="inter_word"
             android:text="Este kit é muito especial e tornará uma criança feliz, realize cada processo com muito carinho."
             android:textColor="@color/black"
+            android:fontFamily="@font/noto_sans"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -360,19 +370,20 @@
             android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:fontFamily="@font/noto_sans"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/cardResponsavel" />
 
-<!--        <Button-->
-<!--            android:id="@+id/btnGerarCartao"-->
-<!--            android:layout_width="130dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="Gerar Cartão"-->
-<!--            app:cornerRadius="8dp"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintHorizontal_bias="0.491"-->
-<!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintTop_toBottomOf="@+id/respPadrinho" />-->
+        <!--        <Button-->
+        <!--            android:id="@+id/btnGerarCartao"-->
+        <!--            android:layout_width="130dp"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:text="Gerar Cartão"-->
+        <!--            app:cornerRadius="8dp"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintHorizontal_bias="0.491"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/respPadrinho" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

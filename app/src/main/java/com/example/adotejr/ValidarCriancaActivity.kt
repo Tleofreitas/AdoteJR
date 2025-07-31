@@ -10,7 +10,6 @@ import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityValidarCriancaBinding
 import com.example.adotejr.model.Crianca
-import com.example.adotejr.model.Responsavel
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
@@ -319,6 +318,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
                                             fotoValidadoPor = foto
                                         }
 
+                                        /*
                                         salvarDadosResponsavel(
                                             vinculoFamiliar,
                                             telPrincipal,
@@ -332,7 +332,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
                                             tel2,
                                             indicacao,
                                             idDetalhar.toString()
-                                        )
+                                        ) */
 
                                         // Após obter os dados do Firestore, processa os dados
                                         processarDados(
@@ -346,7 +346,9 @@ class ValidarCriancaActivity : AppCompatActivity() {
                                             tel2,
                                             indicacao,
                                             validadoPor,
-                                            fotoValidadoPor
+                                            fotoValidadoPor,
+                                            vinculoFamiliar,
+                                            idDetalhar.toString()
                                         )
                                     }
                                 }.addOnFailureListener { exception ->
@@ -389,6 +391,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
         return true
     }
 
+    /*
     private fun salvarDadosResponsavel(
         vinculoFamiliar: String,
         telefone1: String,
@@ -403,17 +406,6 @@ class ValidarCriancaActivity : AppCompatActivity() {
         )
 
         atualizarDadosResponsavel(vinculoFamiliar, dados) // Envia os dados ao banco
-    }
-
-    private fun atualizarDadosResponsavel(id: String, dados: Map<String, String>) {
-        firestore.collection("Responsaveis")
-            .document( id )
-            .update( dados )
-            /* .addOnSuccessListener {
-            }
-            .addOnFailureListener {
-                exibirMensagem("Erro ao validar responsavel.")
-            } */
     }
 
     private fun atualizarDadosResponsavelCriancas(
@@ -454,7 +446,6 @@ class ValidarCriancaActivity : AppCompatActivity() {
                         telefone2,
                         indicacao
                     )
-
                 }
             }
     }
@@ -472,25 +463,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
         )
 
         atualizarDadosPerfilDependentes(id, dados) // Envia os dados ao banco
-    }
-
-    private fun atualizarDadosPerfilDependentes(id: String, dados: Map<String, String>) {
-        firestore.collection("Criancas")
-            .document( id )
-            .update( dados )
-            /* .addOnSuccessListener {
-                onStart()
-                exibirMensagem("Validado com Sucesso.")
-                val intent = Intent(this, CartaoActivity::class.java)
-                intent.putExtra("id", id)
-                startActivity(intent)
-            }
-            .addOnFailureListener {
-                binding.btnAtualizarDadosCrianca.text = "Validar"
-                binding.btnAtualizarDadosCrianca.isEnabled = true
-                exibirMensagem("Erro ao atualizar. Tente novamente.")
-            } */
-    }
+    } */
 
     private fun processarDados(
         nome: String,
@@ -503,8 +476,56 @@ class ValidarCriancaActivity : AppCompatActivity() {
         telefone2: String,
         indicacao: String,
         validadoPor: String,
-        fotoValidadoPor: String
+        fotoValidadoPor: String,
+        vinculoFamiliar: String,
+        idDetalhe: String
     ) {
+        val dadosResponsavel = mapOf(
+            "vinculoFamiliar" to vinculoFamiliar,
+            "telefone1" to telefone1,
+            "telefone2" to telefone2,
+            "indicacao" to indicacao
+        )
+
+        atualizarDadosResponsavel(vinculoFamiliar, dadosResponsavel, "Responsaveis") // Envia os dados ao banco
+
+        var listaCriancas = mutableListOf<Crianca>()
+        var ano = LocalDate.now().year
+        firestore.collection("Criancas")
+            .addSnapshotListener { querySnapshot, erro ->
+                listaCriancas.clear() // Limpa a lista antes de adicionar os novos dados
+                querySnapshot?.documents?.forEach { documentSnapshot ->
+                    // Converter documentSnapshot em objeto
+                    val crianca = documentSnapshot.toObject(Crianca::class.java)
+                    if (crianca != null && crianca.id.contains(ano.toString())) {
+                        // Log.i("fragmento_listagem", "nome: ${crianca.nome} ")
+                        listaCriancas.add(crianca)
+                    }
+                }
+
+                // Filtra a lista para atualizar todas as crianças do mesmo responsável
+                val listaFiltrada = listaCriancas.filter { crianca ->
+                    crianca.vinculoFamiliar.contains(vinculoFamiliar)
+                }
+                val listaFiltradaFinal = listaFiltrada.filter { crianca ->
+                    !crianca.id.contains(idDetalhe)
+                }
+
+                listaFiltradaFinal.forEach{ crianca ->
+                    // Log.i("fragmento_listagem", "nome: ${crianca.nome} ")
+
+                    val dadosDependente = mapOf(
+                        "telefone1" to telefone1,
+                        "telefone2" to telefone2,
+                        "indicacao" to indicacao
+                    )
+
+                    // atualizarDadosPerfilDependentes(crianca.id, dadosDependente) // Envia os dados ao banco
+
+                    atualizarDadosResponsavel(crianca.id, dadosDependente, "Criancas") // Envia os dados ao banco
+                }
+            }
+
         val dados = mapOf(
             "nome" to nome,
             "sexo" to sexo,
@@ -521,6 +542,33 @@ class ValidarCriancaActivity : AppCompatActivity() {
 
         atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
     }
+
+    private fun atualizarDadosResponsavel(id: String, dados: Map<String, String>, colecao: String) {
+        firestore.collection(colecao)
+            .document( id )
+            .update( dados )
+        /* .addOnSuccessListener {
+        }
+        .addOnFailureListener {
+            exibirMensagem("Erro ao validar responsavel.")
+        } */
+    }
+
+    /*
+    private fun atualizarDadosPerfilDependentes(id: String, dados: Map<String, String>) {
+        firestore.collection("Criancas")
+            .document( id )
+            .update( dados )
+        /* .addOnSuccessListener {
+            exibirMensagem("Validado com Sucesso.")
+        }
+        .addOnFailureListener {
+            binding.btnAtualizarDadosCrianca.text = "Validar"
+            binding.btnAtualizarDadosCrianca.isEnabled = true
+            exibirMensagem("Erro ao atualizar. Tente novamente.")
+        } */
+    }
+    */
 
     private fun atualizarDadosPerfil(id: String, dados: Map<String, String>) {
         firestore.collection("Criancas")

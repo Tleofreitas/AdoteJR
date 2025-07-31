@@ -67,6 +67,7 @@ class CartaoActivity : AppCompatActivity() {
         binding.cartaoAdote.text = "ADOTE $ano"
 
         var nCartao = dados["numeroCartao"] as? String ?: ""
+
         binding.numCartao.text = "N°: $nCartao"
 
         var nome = dados["nome"] as? String ?: ""
