@@ -161,9 +161,10 @@ class CartaoActivity : AppCompatActivity() {
         // fotos -> crianças -> ano -> id -> cartao.jpg
         val idCrianca = idDetalhar
         if (idCrianca != null) {
+            var nCartaoF = nCartao.padStart(4, '0')
             storage.getReference("cartoes")
                 .child(ano.toString())
-                .child("$nCartao-Cartao$idCrianca.pdf") // Agora salvamos como PDF
+                .child("$nCartaoF-Cartao$idCrianca.pdf") // Agora salvamos como PDF
                 .putBytes(pdfBytes)
                 .addOnSuccessListener {
                     exibirMensagem("Cartão em PDF gerado com sucesso!")
