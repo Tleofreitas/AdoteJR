@@ -154,22 +154,26 @@ class ListagemFragment : Fragment() {
     }
 
     private fun filtrarListaCriancas(texto: String, filtroId: Int) {
-        // Filtra a lista com base no critério selecionado pelo usuário (Nome ou CPF)
-        val listaFiltrada = listaCriancas.filter { crianca ->
-            if (filtroId == binding.rbNome.id) {
-                // Filtra pelo nome, ignorando maiúsculas e minúsculas
-                crianca.nome.contains(texto, ignoreCase = true)
-            } else if (filtroId == binding.rbNCartao.id) {
-                // Filtra pelo Número do Cartão (mantendo exata correspondência)
-                crianca.numeroCartao.contains(texto)
-            } else {
-                // Filtra pelo CPF (mantendo exata correspondência)
-                crianca.id.contains(ano.toString()+texto)
+        val listaFinal = listaCriancas
+            // 1. Primeiro, filtra
+            .filter { crianca ->
+                when (filtroId) {
+                    binding.rbNome.id -> crianca.nome.startsWith(texto, ignoreCase = true)
+                    binding.rbNCartao.id -> crianca.numeroCartao.startsWith(texto)
+                    else -> crianca.id.startsWith(ano.toString() + texto)
+                }
             }
-        }
+            // 2. Depois, ordena o resultado do filtro
+            .sortedBy { crianca ->
+                when (filtroId) {
+                    binding.rbNome.id -> crianca.nome
+                    binding.rbNCartao.id -> crianca.numeroCartao
+                    else -> crianca.id
+                }
+            }
 
-        // Atualiza a RecyclerView com a lista filtrada
-        criancasAdapter.adicionarLista(listaFiltrada)
+        // 3. Atualiza a UI
+        criancasAdapter.adicionarLista(listaFinal)
     }
 
     override fun onStart() {
