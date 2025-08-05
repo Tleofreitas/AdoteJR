@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewTreeObserver
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityCartaoBinding
 import com.example.adotejr.utils.NetworkUtils
@@ -102,7 +103,24 @@ class CartaoActivity : AppCompatActivity() {
             }
         }
 
-        gerarCartao(nCartao)
+        aguardarLayoutEGerarCartao(nCartao)
+    }
+
+    private fun aguardarLayoutEGerarCartao(nCartao: String) {
+        val viewTreeObserver = binding.layoutCartao.viewTreeObserver
+        if (viewTreeObserver.isAlive) {
+            viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    // O layout está pronto! Agora podemos capturar o screenshot.
+
+                    // IMPORTANTE: Remova o listener para não ser chamado de novo desnecessariamente.
+                    binding.layoutCartao.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                    // Agora sim, chame a função para gerar o cartão.
+                    gerarCartao(nCartao)
+                }
+            })
+        }
     }
 
     private fun gerarCartao(nCartao: String) {

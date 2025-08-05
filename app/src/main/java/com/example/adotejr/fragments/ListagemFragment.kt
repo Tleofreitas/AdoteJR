@@ -155,15 +155,15 @@ class ListagemFragment : Fragment() {
 
     private fun filtrarListaCriancas(texto: String, filtroId: Int) {
         val listaFinal = listaCriancas
-            // 1. Primeiro, filtra
+            // 1. Primeiro, filtra a lista original com a lógica correta para cada campo.
             .filter { crianca ->
                 when (filtroId) {
-                    binding.rbNome.id -> crianca.nome.startsWith(texto, ignoreCase = true)
+                    binding.rbNome.id -> crianca.nome.contains(texto, ignoreCase = true)
                     binding.rbNCartao.id -> crianca.numeroCartao.startsWith(texto)
                     else -> crianca.id.startsWith(ano.toString() + texto)
                 }
             }
-            // 2. Depois, ordena o resultado do filtro
+            // 2. Em seguida, ordena o resultado do filtro em ordem crescente (A-Z, 0-9).
             .sortedBy { crianca ->
                 when (filtroId) {
                     binding.rbNome.id -> crianca.nome
@@ -172,7 +172,7 @@ class ListagemFragment : Fragment() {
                 }
             }
 
-        // 3. Atualiza a UI
+        // 3. Por fim, atualiza o adapter com a lista processada.
         criancasAdapter.adicionarLista(listaFinal)
     }
 
