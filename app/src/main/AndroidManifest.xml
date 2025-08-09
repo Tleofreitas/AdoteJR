@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- Permissão de acesso as fotos -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!-- Permissão necessária para Foreground Services -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- A partir do Android 13 (API 33), notificações precisam de permissão -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,6 +26,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppAdoteJrTLRF"
         tools:targetApi="31">
+
+        <service
+            android:name=".utils.GeradorCartaoService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <activity
             android:name=".ValidarCriancaOutrosActivity"
             android:exported="false"
