@@ -1,9 +1,26 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.AppAdoteJrTLRF" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.AppAdoteJrTLRF" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/primaria</item>
+        <item name="colorPrimaryVariant">@color/azulEscuro</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Cores secundárias -->
+        <item name="colorSecondary">@color/destaque</item>
+        <item name="colorSecondaryVariant">@color/azul</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Cor de fundo do app -->
+        <item name="android:colorBackground">@color/white</item>
+        <!-- Cor das superfícies (como Cards ) -->
+        <item name="colorSurface">@color/white</item>
+        <!-- Cor do texto sobre o fundo e superfícies -->
+        <item name="colorOnBackground">@color/black</item>
+        <item name="colorOnSurface">@color/black</item>
+
+        <!-- Cor de Erro -->
+        <item name="colorError">@color/vermelhoCarmim</item>
+        <item name="colorOnError">@color/white</item>
     </style>
 
     <!--  Arredondam de imagens -->
@@ -11,5 +28,9 @@
         <item name="cornerSize">50%</item>
     </style>
 
-    <style name="Theme.AppAdoteJrTLRF" parent="Base.Theme.AppAdoteJrTLRF" />
+    <style name="Theme.AppAdoteJrTLRF" parent="Base.Theme.AppAdoteJrTLRF">
+        <!-- Sem permissão para forçar o modo escuro neste tema -->
+        <!-- tools:targetApi="q" = garante que o app não tenha problemas de compatibilidade em versões mais antigas do Android -->
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
 </resources>
