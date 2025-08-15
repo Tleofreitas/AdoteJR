@@ -2,11 +2,13 @@ package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityCadastroBinding
 import com.example.adotejr.model.Usuario
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -66,46 +68,40 @@ class CadastroActivity : AppCompatActivity() {
     }
 
     private fun cadastrarUsuarioVoluntario(nome: String, email: String, senha: String) {
-        firebaseAuth.createUserWithEmailAndPassword(
-            email, senha
-        ).addOnCompleteListener{ resultado ->
-            if( resultado.isSuccessful ) {
-                // Salvar dados dos usuários no banco de dados do firebase (Firestore)
-                val idUsuario = resultado.result.user?.uid
-                if ( idUsuario != null ){
-                    val usuario = Usuario(
-                        idUsuario, nome, email, "User"
-                    )
-                    salvarUsuarioFirestore( usuario )
+        firebaseAuth.createUserWithEmailAndPassword(email, senha)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // SUCESSO NA CRIAÇÃO DO AUTH
+                    val idUsuario = task.result.user?.uid
+                    if (idUsuario != null) {
+                        val usuario = Usuario(idUsuario, nome, email, "User")
+                        salvarUsuarioFirestore(usuario)
+                    } else {
+                        // Erro raro, mas importante de tratar
+                        exibirMensagem("Erro inesperado ao obter ID do usuário.")
+                        resetarEstadoDoBotao()
+                    }
+                } else {
+                    // FALHA NA CRIAÇÃO DO AUTH
+                    val exception = task.exception // Pegamos o erro aqui
+                    val mensagemErro = when (exception) {
+                        is FirebaseAuthWeakPasswordException -> "Senha fraca. Use no mínimo 6 caracteres."
+                        is FirebaseAuthUserCollisionException -> "Este e-mail já está cadastrado."
+                        is FirebaseAuthInvalidCredentialsException -> "O formato do e-mail é inválido."
+                        is FirebaseNetworkException -> "Sem conexão com a internet."
+                        else -> "Erro ao cadastrar. Tente novamente mais tarde."
+                    }
+                    exibirMensagem(mensagemErro)
+                    Log.e("CADASTRO_FALHA", "Erro não esperado", exception)
+                    resetarEstadoDoBotao()
                 }
             }
-        }.addOnFailureListener { erro ->
-            try {
-                throw erro
+    }
 
-            // Testar senha forte
-            } catch ( erroSenhaFraca: FirebaseAuthWeakPasswordException ) {
-                binding.btnCadastrar.text = "Cadastrar"
-                binding.btnCadastrar.isEnabled = true
-
-                erroSenhaFraca.printStackTrace()
-                exibirMensagem("Senha fraca, escolher uma com letras, números e caracteres especiais")
-
-            // Testar se o e-mail já está cadastrado
-            } catch ( erroEmailExistente: FirebaseAuthUserCollisionException ) {
-                binding.btnCadastrar.text = "Cadastrar"
-                binding.btnCadastrar.isEnabled = true
-                erroEmailExistente.printStackTrace()
-                exibirMensagem("E-mail já cadastrado, use outro e-mail ou redefina a senha!")
-
-            // Testar se o e-mail é válido
-            } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException ) {
-                binding.btnCadastrar.text = "Cadastrar"
-                binding.btnCadastrar.isEnabled = true
-                erroCredenciaisInvalidas.printStackTrace()
-                exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
-            }
-        }
+    // Crie esta função de ajuda para não repetir código
+    private fun resetarEstadoDoBotao() {
+        binding.btnCadastrar.text = "Cadastrar"
+        binding.btnCadastrar.isEnabled = true
     }
 
     private fun salvarUsuarioFirestore(usuario: Usuario) {
@@ -114,41 +110,55 @@ class CadastroActivity : AppCompatActivity() {
             .set(usuario)
             .addOnSuccessListener {
                 exibirMensagem("Cadastro realizado com sucesso")
-                startActivity(
-                    Intent(applicationContext, GerenciamentoActivity::class.java)
-                )
-            }.addOnFailureListener {
-                binding.btnCadastrar.text = "Cadastrar"
-                binding.btnCadastrar.isEnabled = true
-                exibirMensagem("Erro ao realizar cadastro")
+                navegarParaGerenciamento() // Chame a função de navegação aqui
+            }
+            .addOnFailureListener {
+                exibirMensagem("Erro ao salvar dados. Tente fazer login.")
+                Log.e("CADASTRO_FIRESTORE", "Erro ao salvar usuário no Firestore", it)
+                resetarEstadoDoBotao()
             }
     }
 
+    private fun navegarParaGerenciamento() {
+        val intent = Intent(this, GerenciamentoActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish() // Adicione finish() para destruir a tela de cadastro
+    }
+
     private fun validarCamposCadastroUsuario(): Boolean {
-        nome = binding.editNome.text.toString()
-        email = binding.editEmail.text.toString()
-        senha = binding.editSenha.text.toString()
+        val nomeInput = binding.editNome.text.toString().trim()
+        val emailInput = binding.editEmail.text.toString().trim()
+        val senhaInput = binding.editSenha.text.toString()
 
-        if(nome.isNotEmpty()){
-            binding.textInputNome.error = null
+        binding.textInputNome.error = null
+        binding.textInputEmail.error = null
+        binding.textInputSenha.error = null
 
-            if(email.isNotEmpty()){
-                binding.textInputEmail.error = null
-
-                if(senha.isNotEmpty()){
-                    binding.textInputSenha.error = null
-                    return  true
-                }else{
-                    binding.textInputSenha.error = "Preencha a senha!"
-                    return false
-                }
-            }else{
-                binding.textInputEmail.error = "Preencha seu e-mail!"
-                return false
-            }
-        }else{
-            binding.textInputNome.error = "Preencha seu nome!"
+        if (nomeInput.isEmpty()) {
+            binding.textInputNome.error = "Preencha seu nome"
             return false
         }
+
+        if (emailInput.isEmpty()) {
+            binding.textInputEmail.error = "Preencha seu e-mail"
+            return false
+        }
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+            binding.textInputEmail.error = "Digite um e-mail válido"
+            return false
+        }
+
+        if (senhaInput.length < 6) { // O Firebase exige no mínimo 6 caracteres
+            binding.textInputSenha.error = "A senha deve ter no mínimo 6 caracteres"
+            return false
+        }
+
+        this.nome = nomeInput
+        this.email = emailInput
+        this.senha = senhaInput
+        return true
     }
 }
