@@ -29,7 +29,8 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/includeToolbar"
-        app:srcCompat="@drawable/logo_completo_cima_laranja" />
+        app:srcCompat="@drawable/logo_completo_cima_laranja"
+        android:contentDescription="Logo do aplicativo Adote JR" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputEmailLogin"
@@ -49,7 +50,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Digite seu e-mail..."
-            android:inputType="text|textEmailAddress" />
+            android:inputType="textEmailAddress"
+            android:imeOptions="actionNext" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -71,11 +73,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Digite sua senha..."
-            android:inputType="text|textPassword" />
+            android:inputType="textPassword"
+            android:imeOptions="actionDone" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/btnCriarConta"
+        style="@style/Widget.App.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -83,10 +87,6 @@
         android:layout_marginEnd="8dp"
         android:backgroundTint="@color/azul"
         android:text="Criar Conta"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        app:cornerRadius="8dp"
         app:layout_constraintEnd_toStartOf="@+id/btnEsqueciSenha"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
@@ -94,6 +94,7 @@
 
     <Button
         android:id="@+id/btnEsqueciSenha"
+        style="@style/Widget.App.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -101,10 +102,6 @@
         android:layout_marginEnd="16dp"
         android:backgroundTint="@color/destaque"
         android:text="Alterar senha"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btnCriarConta"
         app:layout_constraintTop_toBottomOf="@+id/textInputSenhaLogin" />
@@ -112,6 +109,7 @@
     <!-- Botão principal de Login -->
     <Button
         android:id="@+id/btnLogarUsuario"
+        style="@style/Widget.App.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -119,12 +117,8 @@
         android:layout_marginEnd="16dp"
         android:backgroundTint="@color/primaria"
         android:text="Logar"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
         android:textSize="20sp"
-        app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnCriarConta" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

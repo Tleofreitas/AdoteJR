@@ -2,10 +2,12 @@ package com.example.adotejr
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityLoginBinding
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -67,6 +69,7 @@ class LoginActivity : AppCompatActivity() {
                     logarUsuario()
                 } else {
                     exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                    resetarEstadoDoBotao()
                 }
             }
         }
@@ -89,54 +92,67 @@ class LoginActivity : AppCompatActivity() {
             email, senha
         ).addOnSuccessListener {
             exibirMensagem("Login realizado com sucesso")
+            // Função de navegação
+            navegarParaGerenciamento()
             startActivity(
                 Intent(applicationContext, GerenciamentoActivity::class.java)
             )
-        }.addOnFailureListener { erro ->
-            try {
-                throw erro
-
-            // testar E-mail cadastrado
-            } catch ( erroEmailInvalido: FirebaseAuthInvalidUserException) {
-                erroEmailInvalido.printStackTrace()
-                binding.btnCriarConta.isEnabled = true
-                binding.btnEsqueciSenha.isEnabled = true
-
-                binding.btnLogarUsuario.text = "Logar"
-                binding.btnLogarUsuario.isEnabled = true
-                exibirMensagem("E-mail não cadastrado")
-
-            // Testar E-mail e senha
-            } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
-                erroCredenciaisInvalidas.printStackTrace()
-
-                binding.btnCriarConta.isEnabled = true
-                binding.btnEsqueciSenha.isEnabled = true
-
-                binding.btnLogarUsuario.text = "Logar"
-                binding.btnLogarUsuario.isEnabled = true
-                exibirMensagem("E-mail não cadastrado OU E-mail/Senha estão incorretos!")
+        }.addOnFailureListener { exception ->
+            val mensagemErro = when (exception) {
+                is FirebaseAuthInvalidUserException -> "E-mail não cadastrado."
+                is FirebaseAuthInvalidCredentialsException -> "Senha incorreta. Verifique e tente novamente."
+                is FirebaseNetworkException -> "Sem conexão com a internet."
+                else -> "Erro ao fazer login. Tente novamente mais tarde." // Erro genérico
             }
+            exibirMensagem(mensagemErro)
+            Log.e("LOGIN_FALHA", "Erro não esperado", exception) // Loga o erro completo para depuração
+            resetarEstadoDoBotao() // Criar função para reativar os botões
         }
     }
 
+    private fun resetarEstadoDoBotao() {
+        binding.btnLogarUsuario.text = "Logar"
+        binding.btnLogarUsuario.isEnabled = true
+        binding.btnCriarConta.isEnabled = true
+        binding.btnEsqueciSenha.isEnabled = true
+    }
+
+    private fun navegarParaGerenciamento() {
+        val intent = Intent(this, GerenciamentoActivity::class.java).apply {
+            // Limpa a pilha de activities para que o usuário não possa voltar para a tela de login
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+    }
+
     private fun validarCamposLogin(): Boolean {
-        email = binding.editLoginEmail.text.toString()
-        senha = binding.editLoginSenha.text.toString()
+        // Pega os textos aqui
+        val emailInput = binding.editLoginEmail.text.toString().trim()
+        val senhaInput = binding.editLoginSenha.text.toString() // Senhas podem ter espaços
 
-        if(email.isNotEmpty()){
-            binding.textInputEmailLogin.error = null
+        // Limpa erros antigos
+        binding.textInputEmailLogin.error = null
+        binding.textInputSenhaLogin.error = null
 
-            if(senha.isNotEmpty()){
-                binding.textInputSenhaLogin.error = null
-                return  true
-            } else {
-                binding.textInputSenhaLogin.error = "Preencha a Senha"
-                return false
-            }
-        }else{
-            binding.textInputEmailLogin.error = "Preencha o E-mail"
+        if (emailInput.isEmpty()) {
+            binding.textInputEmailLogin.error = "Preencha o e-mail"
             return false
         }
+
+        // Opcional: Validar se o e-mail tem um formato válido
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+            binding.textInputEmailLogin.error = "Digite um e-mail válido"
+            return false
+        }
+
+        if (senhaInput.isEmpty()) {
+            binding.textInputSenhaLogin.error = "Preencha a senha"
+            return false
+        }
+
+        // Se passou por todas as validações, atribui às variáveis de classe
+        this.email = emailInput
+        this.senha = senhaInput
+        return true
     }
 }
