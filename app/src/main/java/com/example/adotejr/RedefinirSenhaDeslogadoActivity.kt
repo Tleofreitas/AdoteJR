@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.util.Patterns
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityRedefinirSenhaDeslogadoBinding
@@ -18,8 +19,6 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
         ActivityRedefinirSenhaDeslogadoBinding.inflate(layoutInflater)
     }
 
-    private lateinit var email: String
-
     // Autenticação
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
@@ -32,29 +31,31 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
         incializarToolbar()
 
         // Pegar E-mail passado
-        val bundle = intent.extras
-        if(bundle != null) {
-            email = bundle.getString("email").toString()
-            binding.editEmailSolicitar.setText( email )
-        } else {
-            email = "null"
+        val emailRecebido = intent.extras?.getString("email")
+        if (emailRecebido != null) {
+            binding.editEmailSolicitar.setText(emailRecebido)
         }
-
-        // Adicionar o listener ao campo de e-mail
-        adicionarListenerCampoEmail()
 
         inicializarEventosClique()
     }
 
-    private fun adicionarListenerCampoEmail() {
-        binding.editEmailSolicitar.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                email = binding.editEmailSolicitar.text.toString().trim() // Atualiza a variável email
-            }
+    // A nova função de validação, que retorna o e-mail se for válido, ou nulo se não for.
+    private fun validarCampoEmail(): String? {
+        val emailInput = binding.editEmailSolicitar.text.toString().trim()
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
+        if (emailInput.isEmpty()) {
+            binding.textInputEmailSolicitar.error = "Preencha o e-mail"
+            return null
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+            binding.textInputEmailSolicitar.error = "Digite um e-mail válido"
+            return null
+        }
+
+        // Se passou em tudo, limpa o erro e retorna o e-mail válido
+        binding.textInputEmailSolicitar.error = null
+        return emailInput
     }
 
     private fun incializarToolbar() {
@@ -68,74 +69,65 @@ class RedefinirSenhaDeslogadoActivity : AppCompatActivity() {
 
     private fun inicializarEventosClique() {
         binding.btnSolicitar.setOnClickListener {
-            if( validarCamposCadastroUsuario() ){
-                if( validarEmail(email) ){
-                    if (NetworkUtils.conectadoInternet(this)) {
-                        binding.btnSolicitar.text = "Aguarde..."
-                        binding.btnSolicitar.isEnabled = false
-                        firebaseAuth.sendPasswordResetEmail(email)
-                            .addOnCompleteListener { resultado ->
-                                if (resultado.isSuccessful) {
-                                    exibirMensagem("E-mail enviado! Redefina a senha e faça login =)");
+            // 1. Valida e pega o e-mail em uma única chamada
+            val emailValido = validarCampoEmail()
+            if (emailValido == null) {
+                // Se for nulo, a função de validação já mostrou o erro. Apenas paramos aqui.
+                return@setOnClickListener
+            }
 
-                                    val user = FirebaseAuth.getInstance().currentUser
-                                    if (user != null) {
-                                        // Usuário está logado, deslogar
-                                        firebaseAuth.signOut()
-                                    }
+            // 2. Verifica a conexão com a internet
+            if (!NetworkUtils.conectadoInternet(this)) {
+                exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+                return@setOnClickListener
+            }
 
-                                    startActivity(
-                                        Intent(this, LoginActivity::class.java)
-                                    )
-                                } else {
-                                    binding.btnSolicitar.text = "Solicitar link para redefinir senha"
-                                    binding.btnSolicitar.isEnabled = true
-                                    val errorMessage = resultado.exception?.message
-                                    exibirMensagem("Erro: $errorMessage");
-                                }
-                            }
-                            .addOnFailureListener { erro ->
-                                try {
-                                    throw erro
+            // 3. Se tudo estiver OK, inicia o processo
+            enviarEmailDeRedefinicao(emailValido)
+        }
+    }
 
-                                    // Testar se o e-mail é válido
-                                } catch ( erroCredenciaisInvalidas: FirebaseAuthInvalidCredentialsException) {
-                                    erroCredenciaisInvalidas.printStackTrace()
-                                    binding.btnSolicitar.text = "Solicitar link para redefinir senha"
-                                    binding.btnSolicitar.isEnabled = true
-                                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
-                                }
-                            }
-                    } else {
-                        exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+    private fun enviarEmailDeRedefinicao(email: String) {
+        binding.btnSolicitar.text = "Aguarde..."
+        binding.btnSolicitar.isEnabled = false
+
+        firebaseAuth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // SUCESSO
+                    exibirMensagem("E-mail de redefinição enviado para $email")
+
+                    // Se o usuário estava logado, deslogue-o.
+                    // Isso é bom caso ele tenha vindo da tela de perfil.
+                    if (firebaseAuth.currentUser != null) {
+                        firebaseAuth.signOut()
                     }
+
+                    // Volta para a tela de login
+                    val intent = Intent(this, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    finish() // Finaliza esta tela
+
                 } else {
-                    binding.btnSolicitar.text = "Solicitar link para redefinir senha"
-                    binding.btnSolicitar.isEnabled = true
-                    exibirMensagem("E-mail inválido, verifique o e-mail digitado!")
+                    // FALHA
+                    val exception = task.exception
+                    val mensagemErro = when (exception) {
+                        // O erro mais comum é o usuário não existir, mas o Firebase não o diferencia
+                        // por segurança. A mensagem genérica é a melhor abordagem.
+                        is FirebaseAuthInvalidCredentialsException -> "O formato do e-mail é inválido."
+                        else -> "Falha ao enviar o e-mail. Verifique se o e-mail está correto."
+                    }
+                    exibirMensagem(mensagemErro)
+                    Log.e("REDEFINIR_SENHA", "Erro ao enviar e-mail", exception)
+                    resetarEstadoBotao()
                 }
             }
-        }
     }
 
-    private fun validarEmail(email: String): Boolean {
-        // Verifica se o e-mail não está vazio e se corresponde ao padrão de e-mail
-        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
-
-    private fun validarCamposCadastroUsuario(): Boolean {
-        if (email=="null") {
-            email = binding.editEmailSolicitar.text.toString()
-
-            if(!email.isNullOrEmpty()){
-                binding.textInputEmailSolicitar.error = null
-                return true
-            }else{
-                binding.textInputEmailSolicitar.error = "Preencha o E-mail!"
-                return false
-            }
-        } else {
-            return true
-        }
+    private fun resetarEstadoBotao() {
+        binding.btnSolicitar.text = "Solicitar link para redefinir senha"
+        binding.btnSolicitar.isEnabled = true
     }
 }

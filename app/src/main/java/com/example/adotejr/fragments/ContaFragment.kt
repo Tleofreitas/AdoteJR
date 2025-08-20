@@ -48,10 +48,6 @@ class ContaFragment : Fragment() {
         FirebaseFirestore.getInstance()
     }
 
-    private var nomeDoUser = ""
-    private var fotoDoUser = ""
-    private var emailDoUser = ""
-
     // Gerenciador de permissões
     private val gerenciadorPermissoes = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -71,15 +67,6 @@ class ContaFragment : Fragment() {
         // Inflate the layout using the binding
         _binding = FragmentContaBinding.inflate(inflater, container, false)
 
-        val dados = arguments?.getString("dados").toString()
-        if(dados != "0"){
-            val partes = dados.split("|")
-
-            nomeDoUser = partes[0]
-            fotoDoUser = partes[1]
-            emailDoUser = partes[2]
-        }
-
         return binding.root
     }
 
@@ -96,28 +83,45 @@ class ContaFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        binding.progressBar.visibility = View.VISIBLE // Exibe o indicador de carregamento
-        definirInformacoesUser()
+        buscarEExibirDadosDoUsuario()
     }
 
-    private fun definirInformacoesUser() {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            if (fotoDoUser!="semFoto") {
-                Picasso.get()
-                    .load( fotoDoUser )
-                    .into( binding.includeFotoPerfil.imagePerfil )
-            }
-            binding.editNomePerfil.setText( nomeDoUser )
-            binding.editEmailPerfil.setText( emailDoUser )
-            binding.progressBar.visibility = View.GONE // Esconde se não houver conexão
-        } else {
+    private fun buscarEExibirDadosDoUsuario() {
+        binding.progressBar.visibility = View.VISIBLE
+        if (!NetworkUtils.conectadoInternet(requireContext())) {
+            binding.progressBar.visibility = View.GONE
             Toast.makeText(
                 requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
+                "Sem conexão com a internet.",
                 Toast.LENGTH_LONG
             ).show()
-            binding.progressBar.visibility = View.GONE // Esconde se não houver conexão
+            return
         }
+
+        val idUsuario = firebaseAuth.currentUser?.uid ?: return
+        firestore.collection("Usuarios").document(idUsuario).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val nome = document.getString("nome") ?: ""
+                    val foto = document.getString("foto") ?: ""
+                    val email = document.getString("email") ?: ""
+
+                    binding.editNomePerfil.setText(nome)
+                    binding.editEmailPerfil.setText(email)
+                    if (foto.isNotEmpty() && foto != "semFoto") {
+                        Picasso.get().load(foto).into(binding.includeFotoPerfil.imagePerfil)
+                    }
+                    binding.progressBar.visibility = View.GONE
+                }
+            }
+            .addOnFailureListener {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao buscar dados do perfil.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
     }
 
     private fun inicializarEventosClique() {
@@ -149,9 +153,22 @@ class ContaFragment : Fragment() {
         }
 
         binding.btnAlterarSenhaPerfil.setOnClickListener {
-            val intent = Intent(activity, RedefinirSenhaDeslogadoActivity::class.java)
-            intent.putExtra("email", emailDoUser)
-            startActivity(intent)
+            // 1. Pega o usuário atualmente logado.
+            val usuarioLogado = firebaseAuth.currentUser
+
+            // 2. Verifica se o usuário existe e se o e-mail não é nulo.
+            if (usuarioLogado != null && usuarioLogado.email != null) {
+                // 3. Pega o e-mail diretamente do objeto do usuário.
+                val emailDoUsuarioLogado = usuarioLogado.email
+
+                // 4. Cria o Intent e passa o e-mail.
+                val intent = Intent(requireActivity(), RedefinirSenhaDeslogadoActivity::class.java) // Veja a nota abaixo
+                intent.putExtra("email", emailDoUsuarioLogado)
+                startActivity(intent)
+            } else {
+                // Caso raro, mas é bom ter um fallback.
+                Toast.makeText(requireContext(), "Não foi possível obter o e-mail do usuário.", Toast.LENGTH_LONG).show()
+            }
         }
 
         binding.btnSair.setOnClickListener {
@@ -182,6 +199,7 @@ class ContaFragment : Fragment() {
             Toast.makeText(requireContext(), "Deus abençoe e até breve =D", Toast.LENGTH_LONG).show()
             val intent = Intent(activity, LoginActivity::class.java)
             startActivity(intent)
+            requireActivity().finish()
         }
 
         dialog.show()
@@ -232,9 +250,11 @@ class ContaFragment : Fragment() {
         }
     }
 
+    /*
     // Salvar imagem do armazenamento no storage
     private fun uploadImegemStorage(uri: Uri) {
         // foto -> usuarios -> idUsuario -> perfil.jpg
+        binding.progressBar.visibility = View.VISIBLE // MOSTRA O PROGRESSO
 
         val idUsuario = firebaseAuth.currentUser?.uid
         if ( idUsuario != null ) {
@@ -255,9 +275,39 @@ class ContaFragment : Fragment() {
                             atualizarDadosPerfil( idUsuario, dados )
                         }
                 }.addOnFailureListener{
+                    binding.progressBar.visibility = View.GONE // ESCONDE NO ERRO
                     Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
                 }
         }
+    }
+    */
+
+    private fun uploadImegemStorage(uri: Uri) {
+        // Converte o URI para ByteArray
+        val inputStream = requireContext().contentResolver.openInputStream(uri)
+        val bytesDaImagem = inputStream?.readBytes()
+        inputStream?.close()
+
+        bytesDaImagem ?: return // Se a conversão falhar, não faz nada
+        iniciarUpload(bytesDaImagem) // Chama a função unificada
+    }
+
+    private fun iniciarUpload(bytesDaImagem: ByteArray) {
+        binding.progressBar.visibility = View.VISIBLE
+        val idUsuario = firebaseAuth.currentUser?.uid ?: return
+
+        val ref = storage.getReference("fotos/usuarios/$idUsuario/perfil.jpg")
+        ref.putBytes(bytesDaImagem)
+            .addOnSuccessListener { taskSnapshot ->
+                taskSnapshot.metadata?.reference?.downloadUrl?.addOnSuccessListener { uriDownload ->
+                    val dados = mapOf("foto" to uriDownload.toString())
+                    atualizarDadosPerfil(idUsuario, dados)
+                }
+            }
+            .addOnFailureListener {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(requireContext(), "Erro no upload. Tente novamente.", Toast.LENGTH_LONG).show()
+            }
     }
 
     // ---------- CAMERA ----------
@@ -282,8 +332,11 @@ class ContaFragment : Fragment() {
         }
     }
 
+    /*
     // Salvar imagem da camera no storage
     private fun uploadImegemCameraStorage(bitmapImagemSelecionada: Bitmap?) {
+        binding.progressBar.visibility = View.VISIBLE // MOSTRA O PROGRESSO
+
         val outputStream = ByteArrayOutputStream()
         bitmapImagemSelecionada?.compress(
             Bitmap.CompressFormat.JPEG,
@@ -311,21 +364,33 @@ class ContaFragment : Fragment() {
                         }
                     Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
                 }.addOnFailureListener{
+                    binding.progressBar.visibility = View.GONE // ESCONDE NO ERRO
                     Toast.makeText(requireContext(), "Erro ao salvar. Tente novamente.", Toast.LENGTH_LONG).show()
                 }
         }
+    } */
+
+    private fun uploadImegemCameraStorage(bitmap: Bitmap?) {
+        bitmap ?: return // Se o bitmap for nulo, não faz nada
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream) // 85 é uma boa qualidade/tamanho
+        val bytesDaImagem = outputStream.toByteArray()
+        iniciarUpload(bytesDaImagem) // Chama a função unificada
     }
+
 
     // ---------- SALVAR A FOTO/IMAGEM ----------
     private fun atualizarDadosPerfil(idUsuario: String, dados: Map<String, String>) {
+        binding.progressBar.visibility = View.VISIBLE // MOSTRA O PROGRESSO
         firestore.collection("Usuarios")
             .document( idUsuario )
             .update( dados )
             .addOnSuccessListener {
-                onStart()
                 Toast.makeText(requireContext(), "Sucesso ao atualizar perfil.", Toast.LENGTH_LONG).show()
+                buscarEExibirDadosDoUsuario()
             }
             .addOnFailureListener {
+                binding.progressBar.visibility = View.GONE // ESCONDE NO ERRO
                 Toast.makeText(requireContext(), "Erro ao atualizar perfil. Tente novamente.", Toast.LENGTH_LONG).show()
             }
     }

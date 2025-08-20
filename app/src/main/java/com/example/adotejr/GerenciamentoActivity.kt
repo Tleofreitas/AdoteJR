@@ -14,7 +14,6 @@ import com.example.adotejr.fragments.SettingsFragment
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.SessionManager
 import com.example.adotejr.utils.exibirMensagem
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.concurrent.TimeUnit
@@ -34,118 +33,93 @@ class GerenciamentoActivity : AppCompatActivity() {
         ActivityGerenciamentoBinding.inflate(layoutInflater)
     }
 
+    // Variáveis para guardar os dados do usuário
     private var nomeDoUser = ""
     private var fotoDoUser = ""
     private var emailDoUser = ""
     private var nivelDoUser = ""
-    private lateinit var bottomNavigationView: BottomNavigationView
-
-    override fun onStart() {
-        super.onStart()
-        // Recupera os dados de nivel e espera o retorno antes de atualizar a variavel
-        recuperarDadosDefinicoes { dados ->
-            if(dados != "0"){
-                val partes = dados.split("|")
-
-                nomeDoUser = partes[0]
-                fotoDoUser = partes[1]
-                nivelDoUser = partes[2]
-                emailDoUser = partes[3]
-            }
-        }
-    }
-
-    private fun recuperarDadosDefinicoes(callback: (String) -> Unit) {
-        if (NetworkUtils.conectadoInternet(this)) {
-            val idUsuario = firebaseAuth.currentUser?.uid
-            if (idUsuario != null){
-                firestore.collection("Usuarios")
-                    .document( idUsuario )
-                    .get()
-                    .addOnSuccessListener { documentSnapshot ->
-                        val dadosUser = documentSnapshot.data
-                        if (dadosUser != null) {
-                            val nivel = dadosUser["nivel"] as String
-                            var foto = dadosUser["foto"] as String
-                            val nome = dadosUser["nome"] as String
-                            val email = dadosUser["email"] as String
-
-                            if(foto.isEmpty()){
-                                foto = "semFoto"
-                            }
-
-                            // Atualiza as variáveis globais
-                            nomeDoUser = nome
-                            fotoDoUser = foto
-                            nivelDoUser = nivel
-                            emailDoUser = email
-                            callback("$nome|$foto|$nivel|$email") // Retorna o valor pelo callback
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e("Firestore", "Erro ao obter nivel: ", exception)
-                        callback("0") // Retorna "0" em caso de falha
-                    }
-            }
-        } else {
-            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
         sessionManager = SessionManager(this)
 
-        bottomNavigationView = binding.bottomNavigation
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            var selectedFragment: Fragment? = null
-            val bundle = Bundle() // Criando o Bundle para passar dados
+        // A inicialização do listener da navegação
+        setupBottomNavigation()
 
-            when (item.itemId) {
-                R.id.navigation_reports -> {
-                    selectedFragment = ReportsFragment()
-                    bundle.putString("nivel", nivelDoUser)
-                }
-                R.id.navigation_definir -> {
-                    selectedFragment = SettingsFragment()
-                    bundle.putString("nivel", nivelDoUser)
-                }
-                R.id.navigation_listagem -> selectedFragment = ListagemFragment()
-                R.id.navigation_cadastrar -> selectedFragment = CadastrarFragment()
-
-                R.id.navigation_perfil -> {
-                    selectedFragment = ContaFragment()
-                    bundle.putString("dados", "$nomeDoUser|$fotoDoUser|$emailDoUser")
-                }
-            }
-
-            if (selectedFragment != null) {
-                selectedFragment.arguments = bundle // Passando os dados para o fragmento
-
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, selectedFragment)
-                    .commit()
-            }
-            true
-        }
-
-        // Definir o fragmento inicial
+        // Definir o fragmento inicial, se não houver estado salvo
         if (savedInstanceState == null) {
-            bottomNavigationView.selectedItemId = R.id.navigation_cadastrar
+            binding.bottomNavigation.selectedItemId = R.id.navigation_cadastrar
         }
 
         // Recuperar botão selecionado ao vir de outra Activity
         val botaoSelecionado = intent.getIntExtra("botao_selecionado", R.id.navigation_cadastrar)
-        bottomNavigationView.selectedItemId = botaoSelecionado
+        binding.bottomNavigation.selectedItemId = botaoSelecionado
+
+        // Busca os dados do usuário APENAS uma vez, quando a activity é criada.
+        recuperarDadosUsuario()
+    }
+
+    private fun setupBottomNavigation() {
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            val selectedFragment: Fragment = when (item.itemId) {
+                R.id.navigation_reports -> {
+                    ReportsFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("nivel", nivelDoUser)
+                        }
+                    }
+                }
+                R.id.navigation_definir -> {
+                    SettingsFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("nivel", nivelDoUser)
+                        }
+                    }
+                }
+                R.id.navigation_listagem -> ListagemFragment()
+                R.id.navigation_cadastrar -> CadastrarFragment()
+                R.id.navigation_perfil -> ContaFragment()
+                else -> CadastrarFragment() // Fragmento padrão
+            }
+
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, selectedFragment)
+                .commit()
+
+            true
+        }
+    }
+
+    private fun recuperarDadosUsuario() {
+        if (!NetworkUtils.conectadoInternet(this)) {
+            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+            return
+        }
+
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if (idUsuario != null) {
+            firestore.collection("Usuarios").document(idUsuario).get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val dadosUser = documentSnapshot.data
+                    if (dadosUser != null) {
+                        nomeDoUser = dadosUser["nome"] as? String ?: ""
+                        fotoDoUser = dadosUser["foto"] as? String ?: "semFoto"
+                        nivelDoUser = dadosUser["nivel"] as? String ?: ""
+                        emailDoUser = dadosUser["email"] as? String ?: ""
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firestore", "Erro ao obter dados do usuário: ", exception)
+                    exibirMensagem("Erro ao carregar dados do perfil.")
+                }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        // A verificação agora acontece APENAS quando o app volta para o primeiro plano.
         sessionManager.checkSessionExpiration(TEMPO_EXPIRACAO_SESSAO)
     }
 }

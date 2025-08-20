@@ -29,7 +29,8 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/includeToolbar"
-        app:srcCompat="@drawable/logo_completo_cima_laranja" />
+        app:srcCompat="@drawable/logo_completo_cima_laranja"
+        android:contentDescription="Logo do aplicativo Adote Jr." />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputEmailSolicitar"
@@ -49,19 +50,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Digite seu e-mail..."
-            android:inputType="text|textEmailAddress" />
+            android:inputType="textEmailAddress"
+            android:imeOptions="actionDone" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/btnSolicitar"
+        style="@style/Widget.App.Button.Primary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/primaria"
         android:text="Solicitar link para redefinir senha"
-        android:textSize="20sp"
-        app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
