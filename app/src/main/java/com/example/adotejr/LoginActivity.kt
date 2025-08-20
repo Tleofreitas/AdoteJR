@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityLoginBinding
 import com.example.adotejr.utils.NetworkUtils
+import com.example.adotejr.utils.SessionManager
 import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
@@ -92,11 +93,11 @@ class LoginActivity : AppCompatActivity() {
             email, senha
         ).addOnSuccessListener {
             exibirMensagem("Login realizado com sucesso")
+            val sessionManager = SessionManager(applicationContext)
+            sessionManager.storeLoginTime() // <-- LUGAR CORRETO PARA ARMAZENAR O TEMPO
+
             // Função de navegação
             navegarParaGerenciamento()
-            startActivity(
-                Intent(applicationContext, GerenciamentoActivity::class.java)
-            )
         }.addOnFailureListener { exception ->
             val mensagemErro = when (exception) {
                 is FirebaseAuthInvalidUserException -> "E-mail não cadastrado."

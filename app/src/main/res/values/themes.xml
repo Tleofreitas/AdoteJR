@@ -52,4 +52,11 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+    <!-- Barra de navegação inferior -->
+    <style name="Widget.App.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemTextColor">@color/selector_item_text_color</item>
+        <item name="itemIconTint">@color/selector_item_icon_color</item>
+    </style>
 </resources>

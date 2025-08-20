@@ -28,6 +28,7 @@ class GerenciamentoActivity : AppCompatActivity() {
     }
 
     private lateinit var sessionManager: SessionManager
+    private val TEMPO_EXPIRACAO_SESSAO = TimeUnit.HOURS.toMillis(12) // 12 HORAS
 
     private val binding by lazy {
         ActivityGerenciamentoBinding.inflate(layoutInflater)
@@ -98,12 +99,6 @@ class GerenciamentoActivity : AppCompatActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         sessionManager = SessionManager(this)
-        sessionManager.storeLoginTime()
-
-        sessionManager.startSessionExpirationCheck(
-            interval = 1,
-            expirationTime = TimeUnit.HOURS.toMillis(12) // 12 HORAS
-        )
 
         bottomNavigationView = binding.bottomNavigation
         bottomNavigationView.setOnItemSelectedListener { item ->
@@ -150,8 +145,7 @@ class GerenciamentoActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        sessionManager.checkSessionExpiration(
-            TimeUnit.HOURS.toMillis(12) // 12 HORAS
-        )
+        // A verificação agora acontece APENAS quando o app volta para o primeiro plano.
+        sessionManager.checkSessionExpiration(TEMPO_EXPIRACAO_SESSAO)
     }
 }
