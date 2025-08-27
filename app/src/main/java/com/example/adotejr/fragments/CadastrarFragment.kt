@@ -763,13 +763,6 @@ class CadastrarFragment : Fragment() {
                     } else {
                         // A imagem foi alterada e pode ser inserida no banco de dados
 
-                        /* var teste = "$cpfOriginal , $dataNascimento" +
-                                " , $id , $nome , $idade, $sexo , $blusa , $calca , $sapato " +
-                                ", $especial , $descricaoEspecial , $gostosPessoais , $responsavel " +
-                                ", $vinculoResponsavel , $telefone1 , $telefone2 , $ano , $ativo , $motivoStatus " +
-                                ", $logradouro , $numero , $complemento , $bairro , $cidade , $uf , $cep" */
-
-
                         if (NetworkUtils.conectadoInternet(requireContext())) {
                             // Altera o texto do botão para "Aguarde"
                             binding.btnCadastrarCrianca.text = "Aguarde..."
@@ -909,52 +902,117 @@ class CadastrarFragment : Fragment() {
                                     }
                                 }
                             }
-                            /* else {
+                            else {
                                 // ARMAZENAMENTO
                                 uploadImegemStorage(id) { sucesso ->
                                     if (sucesso) {
-                                        // Toast.makeText(requireContext(), "Salvo com sucesso.", Toast.LENGTH_LONG).show()
-                                        val crianca = Crianca(
-                                            id,
-                                            cpfOriginal,
-                                            nome,
-                                            dataNascimento,
-                                            idade,
-                                            sexo,
-                                            blusa,
-                                            calca,
-                                            sapato,
-                                            especial,
-                                            descricaoEspecial,
-                                            gostosPessoais,
-                                            foto,
-                                            responsavel,
-                                            vinculoResponsavel,
-                                            telefone1,
-                                            telefone2,
-                                            logradouro,
-                                            numero,
-                                            complemento,
-                                            bairro,
-                                            cidade,
-                                            uf,
-                                            cep,
-                                            ano,
-                                            ativo,
-                                            motivoStatus,
-                                            indicacao,
-                                            cadastradoPor,
-                                            fotoCadastradoPor,
-                                            padrinho,
-                                            retirouSacola,
-                                            blackList,
-                                            vinculoFamiliar,
-                                            validadoPor,
-                                            fotoValidadoPor,
-                                            retirouSenha,
-                                            numeroCartao
-                                        )
-                                        salvarUsuarioFirestore(crianca, idGerado)
+                                        // GERAR NUM CARTAO
+                                        val db = FirebaseFirestore.getInstance()
+                                        db.runTransaction { transaction ->
+                                            val referencia = db.collection("Definicoes").document(ano.toString())
+                                            referencia.get()
+                                                .addOnSuccessListener { documentSnapshot ->
+                                                    if (documentSnapshot.exists()) {
+                                                        val idCartao = documentSnapshot.getLong("idCartao") ?: 0
+                                                        Log.d("Firestore", "ID do cartão recuperado: $idCartao")
+                                                    } else {
+                                                        Log.d("Firestore", "Documento não encontrado, criando um novo.")
+                                                        referencia.set(mapOf("idCartao" to 1)) // Cria o documento com ID inicial
+                                                    }
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    Log.e("Firestore", "Erro ao recuperar documento", e)
+                                                }
+
+                                            val snapshot = transaction.get(referencia)
+
+                                            val ultimoId = snapshot.getLong("idCartao") ?: 0
+                                            val novoId = ultimoId + 1
+
+                                            // Atualiza o ID no banco de forma segura
+                                            transaction.update(referencia, "idCartao", novoId)
+
+                                            // Atualiza o valor do número do cartão
+                                            var numeroCartao = novoId.toString()
+
+                                            val dadosResponsavel = Responsavel(
+                                                vinculoFamiliar,
+                                                responsavel,
+                                                vinculoResponsavel,
+                                                telefone1,
+                                                telefone2,
+                                                logradouro,
+                                                numero,
+                                                complemento,
+                                                bairro,
+                                                cidade,
+                                                uf,
+                                                cep,
+                                                indicacao
+                                            )
+                                            salvarDadosResponsavel(dadosResponsavel)
+
+                                            val crianca = Crianca(
+                                                id,
+                                                cpfOriginal,
+                                                nome,
+                                                dataNascimento,
+                                                idade,
+                                                sexo,
+                                                blusa,
+                                                calca,
+                                                sapato,
+                                                especial,
+                                                descricaoEspecial,
+                                                gostosPessoais,
+                                                foto,
+                                                responsavel,
+                                                vinculoResponsavel,
+                                                telefone1,
+                                                telefone2,
+                                                logradouro,
+                                                numero,
+                                                complemento,
+                                                bairro,
+                                                cidade,
+                                                uf,
+                                                cep,
+                                                ano,
+                                                ativo,
+                                                motivoStatus,
+                                                indicacao,
+                                                cadastradoPor,
+                                                fotoCadastradoPor,
+                                                padrinho,
+                                                retirouSacola,
+                                                blackList,
+                                                vinculoFamiliar,
+                                                validadoPor,
+                                                fotoValidadoPor,
+                                                retirouSenha,
+                                                numeroCartao,
+                                                dataCadastro,
+                                                chegouKit
+                                            )
+                                            salvarCriancaFirestore(crianca,idGerado)
+
+                                            novoId // Retorna o novo ID gerado
+                                        }.addOnSuccessListener { novoId ->
+                                            Log.d("Firebase", "Cartão gerado com ID: $novoId")
+                                        }.addOnFailureListener {
+                                            // Altera o texto do botão para "Cadastrar"
+                                            binding.btnCadastrarCrianca.text = "Cadastrar"
+
+                                            // Habilita o botão
+                                            binding.btnCadastrarCrianca.isEnabled = true
+                                            Log.e("Firebase", "Erro ao gerar cartão", it)
+
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "Erro ao gerar Num. Cartão. Tente novamente.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
                                     } else {
                                         Toast.makeText(
                                             requireContext(),
@@ -963,7 +1021,7 @@ class CadastrarFragment : Fragment() {
                                         ).show()
                                     }
                                 }
-                            } */
+                            }
                         } else {
                             Toast.makeText(
                                 requireContext(),
@@ -981,18 +1039,6 @@ class CadastrarFragment : Fragment() {
         firestore.collection("Responsaveis")
             .document(dadosResponsavel.vinculoFamiliar)
             .set(dadosResponsavel)
-            /*
-            .addOnSuccessListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Dados Responsável cadastrado com sucesso",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG)
-                    .show()
-            } */
     }
 
     private fun obterDataHoraBrasil(): String {
@@ -1024,12 +1070,30 @@ class CadastrarFragment : Fragment() {
     private fun verificarPermissoes() {
         // Verificar se a permissão da câmera já foi concedida
         if (PermissionUtil.temPermissaoCamera(requireContext())) {
-            // mostrarDialogoEscolherImagem()
-            abrirCamera()
+            mostrarDialogoEscolherImagem()
         } else {
             // Solicitar permissão da câmera
             PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
         }
+    }
+
+    private fun mostrarDialogoEscolherImagem() {
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setView(view)
+            .create()
+
+        view.findViewById<Button>(R.id.button_camera).setOnClickListener {
+            abrirCamera()
+            dialog.dismiss()
+        }
+
+        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
+            abrirArmazenamento()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     // --- CAMERA ---
@@ -1089,6 +1153,51 @@ class CadastrarFragment : Fragment() {
             }.addOnFailureListener {
                 callback(false) // Notifica falha
             }
+    }
+
+    // ---------- ARMAZENAMENTO ----------
+    private fun abrirArmazenamento() {
+        // Código para abrir o armazenamento
+        gerenciadorGaleria.launch("image/*")
+    }
+
+    // Armazenamento
+    private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
+        if ( uri != null ) {
+            bitmapImagemSelecionada = null
+            imagemSelecionadaUri = uri
+            binding.includeFotoCrianca.imagePerfil.setImageURI( uri )
+        } else {
+            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Salvar imagem do armazenamento no storage
+    private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
+        var uri = imagemSelecionadaUri
+        // foto -> criancas -> id -> perfil.jpg
+        val idCrianca = id
+        if (uri != null) {
+            storage.getReference("fotos")
+                .child("criancas")
+                .child(ano.toString())
+                .child(idCrianca)
+                .child("perfil.jpg")
+                .putFile( uri )
+                .addOnSuccessListener { taskSnapshot ->
+                    taskSnapshot.metadata
+                        ?.reference
+                        ?.downloadUrl
+                        ?.addOnSuccessListener { uriDownload ->
+                            foto = uriDownload.toString()
+                            callback(true) // Notifica sucesso
+                        }
+                }.addOnFailureListener{
+                    callback(false) // Notifica falha
+                }
+        } else {
+            callback(false)
+        }
     }
 
     // --- CALCULO DE IDADE ---
