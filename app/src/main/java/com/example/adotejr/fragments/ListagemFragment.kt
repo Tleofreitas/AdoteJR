@@ -1,11 +1,9 @@
 package com.example.adotejr.fragments
 
-import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,8 +31,6 @@ class ListagemFragment : Fragment() {
     private lateinit var eventoSnapshot: ListenerRegistration
     private lateinit var criancasAdapter: CriancasAdapter
     private lateinit var txtAno: TextView
-    private lateinit var txtEvolucaoCadastro: TextView
-    private lateinit var progressDialog: ProgressDialog
 
     // Banco de dados Firestore
     private val firestore by lazy {
@@ -128,133 +124,120 @@ class ListagemFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        txtAno = binding.txtAno
-        txtAno.setText(ano.toString())
+        binding.txtAno.text = ano.toString()
 
-        txtEvolucaoCadastro = binding.textCadastroXLimite
-
-        val editTextPesquisa = binding.InputPesquisa.editText  // Obtém o campo de texto para pesquisa
-        val radioGroupFiltro = binding.rgFiltroTipo  // Obtém o grupo de botões de rádio para definir o critério de busca
-
-        // Adiciona um listener para capturar mudanças no campo de texto
-        editTextPesquisa?.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                // Chama a função para filtrar os dados com base no texto digitado e na opção selecionada
-                filtrarListaCriancas(s.toString(), radioGroupFiltro.checkedRadioButtonId)
-            }
-
+        // Listener para o campo de texto (VERSÃO COMPLETA E CORRETA)
+        binding.InputPesquisa.editText?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // Não necessário para esta lógica, mas obrigatório implementar
+                // Não precisamos fazer nada aqui
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Não necessário para esta lógica, mas obrigatório implementar
+                // Não precisamos fazer nada aqui
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                // A ação acontece aqui, depois que o usuário termina de digitar
+                filtrarListaLocal()
             }
         })
-    }
 
-    private fun filtrarListaCriancas(texto: String, filtroId: Int) {
-        val listaFinal = listaCriancas
-            // 1. Primeiro, filtra a lista original com a lógica correta para cada campo.
-            .filter { crianca ->
-                when (filtroId) {
-                    binding.rbNome.id -> crianca.nome.contains(texto, ignoreCase = true)
-                    binding.rbNCartao.id -> crianca.numeroCartao.startsWith(texto)
-                    else -> crianca.id.startsWith(ano.toString() + texto)
-                }
-            }
-            // 2. Em seguida, ordena o resultado do filtro em ordem crescente (A-Z, 0-9).
-            .sortedBy { crianca ->
-                when (filtroId) {
-                    binding.rbNome.id -> crianca.nome
-                    binding.rbNCartao.id -> crianca.numeroCartao
-                    else -> crianca.id
-                }
-            }
-
-        // 3. Por fim, atualiza o adapter com a lista processada.
-        criancasAdapter.adicionarLista(listaFinal)
+        // Listener para a seleção de chips
+        binding.chipGroupFiltro.setOnCheckedStateChangeListener { group, checkedIds ->
+            filtrarListaLocal()
+        }
     }
 
     override fun onStart() {
         super.onStart()
-
-        progressDialog = ProgressDialog(requireContext())
-        progressDialog.setMessage("Carregando dados...")
-        progressDialog.setCancelable(false)
-        progressDialog.show()
-
-        // Recupera a quantidade de cadastros feitos
-        recuperarQtdCadastros(FirebaseFirestore.getInstance()) { quantidade ->
-            qtdCadastrosFeitos = quantidade
-            atualizarEvolucaoCadastro() // Atualiza a UI após obter a quantidade de cadastros
-        }
-
-        // Recupera os dados de definições e espera o retorno antes de atualizar a UI
-        recuperarDadosDefinicoes { quantidadeTotal ->
-            quantidadeCriancasTotal = quantidadeTotal.toInt().toString() // Converte para Int
-            atualizarEvolucaoCadastro() // Atualiza a interface após obter os dados
-            if (dadosCarregados()) progressDialog.dismiss()
-        }
-
-        adicionarListenerCadastros()
+        // Apenas inicia o listener. A lógica de UI vai para dentro dele.
+        adicionarListenerPrincipal()
     }
 
-    private fun dadosCarregados(): Boolean {
-        return qtdCadastrosFeitos != null && quantidadeCriancasTotal != null
-    }
+    private fun adicionarListenerPrincipal() {
+        // Mostra o progresso e esconde o resto
+        binding.progressBarListagem.visibility = View.VISIBLE
+        binding.rvCadastros.visibility = View.GONE
+        binding.textEstadoVazio.visibility = View.GONE
 
-    private fun recuperarQtdCadastros(firestore: FirebaseFirestore, callback: (Int) -> Unit) {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            firestore.collection("Criancas")
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    val quantidade = querySnapshot.size()
-                    qtdCadastrosFeitos = quantidade // Atualiza a variável global
+        val anoAtual = LocalDate.now().year.toString()
 
-                    atualizarEvolucaoCadastro() // Atualiza a UI
-                    callback(quantidade)
+        // 1. Listener para as Definições (executa uma vez)
+        firestore.collection("Definicoes").document(anoAtual).get()
+            .addOnSuccessListener { docDefinicoes ->
+                if (docDefinicoes.exists()) {
+                    quantidadeCriancasTotal = docDefinicoes.getString("quantidadeDeCriancas") ?: "0"
                 }
-                .addOnFailureListener { exception ->
-                    Log.e("Firebase", "Erro ao obter documentos: ", exception)
-                    callback(0)
-                }
-        } else {
-            Toast.makeText(
-                requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 
-    private fun recuperarDadosDefinicoes(callback: (String) -> Unit) {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            firestore.collection("Definicoes")
-                .document(ano.toString())
-                .get()
-                .addOnSuccessListener { documentSnapshot ->
-                    val dadosDefinicoes = documentSnapshot.data
-                    if (dadosDefinicoes != null) {
-                        val quantidade = dadosDefinicoes["quantidadeDeCriancas"] as String
+                // 2. Listener para as Crianças (escuta em tempo real)
+                // Este listener é aninhado para garantir que só buscamos as crianças
+                // depois de ter o total.
+                eventoSnapshot = firestore.collection("Criancas")
+                    .whereEqualTo("ano", anoAtual.toInt()) // Filtro mais eficiente no servidor
+                    .addSnapshotListener { snapshotCriancas, error ->
+                        binding.progressBarListagem.visibility = View.GONE // Esconde o progresso
 
-                        quantidadeCriancasTotal = quantidade // Atualiza a variável global
-                        atualizarEvolucaoCadastro() // Atualiza a UI
+                        if (error != null) {
+                            binding.textEstadoVazio.text = "Erro ao carregar dados."
+                            binding.textEstadoVazio.visibility = View.VISIBLE
+                            return@addSnapshotListener
+                        }
 
-                        callback(quantidade) // Retorna o valor pelo callback
+                        // Processa os dados recebidos
+                        listaCriancas.clear()
+                        snapshotCriancas?.documents?.forEach { doc ->
+                            doc.toObject(Crianca::class.java)?.let { crianca ->
+                                listaCriancas.add(crianca)
+                            }
+                        }
+
+                        // Atualiza o contador e a UI de filtro
+                        qtdCadastrosFeitos = listaCriancas.size
+                        atualizarEvolucaoCadastro()
+                        filtrarListaLocal() // Chama o filtro para aplicar a ordenação inicial e exibir
                     }
-                }
-                .addOnFailureListener { exception ->
-                    Log.e("Firestore", "Erro ao obter documentos: ", exception)
-                    callback("0") // Retorna "0" em caso de falha
-                }
+            }
+            .addOnFailureListener {
+                binding.progressBarListagem.visibility = View.GONE
+                binding.textEstadoVazio.text = "Erro ao carregar configurações."
+                binding.textEstadoVazio.visibility = View.VISIBLE
+            }
+    }
+
+    // Renomeie para refletir que é um filtro local
+    private fun filtrarListaLocal() {
+        val texto = binding.InputPesquisa.editText?.text.toString().trim()
+        val chipSelecionadoId = binding.chipGroupFiltro.checkedChipId
+
+        val listaFiltrada = listaCriancas.filter { crianca ->
+            // Lógica do filtro baseada no texto
+            when (chipSelecionadoId) {
+                R.id.chipNome -> crianca.nome.contains(texto, ignoreCase = true)
+                R.id.chipNCartao -> crianca.numeroCartao.startsWith(texto)
+                R.id.chipCpf -> crianca.id.contains(ano.toString() + texto) // Assumindo que CPF faz parte do ID
+                else -> true // Se nenhum chip estiver selecionado, não filtra por texto
+            }
+        }.sortedWith(compareBy { crianca ->
+            // Lógica de ordenação baseada no critério
+            when (chipSelecionadoId) {
+                R.id.chipNome -> crianca.nome
+                R.id.chipNCartao -> crianca.numeroCartao.toIntOrNull() ?: Int.MAX_VALUE // Ordena numericamente
+                R.id.chipCpf -> crianca.id
+                else -> crianca.nome // Ordenação padrão por nome
+            }
+        })
+
+        // Lógica de visibilidade da lista
+        if (listaFiltrada.isEmpty()) {
+            binding.textEstadoVazio.text = if (texto.isNotEmpty()) "Nenhum resultado para sua busca." else "Nenhum cadastro encontrado."
+            binding.textEstadoVazio.visibility = View.VISIBLE
+            binding.rvCadastros.visibility = View.GONE
         } else {
-            Toast.makeText(
-                requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
-                Toast.LENGTH_LONG
-            ).show()
+            binding.textEstadoVazio.visibility = View.GONE
+            binding.rvCadastros.visibility = View.VISIBLE
         }
+
+        criancasAdapter.adicionarLista(listaFiltrada)
     }
 
     private fun atualizarEvolucaoCadastro() {
@@ -269,46 +252,7 @@ class ListagemFragment : Fragment() {
             }
 
             val percentualArredondado = String.format("%.2f", percentual).replace(",", ".")
-
-            txtEvolucaoCadastro.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentualArredondado%)"
-        }
-    }
-
-    private fun adicionarListenerCadastros() {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            eventoSnapshot = firestore.collection("Criancas")
-                .addSnapshotListener { querySnapshot, erro ->
-                    listaCriancas.clear() // Limpa a lista antes de adicionar os novos dados
-                    querySnapshot?.documents?.forEach { documentSnapshot ->
-                        // Converter documentSnapshot em objeto
-                        val crianca = documentSnapshot.toObject(Crianca::class.java)
-                        if (crianca != null && crianca.id.contains(ano.toString())) {
-                            // Log.i("fragmento_listagem", "nome: ${crianca.nome} ")
-                            listaCriancas.add(crianca)
-                        }
-                    }
-
-                    // Log.i("fragmento_listagem", "nome: $listaCriancas ")
-                    if (listaCriancas.isNotEmpty()) {
-                        // Ordena por nome antes de atualizar a RecyclerView
-                        listaCriancas.sortBy { it.nome }
-                        criancasAdapter.adicionarLista(listaCriancas)
-                    }
-                    // Fecha o ProgressDialog **após** processar os dados
-                    progressDialog.dismiss()
-                }
-        } else {
-            progressDialog.dismiss() // Garante que fecha se houver erro na conexão
-
-            // Inicializar eventoSnapshot com um listener "fake" para evitar erro
-            eventoSnapshot = firestore.collection("Criancas")
-                .addSnapshotListener { _, _ -> } // Listener vazio
-
-            Toast.makeText(
-                requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
-                Toast.LENGTH_LONG
-            ).show()
+            binding.textCadastroXLimite.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentualArredondado%)"
         }
     }
 
