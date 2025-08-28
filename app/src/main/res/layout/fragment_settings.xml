@@ -38,7 +38,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="64dp"
             android:layout_marginEnd="16dp"
             android:text="Período de Cadastramento"
             android:textAppearance="?attr/textAppearanceHeadline6"
@@ -60,16 +60,20 @@
             app:counterMaxLength="10"
             app:layout_constraintEnd_toStartOf="@+id/guideline5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textDefinicoesDatas">
+            app:layout_constraintTop_toBottomOf="@+id/textDefinicoesDatas"
+            app:endIconMode="custom"
+            app:endIconDrawable="@drawable/ic_calendar">
 
-            <com.google.android.material.textfield.TextInputEditText
+        <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextDataInicial"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:enabled="false"
                 android:hint="Data de Início"
                 android:inputType="datetime|date"
-                android:maxLength="10" />
+                android:maxLength="10"
+                android:focusable="false"
+                android:cursorVisible="false" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -82,7 +86,9 @@
             app:counterMaxLength="10"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@+id/guideline5"
-            app:layout_constraintTop_toTopOf="@+id/InputDataInical">
+            app:layout_constraintTop_toTopOf="@+id/InputDataInical"
+            app:endIconMode="custom"
+            app:endIconDrawable="@drawable/ic_calendar">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextDataFinal"
@@ -91,7 +97,9 @@
                 android:enabled="false"
                 android:hint="Data de Término"
                 android:inputType="datetime|date"
-                android:maxLength="10" />
+                android:maxLength="10"
+                android:focusable="false"
+                android:cursorVisible="false" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -99,7 +107,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="32dp"
             android:layout_marginEnd="16dp"
             android:text="Quantidade de Crianças"
             android:textAppearance="?attr/textAppearanceHeadline6"
@@ -138,7 +146,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="32dp"
             android:layout_marginEnd="16dp"
             android:text="Limites de Idade"
             android:textAppearance="?attr/textAppearanceHeadline6"
@@ -195,67 +203,47 @@
                 android:maxLength="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/textVariante"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:text="Senha (Cadastro de Voluntários)"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="@color/azulEscuro"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/InputLimiteNormal" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/InputVariante"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textVariante">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editTextVariante"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:hint="Senha" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <Button
             android:id="@+id/btnEditarDefinicoes"
+            style="@style/Widget.App.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
             android:backgroundTint="@color/destaque"
             android:text="Editar"
-            app:cornerRadius="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/btnAtualizarDefinicoes"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            android:visibility="visible" />
 
         <Button
             android:id="@+id/btnAtualizarDefinicoes"
+            style="@style/Widget.App.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
             android:backgroundTint="@color/azul"
             android:text="Salvar"
-            app:cornerRadius="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/btnEditarDefinicoes" />
+            app:layout_constraintStart_toEndOf="@+id/btnEditarDefinicoes"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
+        <ProgressBar
+            android:id="@+id/progressBarSettings"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

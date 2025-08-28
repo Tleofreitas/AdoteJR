@@ -1,6 +1,7 @@
 package com.example.adotejr.fragments
 
 import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,6 +21,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 class SettingsFragment : Fragment() {
     private lateinit var binding: FragmentSettingsBinding
@@ -36,7 +38,6 @@ class SettingsFragment : Fragment() {
     private lateinit var editTextLimiteComum: EditText
     private lateinit var editTextLimitePcd: EditText
     private var idCartao : String = ""
-    private lateinit var editTextVariante: EditText
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -61,39 +62,63 @@ class SettingsFragment : Fragment() {
         editTextDataFinal = binding.editTextDataFinal
         FormatadorUtil.formatarDataNascimento(editTextDataFinal)
 
+        // Listeners de clique para os campos de data
+        binding.editTextDataInicial.setOnClickListener { showDatePickerDialog(it as EditText) }
+        binding.editTextDataFinal.setOnClickListener { showDatePickerDialog(it as EditText) }
+
         editTextQuantidadeCrianca = binding.editTextQtdCriancas
 
         editTextLimiteComum = binding.editTextLimiteNormal
 
         editTextLimitePcd = binding.editTextLimitePCD
 
-        editTextVariante = binding.editTextVariante
-
-        if(nivelDoUser != "Admin"){
-            ocultarSenha()
-        }
-
+        setModoVisualizacao()
         inicializarEventosClique()
     }
 
-    private fun ocultarSenha() {
-        // Ocultar titulo
-        binding.textVariante.apply {
-            visibility = View.GONE
-        }
+    // Função para o modo de visualização
+    private fun setModoVisualizacao() {
+        binding.btnEditarDefinicoes.visibility = View.VISIBLE
+        binding.btnAtualizarDefinicoes.visibility = View.GONE
 
-        // Ocultar e desabilitar Input
-        binding.InputVariante.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
+        // Desabilita todos os campos
+        binding.editTextDataInicial.isEnabled = false
+        binding.editTextDataFinal.isEnabled = false
+        binding.editTextQtdCriancas.isEnabled = false
+        binding.editTextLimiteNormal.isEnabled = false
+        binding.editTextLimitePCD.isEnabled = false
+    }
+
+    // Função para o modo de edição
+    private fun setModoEdicao() {
+        binding.btnEditarDefinicoes.visibility = View.GONE
+        binding.btnAtualizarDefinicoes.visibility = View.VISIBLE
+
+        // Habilita todos os campos
+        binding.editTextDataInicial.isEnabled = true
+        binding.editTextDataFinal.isEnabled = true
+        binding.editTextQtdCriancas.isEnabled = true
+        binding.editTextLimiteNormal.isEnabled = true
+        binding.editTextLimitePCD.isEnabled = true
+    }
+
+    private fun showDatePickerDialog(editText: EditText) {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+            // Formata a data para dd/MM/yyyy
+            val selectedDate = String.format("%02d/%02d/%d", selectedDay, selectedMonth + 1, selectedYear)
+            editText.setText(selectedDate)
+        }, year, month, day).show()
     }
 
     private fun inicializarEventosClique() {
         binding.btnEditarDefinicoes.setOnClickListener {
-            if(validarNivel()){
-                editarCampos()
-                Toast.makeText(requireContext(), "Campos liberados para alteração", Toast.LENGTH_LONG).show()
+            if (validarNivel()) {
+                setModoEdicao()
             } else {
                 // mostrarDialogoPermissao()
                 Toast.makeText(requireContext(), "Edição NÃO PERMITIDA para seu usuário", Toast.LENGTH_LONG).show()
@@ -101,191 +126,124 @@ class SettingsFragment : Fragment() {
         }
 
         binding.btnAtualizarDefinicoes.setOnClickListener {
-            if(validarNivel()){
-                editTextDataInicio = binding.editTextDataInicial
-                var dtInicio = editTextDataInicio.text.toString()
-
-                editTextDataFinal = binding.editTextDataFinal
-                var dtFim = editTextDataFinal.text.toString()
-
-                editTextQuantidadeCrianca = binding.editTextQtdCriancas
-                var qtdCriancas = editTextQuantidadeCrianca.text.toString()
-
-                editTextLimiteComum = binding.editTextLimiteNormal
-                var limiteComum = editTextLimiteComum.text.toString()
-
-                editTextLimitePcd = binding.editTextLimitePCD
-                var limitePcd = editTextLimitePcd.text.toString()
-
-                editTextVariante = binding.editTextVariante
-                var variante = editTextVariante.text.toString()
-
-                val datasValidas = verificarDatas(binding.InputDataInical, binding.InputDataFinal)
-                val quantidadeCriancasValida = verificarQuantidade(binding.InputQtdCriancas)
-                val idadeComum = verificarIdadeComum(binding.InputLimiteNormal)
-                val idadePcd = verificarIdadePCD(binding.InputLimitePCD)
-
-                if (datasValidas && quantidadeCriancasValida && idadeComum && idadePcd) {
-                    if (NetworkUtils.conectadoInternet(requireContext())) {
-                        if(idCartao == ""){
-                            idCartao = "0"
-                        }
-                        val definicoes = Definicoes(
-                            ano.toString(), dtInicio, dtFim, qtdCriancas, limiteComum, limitePcd,
-                            idCartao.toInt(), variante
-                        )
-                        salvarDadosFirestore( definicoes )
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Verifique a conexão com a internet e tente novamente!",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Acesso Negado!",
-                    Toast.LENGTH_SHORT
-                ).show()
+            // A nova lógica começa aqui
+            if (validarTodosOsCampos()) {
+                salvarDefinicoes()
             }
         }
+    }
+
+    private fun validarTodosOsCampos(): Boolean {
+        // Limpa erros antigos para um novo ciclo de validação
+        binding.InputDataInical.error = null
+        binding.InputDataFinal.error = null
+        binding.InputQtdCriancas.error = null
+        binding.InputLimiteNormal.error = null
+        binding.InputLimitePCD.error = null
+
+        var camposValidos = true // Começamos assumindo que tudo está correto
+
+        // --- Validação de Datas ---
+        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val hoje = LocalDate.now()
+        val dataInicialStr = binding.editTextDataInicial.text.toString()
+        val dataFinalStr = binding.editTextDataFinal.text.toString()
+
+        try {
+            val dataInicial = LocalDate.parse(dataInicialStr, formato)
+            val dataFinal = LocalDate.parse(dataFinalStr, formato)
+
+            if (dataInicial.isBefore(hoje)) {
+                binding.InputDataInical.error = "A data inicial deve ser hoje ou no futuro"
+                camposValidos = false
+            }
+            if (dataFinal.isBefore(hoje)) {
+                binding.InputDataFinal.error = "A data final deve ser hoje ou no futuro"
+                camposValidos = false
+            }
+            if (dataFinal.isBefore(dataInicial)) {
+                binding.InputDataFinal.error = "A data final não pode ser anterior à inicial"
+                camposValidos = false
+            }
+        } catch (e: Exception) {
+            if (dataInicialStr.isEmpty()) binding.InputDataInical.error = "Preencha a data"
+            if (dataFinalStr.isEmpty()) binding.InputDataFinal.error = "Preencha a data"
+            camposValidos = false
+        }
+
+        // --- Validação de Quantidade ---
+        val quantidadeStr = binding.editTextQtdCriancas.text.toString()
+        if (quantidadeStr.isEmpty()) {
+            binding.InputQtdCriancas.error = "Preencha a quantidade"
+            camposValidos = false
+        } else if (quantidadeStr.toIntOrNull() ?: 0 <= 0) {
+            binding.InputQtdCriancas.error = "Quantidade inválida"
+            camposValidos = false
+        }
+
+        // --- Validação de Idade Comum ---
+        val idadeComumStr = binding.editTextLimiteNormal.text.toString()
+        val idadeComum = idadeComumStr.toIntOrNull() ?: 0
+        if (idadeComumStr.isEmpty()) {
+            binding.InputLimiteNormal.error = "Preencha a idade"
+            camposValidos = false
+        } else if (idadeComum <= 0 || idadeComum > 18) {
+            binding.InputLimiteNormal.error = "Idade inválida (1-18)"
+            camposValidos = false
+        }
+
+        // --- Validação de Idade PCD ---
+        val idadePCDStr = binding.editTextLimitePCD.text.toString()
+        val idadePCD = idadePCDStr.toIntOrNull() ?: 0
+        if (idadePCDStr.isEmpty()) {
+            binding.InputLimitePCD.error = "Preencha a idade"
+            camposValidos = false
+        } else if (idadePCD <= 0 || idadePCD > 18) {
+            binding.InputLimitePCD.error = "Idade inválida (1-18)"
+            camposValidos = false
+        }
+
+        return camposValidos // Retorna true apenas se NENHUM erro foi encontrado
+    }
+
+    private fun salvarDefinicoes() {
+        if (!NetworkUtils.conectadoInternet(requireContext())) {
+            Toast.makeText(requireContext(), "Verifique a conexão com a internet.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Mostra a ProgressBar ANTES de iniciar o salvamento
+        binding.progressBarSettings.visibility = View.VISIBLE
+
+        val definicoes = Definicoes(
+            idAno = LocalDate.now().year.toString(),
+            dataInicial = binding.editTextDataInicial.text.toString(),
+            dataFinal = binding.editTextDataFinal.text.toString(),
+            quantidadeDeCriancas = binding.editTextQtdCriancas.text.toString(),
+            limiteIdadeNormal = binding.editTextLimiteNormal.text.toString(),
+            limiteIdadePCD = binding.editTextLimitePCD.text.toString(),
+            idCartao = this.idCartao.toIntOrNull() ?: 0 // Usa a variável de classe que já é atualizada
+        )
+
+        firestore.collection("Definicoes").document(definicoes.idAno)
+            .set(definicoes)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Definições salvas com sucesso!", Toast.LENGTH_LONG).show()
+                setModoVisualizacao() // Volta para o modo de visualização
+                // Esconde a ProgressBar QUANDO o salvamento termina (com sucesso)
+                binding.progressBarSettings.visibility = View.GONE
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Erro ao salvar definições.", Toast.LENGTH_LONG).show()
+                // Esconde a ProgressBar QUANDO o salvamento termina (com falha)
+                binding.progressBarSettings.visibility = View.GONE
+            }
     }
 
     private fun validarNivel(): Boolean {
         if(nivelDoUser == "Admin"){
             return true
         } else {
-            return false
-        }
-    }
-
-    private fun salvarDadosFirestore(definicoes: Definicoes) {
-        firestore.collection("Definicoes")
-            .document(definicoes.idAno)
-            .set(definicoes)
-            .addOnSuccessListener {
-                onStart()
-                Toast.makeText(
-                    requireContext(),
-                    "Dados atualizados com sucesso!",
-                    Toast.LENGTH_LONG
-                ).show()
-
-            }.addOnFailureListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Erro ao salvar. Verifique a conexão com a internet e tente novamente",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-    }
-
-    private fun verificarIdadePCD(InputLimitePCD: TextInputLayout): Boolean {
-        val idadePCD = InputLimitePCD.editText?.text.toString()
-
-        if (InputLimitePCD.isEmpty()) {
-            InputLimitePCD.error = "Preencha a idade"
-            return false
-        } else if(idadePCD <= 0.toString()) {
-            InputLimitePCD.error = "Idade inválida"
-            return false
-        } else if(idadePCD > 18.toString()) {
-            InputLimitePCD.error = "Idade inválida"
-            return false
-        } else {
-            InputLimitePCD.error = null
-            return true
-        }
-    }
-
-    private fun verificarIdadeComum(inputLimiteNormal: TextInputLayout): Boolean {
-        val idadeComum = inputLimiteNormal.editText?.text.toString()
-
-        if (inputLimiteNormal.isEmpty()) {
-            inputLimiteNormal.error = "Preencha a idade"
-            return false
-        } else if(idadeComum <= 0.toString()) {
-            inputLimiteNormal.error = "Idade inválida"
-            return false
-        } else if(idadeComum > 18.toString()) {
-            inputLimiteNormal.error = "Idade inválida"
-            return false
-        } else {
-            inputLimiteNormal.error = null
-            return true
-        }
-    }
-
-    private fun verificarQuantidade(inputQtdCriancas: TextInputLayout): Boolean {
-        val quantidadeStr = inputQtdCriancas.editText?.text.toString()
-
-        if (inputQtdCriancas.isEmpty()) {
-            inputQtdCriancas.error = "Preencha a quantidade"
-            return false
-        } else if(quantidadeStr <= 0.toString()) {
-            inputQtdCriancas.error = "Quantidade inválida"
-            return false
-        } else {
-            inputQtdCriancas.error = null
-            return true
-        }
-    }
-
-    private fun verificarDatas(
-        inputDataInicial: TextInputLayout,
-        inputDataFinal: TextInputLayout
-    ): Boolean {
-        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Formato apenas com data
-        val hoje = LocalDate.now() // Obtém a data atual sem a hora
-
-        val dataInicialStr = inputDataInicial.editText?.text.toString()
-        val dataFinalStr = inputDataFinal.editText?.text.toString()
-
-        try {
-            val dataInicial = LocalDate.parse(dataInicialStr, formato)
-            val dataFinal = LocalDate.parse(dataFinalStr, formato)
-
-            // Verificar se a data inicial é hoje ou futura
-            if (dataInicial.isBefore(hoje)) {
-                inputDataInicial.error = "A data inicial deve ser hoje ou no futuro"
-                return false
-            } else {
-                inputDataInicial.error = null // Remove erro
-            }
-
-            // Verificar se a data final é hoje ou futura
-            if (dataFinal.isBefore(hoje)) {
-                inputDataFinal.error = "A data final deve ser hoje ou no futuro"
-                return false
-            } else {
-                inputDataFinal.error = null // Remove erro
-            }
-
-            // Verificar se a data final é maior ou igual à data inicial
-            if (dataFinal.isBefore(dataInicial)) {
-                inputDataFinal.error = "A data final não pode ser anterior à inicial"
-                return false
-            } else {
-                inputDataFinal.error = null // Remove erro
-            }
-            return true
-
-        } catch (e: Exception) {
-            // Lida com erros de parsing (ex.: data inválida ou vazia)
-            if (dataInicialStr.isEmpty()) {
-                inputDataInicial.error = "Preencha a data inicial corretamente"
-            } else {
-                inputDataInicial.error = "Data inicial inválida"
-            }
-
-            if (dataFinalStr.isEmpty()) {
-                inputDataFinal.error = "Preencha a data final corretamente"
-            } else {
-                inputDataFinal.error = "Data final inválida"
-            }
-
             return false
         }
     }
@@ -332,17 +290,9 @@ class SettingsFragment : Fragment() {
         dialog.show()
     } */
 
-    private fun editarCampos() {
-        binding.editTextDataInicial.isEnabled = true
-        binding.editTextDataFinal.isEnabled = true
-        binding.editTextQtdCriancas.isEnabled = true
-        binding.editTextLimiteNormal.isEnabled = true
-        binding.editTextLimitePCD.isEnabled = true
-    }
-
     override fun onStart() {
         super.onStart()
-        recuperarDadosDefinicoes()
+        buscarDadosDasDefinicoes()
     }
 
     // Recuperar dados das definições
@@ -353,71 +303,47 @@ class SettingsFragment : Fragment() {
     // Teste AlertDialog
     // ano = 2026
 
-    val currentDate = LocalDate.now()
-    val formatterMes = DateTimeFormatter.ofPattern("MM")
-    val formatterDia = DateTimeFormatter.ofPattern("dd")
-    val mes = currentDate.format(formatterMes)
-    val dia = currentDate.format(formatterDia)
+    private fun buscarDadosDasDefinicoes() {
+        // Mostra a ProgressBar ANTES de iniciar a busca
+        binding.progressBarSettings.visibility = View.VISIBLE
 
-    private fun recuperarDadosDefinicoes() {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            firestore.collection("Definicoes")
-                .document( ano.toString() )
-                .get()
-                .addOnSuccessListener { documentSnapshot ->
-                    val dadosDefinicoes = documentSnapshot.data
-
-                    if ( dadosDefinicoes != null ){
-                        val dataInicial = dadosDefinicoes["dataInicial"] as String
-                        val dataFinal = dadosDefinicoes["dataFinal"] as String
-                        val quantidadeCriancas = dadosDefinicoes["quantidadeDeCriancas"] as String
-                        val limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
-                        val limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
-                        val idCartaoF = dadosDefinicoes["idCartao"] as Long
-
-                        if(idCartaoF!= 0.toLong()){
-                            idCartao = idCartaoF.toString()
-                        }
-
-                        if(dataInicial!=""){
-                            binding.editTextDataInicial.setText(dataInicial)
-                        }
-
-                        if(dataFinal!=""){
-                            binding.editTextDataFinal.setText(dataFinal)
-                        }
-
-                        if(quantidadeCriancas!=""){
-                            binding.editTextQtdCriancas.setText(quantidadeCriancas)
-                        }
-
-                        if(limiteNormal!=""){
-                            binding.editTextLimiteNormal.setText(limiteNormal)
-                        }
-
-                        if(limitePCD!=""){
-                            binding.editTextLimitePCD.setText(limitePCD)
-                        }
-
-                        binding.editTextVariante.setText("$mes$dia")
-
-                    } else {
-                        binding.editTextQtdCriancas.setText(qtdCriancas.toString())
-                        binding.editTextLimiteNormal.setText(limiteIdadeNormal.toString())
-                        binding.editTextLimitePCD.setText(limiteIdadePcd.toString())
-                        binding.editTextVariante.setText("$mes$dia")
-                        alertaDefinicoes(ano)
+        val anoAtual = LocalDate.now().year.toString()
+        firestore.collection("Definicoes").document(anoAtual).get()
+            .addOnSuccessListener { document ->
+                // Esconde a ProgressBar QUANDO a busca termina (com sucesso)
+                binding.progressBarSettings.visibility = View.GONE
+                if (document.exists()) {
+                    val definicoes = document.toObject(Definicoes::class.java)
+                    if (definicoes != null) {
+                        preencherCampos(definicoes)
                     }
-                } .addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error getting documents: ", exception)
+                } else {
+                    alertaDefinicoes(anoAtual.toInt())
+                    // Preenche com valores padrão se não houver nada no banco
+                    binding.editTextQtdCriancas.setText("0")
+                    binding.editTextLimiteNormal.setText("12")
+                    binding.editTextLimitePCD.setText("15")
                 }
-        } else {
-            Toast.makeText(
-                requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
-                Toast.LENGTH_LONG
-            ).show()
-        }
+            }
+            .addOnFailureListener {
+                // Esconde a ProgressBar QUANDO a busca termina (com falha)
+                binding.progressBarSettings.visibility = View.GONE
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao buscar configurações.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    // Função para preencher os campos
+    private fun preencherCampos(definicoes: Definicoes) {
+        binding.editTextDataInicial.setText(definicoes.dataInicial)
+        binding.editTextDataFinal.setText(definicoes.dataFinal)
+        binding.editTextQtdCriancas.setText(definicoes.quantidadeDeCriancas)
+        binding.editTextLimiteNormal.setText(definicoes.limiteIdadeNormal)
+        binding.editTextLimitePCD.setText(definicoes.limiteIdadePCD)
+        this.idCartao = definicoes.idCartao.toString() // Atualiza a variável de classe
     }
 
     private fun alertaDefinicoes(ano: Int) {
