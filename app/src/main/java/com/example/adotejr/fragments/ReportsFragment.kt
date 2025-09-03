@@ -4,21 +4,22 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat.startForegroundService
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.utils.ExportadorCadastros
 import com.example.adotejr.utils.ExportadorUsuarios
-import com.example.adotejr.utils.GeradorCartaoService
+import com.example.adotejr.utils.GeradorCartaoWorker
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
@@ -68,36 +69,39 @@ class ReportsFragment : Fragment() {
             }
         }
 
+        // Dentro da classe ReportsFragment
+
         binding.btnGerarCartoes.setOnClickListener {
             if (validarNivel()) {
                 if (NetworkUtils.conectadoInternet(requireContext())) {
-                    // 1. Inflar o layout customizado
+                    // 1. Inflar o layout customizado (continua igual)
                     val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_gerar_cartao, null)
                     val inputNumeroCartao = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_numero_cartao_especifico)
 
-                    // 2. Criar e mostrar o AlertDialog
+                    // 2. Criar e mostrar o AlertDialog (continua igual)
                     AlertDialog.Builder(requireContext())
-                        .setView(dialogView) // Usa a nossa view customizada
+                        .setView(dialogView)
+                        .setTitle("Gerar Cartões") // Adicionar um título é uma boa prática
                         .setPositiveButton("Gerar") { _, _ ->
-                            val numeroCartao = inputNumeroCartao.text.toString().trim()
-                            val serviceIntent = Intent(requireContext(), GeradorCartaoService::class.java)
+                            // A LÓGICA AQUI DENTRO MUDA
+                            val numerosCartao = inputNumeroCartao.text.toString().trim()
 
-                            if (numeroCartao.isEmpty()) {
+                            if (numerosCartao.isEmpty()) {
                                 // CAMINHO 1: Gerar todos
                                 // Mostra um segundo dialog de confirmação
                                 AlertDialog.Builder(requireContext())
                                     .setTitle("Confirmar Geração em Lote")
                                     .setMessage("Nenhum número foi especificado. Deseja gerar TODOS os cartões?")
                                     .setPositiveButton("Sim, gerar todos") { _, _ ->
-                                        iniciarServico(serviceIntent)
+                                        // Chama a nova função passando NULO
+                                        iniciarTrabalhoDeGeracao(null)
                                     }
                                     .setNegativeButton("Cancelar", null)
                                     .show()
                             } else {
-                                // CAMINHO 2: Gerar um específico
-                                // Passa o número do cartão para o serviço
-                                serviceIntent.putExtra("NUMEROS_CARTAO_ESPECIFICOS", numeroCartao)
-                                iniciarServico(serviceIntent)
+                                // CAMINHO 2: Gerar um ou mais específicos
+                                // Chama a nova função passando a string com os números
+                                iniciarTrabalhoDeGeracao(numerosCartao)
                             }
                         }
                         .setNegativeButton("Cancelar", null)
@@ -120,26 +124,23 @@ class ReportsFragment : Fragment() {
         return binding.root
     }
 
-    // Crie esta função de ajuda dentro do ReportsFragment para não repetir código
-    // Dentro de ReportsFragment.kt
-
-    // Crie esta função de ajuda dentro do ReportsFragment para não repetir código
-    private fun iniciarServico(intent: Intent) {
-        // 1. Crie um Intent "vazio" apenas para parar qualquer serviço anterior.
-        val stopIntent = Intent(requireContext(), GeradorCartaoService::class.java)
-        // 2. Pare qualquer instância que possa estar rodando em cache.
-        requireContext().stopService(stopIntent)
-
-        // 3. Agora, inicie o serviço com o novo Intent (com ou sem o extra).
-        //    Isso garante que uma instância "fresca" será criada.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            requireContext().startForegroundService(intent)
-        } else {
-            requireContext().startService(intent)
+    private fun iniciarTrabalhoDeGeracao(numeroCartao: String?) {
+        // Cria os dados de entrada para o Worker
+        val inputData = Data.Builder()
+        if (numeroCartao != null) {
+            inputData.putString("NUMERO_CARTAO_ESPECIFICO", numeroCartao)
         }
+
+        // Cria a requisição de trabalho
+        val geracaoRequest = OneTimeWorkRequestBuilder<GeradorCartaoWorker>()
+            .setInputData(inputData.build())
+            .build()
+
+        // Enfileira o trabalho para execução
+        WorkManager.getInstance(requireContext()).enqueue(geracaoRequest)
+
         Toast.makeText(requireContext(), "Iniciando geração em segundo plano...", Toast.LENGTH_LONG).show()
     }
-
 
     private fun validarNivel(): Boolean {
         if(nivelDoUser == "Admin"){

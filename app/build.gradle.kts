@@ -56,6 +56,9 @@ dependencies {
     // Excel
     implementation("org.apache.poi:poi-ooxml:5.2.3")
 
+    // WorkManager em Kotlin
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

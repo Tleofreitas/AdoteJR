@@ -15,8 +15,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- A partir do Android 13 (API 33), notificações precisam de permissão -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- A partir do Android 14, esta permissão também é necessária para dataSync -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
+        android:name=".MeuApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -28,9 +31,14 @@
         tools:targetApi="31">
 
         <service
-            android:name=".utils.GeradorCartaoService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            tools:node="remove" />
 
         <activity
             android:name=".ValidarCriancaOutrosActivity"
