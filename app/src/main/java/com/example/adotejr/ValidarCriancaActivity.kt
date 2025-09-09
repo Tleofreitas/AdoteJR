@@ -24,7 +24,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
     private val firestore by lazy { FirebaseFirestore.getInstance() }
 
     private var idCrianca: String? = null
-    private var criancaAtual: Crianca? = null // Armazena o objeto da criança carregada
+    private var criancaAtual: Crianca? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,9 +47,10 @@ class ValidarCriancaActivity : AppCompatActivity() {
         buscarDadosDaCrianca()
     }
 
+    // --- Funções de Configuração da UI ---
+
     private fun inicializarToolbar() {
-        val toolbar = binding.includeToolbar.tbPrincipal
-        setSupportActionBar(toolbar)
+        setSupportActionBar(binding.includeToolbar.tbPrincipal)
         supportActionBar?.apply {
             title = "Validar Dados da Criança"
             setDisplayHomeAsUpEnabled(true)
@@ -65,16 +66,14 @@ class ValidarCriancaActivity : AppCompatActivity() {
     private fun configurarLayout(origem: String) {
         when (origem) {
             "cadastro" -> {
-                // Modo de visualização após o cadastro
                 binding.btnAtualizarDadosCrianca.visibility = View.GONE
                 binding.btnNovoCadastro.visibility = View.VISIBLE
-                habilitarCampos(false) // Desabilita todos os campos
+                habilitarCampos(false)
             }
             "listagem" -> {
-                // Modo de validação/edição
                 binding.btnAtualizarDadosCrianca.visibility = View.VISIBLE
                 binding.btnNovoCadastro.visibility = View.GONE
-                habilitarCampos(true) // Habilita os campos para edição
+                habilitarCampos(true)
             }
         }
     }
@@ -91,12 +90,13 @@ class ValidarCriancaActivity : AppCompatActivity() {
         binding.includeDadosResponsavel.editTextTel2.isEnabled = habilitar
         binding.includeDadosResponsavel.menuIndicacao.isEnabled = habilitar
 
-        // Campos que nunca são editáveis nesta tela
         binding.includeDadosResponsavel.editTextVinculoFamiliar.isEnabled = false
         binding.includeDadosResponsavel.editTextNomeResponsavel.isEnabled = false
         binding.includeDadosResponsavel.editTextVinculo.isEnabled = false
         binding.includeFotoCrianca.fabSelecionar.visibility = View.GONE
     }
+
+    // --- Funções de Lógica de Dados ---
 
     private fun buscarDadosDaCrianca() {
         if (!NetworkUtils.conectadoInternet(this)) {
@@ -124,9 +124,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
     }
 
     private fun preencherDados(crianca: Crianca) {
-        if (crianca.foto.isNotEmpty()) {
-            Picasso.get().load(crianca.foto).into(binding.includeFotoCrianca.imagePerfil)
-        }
+        if (crianca.foto.isNotEmpty()) Picasso.get().load(crianca.foto).into(binding.includeFotoCrianca.imagePerfil)
         binding.editTextNome.setText(crianca.nome)
         binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked = crianca.sexo == "Masculino"
         binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked = crianca.sexo == "Feminino"
@@ -142,6 +140,8 @@ class ValidarCriancaActivity : AppCompatActivity() {
         binding.includeDadosResponsavel.autoCompleteIndicacao.setText(crianca.indicacao, false)
     }
 
+    // --- Funções de Eventos de Clique e Validação ---
+
     private fun inicializarEventosClique() {
         binding.btnNovoCadastro.setOnClickListener {
             startActivity(Intent(this, GerenciamentoActivity::class.java).apply {
@@ -153,33 +153,37 @@ class ValidarCriancaActivity : AppCompatActivity() {
 
         binding.btnAtualizarDadosCrianca.setOnClickListener {
             if (validarTodosOsCampos()) {
-                buscarDadosDoValidadorEAtualizar()
+                // Se a validação passou, inicia o processo de salvamento
+                salvarDadosDeValidacao()
             }
         }
     }
 
     private fun validarTodosOsCampos(): Boolean {
+        var ehValido = true // Começa como verdadeiro
+
+        // Limpa erros antigos
+        binding.InputNome.error = null
+        binding.includeDadosResponsavel.menuIndicacao.error = null
+
         // Validação do nome
         if (binding.editTextNome.text.isNullOrEmpty()) {
             binding.InputNome.error = "Campo obrigatório"
-            return false
-        } else {
-            binding.InputNome.error = null
+            ehValido = false // Marca como inválido
         }
 
         // Validação da indicação
         val indicacao = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
         if (indicacao.isEmpty() || indicacao == "-- Selecione --") {
             binding.includeDadosResponsavel.menuIndicacao.error = "Selecione uma opção"
-            return false
-        } else {
-            binding.includeDadosResponsavel.menuIndicacao.error = null
+            ehValido = false // Marca como inválido
         }
 
-        return true
+        // Retorna true apenas se NENHUMA validação falhou
+        return ehValido
     }
 
-    private fun buscarDadosDoValidadorEAtualizar() {
+    private fun salvarDadosDeValidacao() {
         if (!NetworkUtils.conectadoInternet(this)) {
             exibirMensagem("Verifique a conexão com a internet.")
             return
@@ -190,11 +194,14 @@ class ValidarCriancaActivity : AppCompatActivity() {
         binding.btnAtualizarDadosCrianca.text = "Aguarde..."
 
         val idUsuarioLogado = firebaseAuth.currentUser?.uid ?: return
+
+        // 1. PRIMEIRA CHAMADA DE REDE: Buscar os dados do validador
         firestore.collection("Usuarios").document(idUsuarioLogado).get()
             .addOnSuccessListener { docUsuario ->
                 val nomeValidador = docUsuario.getString("nome") ?: "N/A"
                 val fotoValidador = docUsuario.getString("foto") ?: ""
 
+                // 2. SE A PRIMEIRA CHAMADA FUNCIONAR, CHAMA A SEGUNDA
                 atualizarDadosDaCrianca(nomeValidador, fotoValidador)
             }
             .addOnFailureListener {
@@ -216,18 +223,18 @@ class ValidarCriancaActivity : AppCompatActivity() {
             "indicacao" to binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString(),
             "validadoPor" to nomeValidador,
             "fotoValidadoPor" to fotoValidador,
-            "status" to "Ativo" // Atualiza o status para Ativo ao validar
+            "status" to "Ativo"
         )
 
+        // SEGUNDA CHAMADA DE REDE: Atualizar os dados da criança
         firestore.collection("Criancas").document(idCrianca!!)
             .update(dadosAtualizados)
             .addOnSuccessListener {
                 exibirMensagem("Validado com Sucesso.")
-                // Navega para a tela do cartão
                 val intent = Intent(this, CartaoActivity::class.java)
                 intent.putExtra("id", idCrianca)
                 startActivity(intent)
-                finish() // Finaliza a tela de validação
+                finish()
             }
             .addOnFailureListener {
                 exibirMensagem("Erro ao atualizar dados. Tente novamente.")
