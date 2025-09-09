@@ -303,7 +303,7 @@ class CadastrarFragment : Fragment() {
         editTextComplemento = binding.includeEndereco.editTextComplemento
         editTextBairro = binding.includeEndereco.editTextBairro
         editTextCidade = binding.includeEndereco.editTextCidade
-        binding.includeDadosResponsavel.selecaoIndicacao.isEnabled = false
+        binding.includeDadosResponsavel.menuIndicacao.isEnabled = false
 
         // Lista com os EditTexts
         editTexts = listOf(editTextNome, editTextDataNascimento, editTextBlusa, editTextCalca,
@@ -368,6 +368,8 @@ class CadastrarFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        configurarAutoCompleteIndicacao()
+
         // Adiciona um TextWatcher para preencher dados do responsavel automaticamente
         binding.includeDadosResponsavel.editTextVinculoFamiliar.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -403,7 +405,8 @@ class CadastrarFragment : Fragment() {
                                 listaResponsaveisFiltrada[0].cidade)
 
                             val indicacao = listaResponsaveisFiltrada[0].indicacao
-                            definirIndicacaoNoSpinner(indicacao)
+                            binding.includeDadosResponsavel.autoCompleteIndicacao.setText(indicacao, false)
+
                         } else {
                             // Log.d("DEBUG_Resp", "Responsável não encontrado!")
 
@@ -421,7 +424,8 @@ class CadastrarFragment : Fragment() {
                             binding.includeEndereco.editTextBairro.setText("")
                             binding.includeEndereco.editTextCidade.setText("")
 
-                            definirIndicacaoNoSpinner(0.toString())
+                            // Limpa o campo de indicação
+                            binding.includeDadosResponsavel.autoCompleteIndicacao.setText("", false)
                         }
                     }
                 } else {
@@ -473,14 +477,10 @@ class CadastrarFragment : Fragment() {
         inicializarEventosClique()
     }
 
-    private fun definirIndicacaoNoSpinner(valorIndicacao: String) {
-        val adapter = binding.includeDadosResponsavel.selecaoIndicacao.adapter as ArrayAdapter<String>
-        val position = adapter.getPosition(valorIndicacao)
-        if (position >= 0) {
-            binding.includeDadosResponsavel.selecaoIndicacao.setSelection(position)
-        } else {
-            binding.includeDadosResponsavel.selecaoIndicacao.setSelection(0)
-        }
+    private fun configurarAutoCompleteIndicacao() {
+        val opcoes = resources.getStringArray(R.array.opcoesIndicacao)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, opcoes)
+        binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
     }
 
     private fun verificarCpfNoFirestore(cpf: String) {
@@ -523,7 +523,7 @@ class CadastrarFragment : Fragment() {
         LLSexoBtnFeminino.isEnabled = boolean
         pcdBtnSim.isEnabled = boolean
         pcdBtnNao.isEnabled = boolean
-        binding.includeDadosResponsavel.selecaoIndicacao.isEnabled = boolean
+        binding.includeDadosResponsavel.menuIndicacao.isEnabled = boolean
         binding.btnCadastrarCrianca.isEnabled = boolean
     }
 
@@ -634,8 +634,7 @@ class CadastrarFragment : Fragment() {
 
             var uf = "SP"
 
-            selecaoIndicacao = binding.includeDadosResponsavel.selecaoIndicacao.selectedItem.toString()
-            var indicacao = selecaoIndicacao
+            val indicacao = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
 
             // Dados de quem realizou o cadastro
             var cadastradoPor: String = ""

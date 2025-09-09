@@ -37,13 +37,19 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            app:endIconMode="custom"
+            app:endIconDrawable="@drawable/ic_search"
+            app:endIconContentDescription="Buscar Endereço">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextCep"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="CEP" />
+                android:hint="CEP"
+                android:inputType="number"
+                android:maxLength="8"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -56,7 +62,8 @@
                 android:id="@+id/editTextNumero"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Número" />
+                android:hint="Número"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
@@ -84,7 +91,9 @@
                 android:id="@+id/editTextRua"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Rua" />
+                android:hint="Rua"
+                android:inputType="textPostalAddress|textCapWords"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -97,7 +106,9 @@
                 android:id="@+id/editTextComplemento"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Complemento" />
+                android:hint="Complemento"
+                android:inputType="textPostalAddress|textCapWords"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
@@ -125,7 +136,9 @@
                 android:id="@+id/editTextBairro"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Bairro" />
+                android:hint="Bairro"
+                android:inputType="textPostalAddress|textCapWords"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -138,7 +151,9 @@
                 android:id="@+id/editTextCidade"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Cidade" />
+                android:hint="Cidade"
+                android:inputType="textPostalAddress|textCapWords"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 

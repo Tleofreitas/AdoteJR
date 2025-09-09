@@ -40,7 +40,8 @@
             android:layout_height="wrap_content"
             android:inputType="number"
             android:maxLength="11"
-            android:hint="CPF (para identificação da família)" />
+            android:hint="CPF (para identificação da família)"
+            android:imeOptions="actionNext" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
@@ -67,7 +68,9 @@
                 android:id="@+id/editTextNomeResponsavel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nome do Responsável" />
+                android:hint="Nome do Responsável"
+                android:inputType="textPersonName|textCapWords"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -80,7 +83,9 @@
                 android:id="@+id/editTextVinculo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Vinculo" />
+                android:hint="Vinculo"
+                android:inputType="text"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
@@ -110,8 +115,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Telefone Principal"
-                android:inputType="number"
-                android:maxLength="15" />
+                android:inputType="phone"
+                android:maxLength="15"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -126,8 +132,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Telefone 2"
-                android:inputType="number"
-                android:maxLength="15" />
+                android:inputType="phone"
+                android:maxLength="15"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
@@ -147,12 +154,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/LLResponsavel" />
 
-    <Spinner
-        android:id="@+id/selecaoIndicacao"
-        android:layout_width="250dp"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/menuIndicacao"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:entries="@array/opcoesIndicacao "
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:hint="Indicado por"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textIndicacao" />
+        app:layout_constraintTop_toBottomOf="@+id/textIndicacao">
+
+        <AutoCompleteTextView
+            android:id="@+id/autoCompleteIndicacao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -101,7 +101,9 @@
                 android:id="@+id/editTextAno"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Ano" />
+                android:hint="Ano"
+                android:inputType="number"
+                android:maxLength="4" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
@@ -209,7 +211,8 @@
             android:id="@+id/editPadrinho"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Padrinho" />
+            android:hint="Padrinho"
+            android:inputType="textPersonName|textCapWords"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView

@@ -72,7 +72,8 @@
                 android:id="@+id/editTextBlusa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Blusa" />
+                android:hint="Blusa"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -86,7 +87,8 @@
                 android:id="@+id/editTextCalca"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Calça" />
+                android:hint="Calça"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -99,7 +101,8 @@
                 android:id="@+id/editTextSapato"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Sapato" />
+                android:hint="Sapato"
+                android:imeOptions="actionNext" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
