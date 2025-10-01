@@ -30,7 +30,6 @@ class ListagemFragment : Fragment() {
     private lateinit var binding: FragmentListagemBinding
     private lateinit var eventoSnapshot: ListenerRegistration
     private lateinit var criancasAdapter: CriancasAdapter
-    private lateinit var txtAno: TextView
 
     // Banco de dados Firestore
     private val firestore by lazy {
@@ -50,19 +49,6 @@ class ListagemFragment : Fragment() {
         binding = FragmentListagemBinding.inflate(
             inflater, container, false
         )
-
-        /*
-        val spinner = binding.spinnerAno
-        // Lista de valores
-        val opcoes = listOf(ano.toString())
-
-        // Criando o Adapter
-        val adapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, opcoes)
-        adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
-
-        // Configurar o Spinner com o Adapter
-        spinner.adapter = adapter
-        */
 
         criancasAdapter = CriancasAdapter{ crianca ->
             if (NetworkUtils.conectadoInternet(requireContext())) {
@@ -90,8 +76,13 @@ class ListagemFragment : Fragment() {
         val imagemPrev = view.findViewById<ImageView>(R.id.imgDialogListagem)
         if (!foto.isNullOrEmpty()) {
             Picasso.get()
-                .load( foto )
+                .load(foto)
+                .resize(500, 500)
+                .centerCrop()
+                .placeholder(R.drawable.perfil) // Imagem a ser mostrada ENQUANTO carrega
+                .error(R.drawable.perfil)       // Imagem a ser mostrada se o carregamento FALHAR
                 .into(imagemPrev)
+
         }
         view.findViewById<TextView>(R.id.textNomeDialogListagem).text = nome
         view.findViewById<TextView>(R.id.textCartaoDialogListagem).text = "Cartão N° $numeroCartao"

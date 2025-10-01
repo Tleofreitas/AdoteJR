@@ -123,6 +123,13 @@
                     android:layout_height="wrap_content"
                     android:text="N° Cartão" />
 
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipSPadrinho"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="S/ Padrinho" />
+
             </com.google.android.material.chip.ChipGroup>
 
             <com.google.android.material.textfield.TextInputLayout
