@@ -1,7 +1,6 @@
 package com.example.adotejr.fragments
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -12,14 +11,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.utils.ExportadorCadastros
 import com.example.adotejr.utils.ExportadorUsuarios
-import com.example.adotejr.utils.GeradorCartaoWorker
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
@@ -30,8 +24,8 @@ class ReportsFragment : Fragment() {
     private lateinit var binding: FragmentReportsBinding
     private var callbackExcel: ((Uri) -> Unit)? = null // Variável para armazenar o callback
     private var ano = LocalDate.now().year
-    val REQUEST_FOLDER = 1001
     val CREATE_DOCUMENT_REQUEST_CODE = 1002
+    val REQUEST_FOLDER = 1001
     private var nivelDoUser = ""
 
     override fun onCreateView(
@@ -69,77 +63,7 @@ class ReportsFragment : Fragment() {
             }
         }
 
-        // Dentro da classe ReportsFragment
-
-        binding.btnGerarCartoes.setOnClickListener {
-            if (validarNivel()) {
-                if (NetworkUtils.conectadoInternet(requireContext())) {
-                    // 1. Inflar o layout customizado (continua igual)
-                    val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_gerar_cartao, null)
-                    val inputNumeroCartao = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_numero_cartao_especifico)
-
-                    // 2. Criar e mostrar o AlertDialog (continua igual)
-                    AlertDialog.Builder(requireContext())
-                        .setView(dialogView)
-                        .setTitle("Gerar Cartões") // Adicionar um título é uma boa prática
-                        .setPositiveButton("Gerar") { _, _ ->
-                            // A LÓGICA AQUI DENTRO MUDA
-                            val numerosCartao = inputNumeroCartao.text.toString().trim()
-
-                            if (numerosCartao.isEmpty()) {
-                                // CAMINHO 1: Gerar todos
-                                // Mostra um segundo dialog de confirmação
-                                AlertDialog.Builder(requireContext())
-                                    .setTitle("Confirmar Geração em Lote")
-                                    .setMessage("Nenhum número foi especificado. Deseja gerar TODOS os cartões?")
-                                    .setPositiveButton("Sim, gerar todos") { _, _ ->
-                                        // Chama a nova função passando NULO
-                                        iniciarTrabalhoDeGeracao(null)
-                                    }
-                                    .setNegativeButton("Cancelar", null)
-                                    .show()
-                            } else {
-                                // CAMINHO 2: Gerar um ou mais específicos
-                                // Chama a nova função passando a string com os números
-                                iniciarTrabalhoDeGeracao(numerosCartao)
-                            }
-                        }
-                        .setNegativeButton("Cancelar", null)
-                        .show()
-                } else {
-                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-
-        binding.btnBaixarCartoes.setOnClickListener {
-            if(validarNivel()){
-                if (NetworkUtils.conectadoInternet(requireContext())) {
-                    selecionarPasta()
-                } else {
-                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
         return binding.root
-    }
-
-    private fun iniciarTrabalhoDeGeracao(numeroCartao: String?) {
-        // Cria os dados de entrada para o Worker
-        val inputData = Data.Builder()
-        if (numeroCartao != null) {
-            inputData.putString("NUMERO_CARTAO_ESPECIFICO", numeroCartao)
-        }
-
-        // Cria a requisição de trabalho
-        val geracaoRequest = OneTimeWorkRequestBuilder<GeradorCartaoWorker>()
-            .setInputData(inputData.build())
-            .build()
-
-        // Enfileira o trabalho para execução
-        WorkManager.getInstance(requireContext()).enqueue(geracaoRequest)
-
-        Toast.makeText(requireContext(), "Iniciando geração em segundo plano...", Toast.LENGTH_LONG).show()
     }
 
     private fun validarNivel(): Boolean {
@@ -149,12 +73,6 @@ class ReportsFragment : Fragment() {
             Toast.makeText(requireContext(), "Ação não permitida para seu usuário", Toast.LENGTH_LONG).show()
             return false
         }
-    }
-
-    // Método para abrir o seletor de pasta
-    private fun selecionarPasta() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        startActivityForResult(intent, REQUEST_FOLDER)
     }
 
     private fun solicitarLocalParaSalvarExcel(callback: (Uri) -> Unit) {

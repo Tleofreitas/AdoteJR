@@ -79,7 +79,14 @@ class GerenciamentoActivity : AppCompatActivity() {
                         }
                     }
                 }
-                R.id.navigation_listagem -> ListagemFragment()
+                R.id.navigation_listagem -> {
+                    ListagemFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("nivel", nivelDoUser)
+                        }
+                    }
+                }
+
                 R.id.navigation_cadastrar -> CadastrarFragment()
                 R.id.navigation_perfil -> ContaFragment()
                 else -> CadastrarFragment() // Fragmento padrão

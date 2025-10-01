@@ -1,5 +1,6 @@
 package com.example.adotejr.fragments
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -9,10 +10,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.adotejr.DadosCriancaActivity
 import com.example.adotejr.R
 import com.example.adotejr.ValidarCriancaActivity
@@ -20,6 +26,7 @@ import com.example.adotejr.ValidarCriancaOutrosActivity
 import com.example.adotejr.adapters.CriancasAdapter
 import com.example.adotejr.databinding.FragmentListagemBinding
 import com.example.adotejr.model.Crianca
+import com.example.adotejr.utils.GeradorCartaoWorker
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -30,8 +37,9 @@ class ListagemFragment : Fragment() {
     private lateinit var binding: FragmentListagemBinding
     private lateinit var eventoSnapshot: ListenerRegistration
     private lateinit var criancasAdapter: CriancasAdapter
+    val REQUEST_FOLDER = 1001
+    private var nivelDoUser = ""
 
-    // Banco de dados Firestore
     private val firestore by lazy {
         FirebaseFirestore.getInstance()
     }
@@ -39,20 +47,19 @@ class ListagemFragment : Fragment() {
     private var ano = LocalDate.now().year
     private var quantidadeCriancasTotal = ""
     private var qtdCadastrosFeitos: Int = 0
-    private var listaCriancas = mutableListOf<Crianca>()
+    private var listaMestraCriancas = mutableListOf<Crianca>() // Renomeado para clareza
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout using the binding
-        binding = FragmentListagemBinding.inflate(
-            inflater, container, false
-        )
+        binding = FragmentListagemBinding.inflate(inflater, container, false)
 
-        criancasAdapter = CriancasAdapter{ crianca ->
+        nivelDoUser = arguments?.getString("nivel").toString() // Obtendo o valor passado
+
+        criancasAdapter = CriancasAdapter { crianca ->
             if (NetworkUtils.conectadoInternet(requireContext())) {
-                mostrarDialogoListagem(crianca.id, crianca.nome, crianca.foto, crianca.numeroCartao)
+                mostrarDialogoListagem(crianca)
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -64,47 +71,156 @@ class ListagemFragment : Fragment() {
         binding.rvCadastros.adapter = criancasAdapter
         binding.rvCadastros.layoutManager = LinearLayoutManager(context)
 
+        binding.fabMenuListagem.setOnClickListener { view ->
+            // 1. Cria um PopupMenu. Ele precisa de um "contexto" (o ambiente do app)
+            //    e de uma "âncora" (a view onde o menu deve aparecer, que é o próprio FAB).
+            val popupMenu = PopupMenu(requireContext(), view)
+
+            // 2. Infla (carrega) o nosso arquivo de menu XML para dentro do PopupMenu.
+            popupMenu.menuInflater.inflate(R.menu.menu_listagem, popupMenu.menu)
+
+            // 3. Define o listener que será chamado quando um item do menu for clicado.
+            popupMenu.setOnMenuItemClickListener { menuItem ->
+                // A mágica acontece aqui. Verificamos o ID do item que foi clicado.
+                when (menuItem.itemId) {
+                    R.id.btnGerarCartoes -> {
+                        if (validarNivel()) {
+                            if (NetworkUtils.conectadoInternet(requireContext())) {
+                                // 1. Inflar o layout customizado (continua igual)
+                                val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_gerar_cartao, null)
+                                val inputNumeroCartao = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_numero_cartao_especifico)
+
+                                // 2. Criar e mostrar o AlertDialog (continua igual)
+                                AlertDialog.Builder(requireContext())
+                                    .setView(dialogView)
+                                    .setTitle("Gerar Cartões") // Adicionar um título é uma boa prática
+                                    .setPositiveButton("Gerar") { _, _ ->
+                                        // A LÓGICA AQUI DENTRO MUDA
+                                        val numerosCartao = inputNumeroCartao.text.toString().trim()
+
+                                        if (numerosCartao.isEmpty()) {
+                                            // CAMINHO 1: Gerar todos
+                                            // Mostra um segundo dialog de confirmação
+                                            AlertDialog.Builder(requireContext())
+                                                .setTitle("Confirmar Geração em Lote")
+                                                .setMessage("Nenhum número foi especificado. Deseja gerar TODOS os cartões?")
+                                                .setPositiveButton("Sim, gerar todos") { _, _ ->
+                                                    // Chama a nova função passando NULO
+                                                    iniciarTrabalhoDeGeracao(null)
+                                                }
+                                                .setNegativeButton("Cancelar", null)
+                                                .show()
+                                        } else {
+                                            // CAMINHO 2: Gerar um ou mais específicos
+                                            // Chama a nova função passando a string com os números
+                                            iniciarTrabalhoDeGeracao(numerosCartao)
+                                        }
+                                    }
+                                    .setNegativeButton("Cancelar", null)
+                                    .show()
+                            } else {
+                                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        true // Retorna true para indicar que o clique foi tratado
+                    }
+                    R.id.btnBaixarCartoes -> {
+                        if(validarNivel()){
+                            if (NetworkUtils.conectadoInternet(requireContext())) {
+                                selecionarPasta()
+                            } else {
+                                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        true // Retorna true para indicar que o clique foi tratado
+                    }
+                    else -> false // Retorna false para qualquer outro item que não tratamos
+                }
+            }
+
+            // 4. Finalmente, mostra o menu.
+            popupMenu.show()
+        }
+
         return binding.root
     }
 
-    private fun mostrarDialogoListagem(id: String, nome: String, foto: String, numeroCartao: String) {
+    private fun validarNivel(): Boolean {
+        if(nivelDoUser == "Admin"){
+            return true
+        } else {
+            Toast.makeText(requireContext(), "Ação não permitida para seu usuário", Toast.LENGTH_LONG).show()
+            return false
+        }
+    }
+
+    // Método para abrir o seletor de pasta
+    private fun selecionarPasta() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        startActivityForResult(intent, REQUEST_FOLDER)
+    }
+
+    private fun iniciarTrabalhoDeGeracao(numeroCartao: String?) {
+        // Cria os dados de entrada para o Worker
+        val inputData = Data.Builder()
+        if (numeroCartao != null) {
+            inputData.putString("NUMERO_CARTAO_ESPECIFICO", numeroCartao)
+        }
+
+        // Cria a requisição de trabalho
+        val geracaoRequest = OneTimeWorkRequestBuilder<GeradorCartaoWorker>()
+            .setInputData(inputData.build())
+            .build()
+
+        // Enfileira o trabalho para execução
+        WorkManager.getInstance(requireContext()).enqueue(geracaoRequest)
+
+        Toast.makeText(requireContext(), "Iniciando geração em segundo plano...", Toast.LENGTH_LONG).show()
+    }
+
+    // Passando o objeto inteiro para simplificar
+    private fun mostrarDialogoListagem(crianca: Crianca) {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_op_listagem, null)
         val dialog = android.app.AlertDialog.Builder(requireContext())
             .setView(view)
             .create()
 
         val imagemPrev = view.findViewById<ImageView>(R.id.imgDialogListagem)
-        if (!foto.isNullOrEmpty()) {
+        // Aplicando as melhorias de layout que discutimos
+        if (crianca.foto.isNotEmpty()) {
             Picasso.get()
-                .load(foto)
-                .resize(500, 500)
+                .load(crianca.foto)
+                .resize(500, 500) // Otimiza o uso de memória
                 .centerCrop()
                 .placeholder(R.drawable.perfil) // Imagem a ser mostrada ENQUANTO carrega
                 .error(R.drawable.perfil)       // Imagem a ser mostrada se o carregamento FALHAR
                 .into(imagemPrev)
-
         }
-        view.findViewById<TextView>(R.id.textNomeDialogListagem).text = nome
-        view.findViewById<TextView>(R.id.textCartaoDialogListagem).text = "Cartão N° $numeroCartao"
+
+        view.findViewById<TextView>(R.id.textNomeDialogListagem).text = crianca.nome
+        view.findViewById<TextView>(R.id.textCartaoDialogListagem).text = "Cartão N° ${crianca.numeroCartao}"
 
         view.findViewById<Button>(R.id.btnCadastroCompleto).setOnClickListener {
-            val intent = Intent(context, DadosCriancaActivity::class.java)
-            intent.putExtra("id", id)
+            val intent = Intent(context, DadosCriancaActivity::class.java).apply {
+                putExtra("id", crianca.id)
+            }
             startActivity(intent)
             dialog.dismiss()
         }
 
         view.findViewById<Button>(R.id.btnValidarCadastro).setOnClickListener {
-            val intent = Intent(context, ValidarCriancaActivity::class.java)
-            intent.putExtra("id", id)
-            intent.putExtra("origem", "listagem")
+            val intent = Intent(context, ValidarCriancaActivity::class.java).apply {
+                putExtra("id", crianca.id)
+                putExtra("origem", "listagem")
+            }
             startActivity(intent)
             dialog.dismiss()
         }
 
         view.findViewById<Button>(R.id.btnValidarListas).setOnClickListener {
-            val intent = Intent(context, ValidarCriancaOutrosActivity::class.java)
-            intent.putExtra("id", id)
+            val intent = Intent(context, ValidarCriancaOutrosActivity::class.java).apply {
+                putExtra("id", crianca.id)
+            }
             startActivity(intent)
             dialog.dismiss()
         }
@@ -117,139 +233,138 @@ class ListagemFragment : Fragment() {
 
         binding.txtAno.text = ano.toString()
 
-        // Listener para o campo de texto (VERSÃO COMPLETA E CORRETA)
+        // Listener para o campo de texto
         binding.InputPesquisa.editText?.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // Não precisamos fazer nada aqui
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Não precisamos fazer nada aqui
-            }
-
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                // A ação acontece aqui, depois que o usuário termina de digitar
                 filtrarListaLocal()
             }
         })
 
         // Listener para a seleção de chips
-        binding.chipGroupFiltro.setOnCheckedStateChangeListener { group, checkedIds ->
+        binding.chipGroupFiltro.setOnCheckedStateChangeListener { _, _ ->
             filtrarListaLocal()
         }
     }
 
     override fun onStart() {
         super.onStart()
-        // Apenas inicia o listener. A lógica de UI vai para dentro dele.
         adicionarListenerPrincipal()
     }
 
     private fun adicionarListenerPrincipal() {
-        // Mostra o progresso e esconde o resto
-        binding.progressBarListagem.visibility = View.VISIBLE
-        binding.rvCadastros.visibility = View.GONE
-        binding.textEstadoVazio.visibility = View.GONE
+        binding.progressBarListagem.isVisible = true
+        binding.rvCadastros.isVisible = false
+        binding.textEstadoVazio.isVisible = false
 
         val anoAtual = LocalDate.now().year.toString()
 
-        // 1. Listener para as Definições (executa uma vez)
         firestore.collection("Definicoes").document(anoAtual).get()
             .addOnSuccessListener { docDefinicoes ->
                 if (docDefinicoes.exists()) {
                     quantidadeCriancasTotal = docDefinicoes.getString("quantidadeDeCriancas") ?: "0"
                 }
 
-                // 2. Listener para as Crianças (escuta em tempo real)
-                // Este listener é aninhado para garantir que só buscamos as crianças
-                // depois de ter o total.
                 eventoSnapshot = firestore.collection("Criancas")
-                    .whereEqualTo("ano", anoAtual.toInt()) // Filtro mais eficiente no servidor
+                    .whereEqualTo("ano", anoAtual.toInt())
                     .addSnapshotListener { snapshotCriancas, error ->
-                        binding.progressBarListagem.visibility = View.GONE // Esconde o progresso
+                        binding.progressBarListagem.isVisible = false
 
                         if (error != null) {
                             binding.textEstadoVazio.text = "Erro ao carregar dados."
-                            binding.textEstadoVazio.visibility = View.VISIBLE
+                            binding.textEstadoVazio.isVisible = true
                             return@addSnapshotListener
                         }
 
-                        // Processa os dados recebidos
-                        listaCriancas.clear()
+                        listaMestraCriancas.clear()
                         snapshotCriancas?.documents?.forEach { doc ->
                             doc.toObject(Crianca::class.java)?.let { crianca ->
-                                listaCriancas.add(crianca)
+                                listaMestraCriancas.add(crianca)
                             }
                         }
 
-                        // Atualiza o contador e a UI de filtro
-                        qtdCadastrosFeitos = listaCriancas.size
+                        qtdCadastrosFeitos = listaMestraCriancas.size
                         atualizarEvolucaoCadastro()
-                        filtrarListaLocal() // Chama o filtro para aplicar a ordenação inicial e exibir
+                        filtrarListaLocal()
                     }
             }
             .addOnFailureListener {
-                binding.progressBarListagem.visibility = View.GONE
+                binding.progressBarListagem.isVisible = false
                 binding.textEstadoVazio.text = "Erro ao carregar configurações."
-                binding.textEstadoVazio.visibility = View.VISIBLE
+                binding.textEstadoVazio.isVisible = true
             }
     }
 
-    // Renomeie para refletir que é um filtro local
+    /**
+     * Orquestra todos os filtros locais (chip e texto) e atualiza o RecyclerView.
+     */
     private fun filtrarListaLocal() {
-        val texto = binding.InputPesquisa.editText?.text.toString().trim()
-        val chipSelecionadoId = binding.chipGroupFiltro.checkedChipId
+        val textoBusca = binding.InputPesquisa.editText?.text.toString().trim()
+        val semPadrinhoAtivo = binding.chipSPadrinho.isChecked
 
-        val listaFiltrada = listaCriancas.filter { crianca ->
-            // Lógica do filtro baseada no texto
-            when (chipSelecionadoId) {
-                R.id.chipNome -> crianca.nome.contains(texto, ignoreCase = true)
-                R.id.chipNCartao -> crianca.numeroCartao.startsWith(texto)
-                R.id.chipCpf -> crianca.id.contains(ano.toString() + texto) // Assumindo que CPF faz parte do ID
-                else -> true // Se nenhum chip estiver selecionado, não filtra por texto
-            }
-        }.sortedWith(compareBy { crianca ->
-            // Lógica de ordenação baseada no critério
-            when (chipSelecionadoId) {
-                R.id.chipNome -> crianca.nome
-                R.id.chipNCartao -> crianca.numeroCartao.toIntOrNull() ?: Int.MAX_VALUE // Ordena numericamente
-                R.id.chipCpf -> crianca.id
-                else -> crianca.nome // Ordenação padrão por nome
-            }
-        })
-
-        // Lógica de visibilidade da lista
-        if (listaFiltrada.isEmpty()) {
-            binding.textEstadoVazio.text = if (texto.isNotEmpty()) "Nenhum resultado para sua busca." else "Nenhum cadastro encontrado."
-            binding.textEstadoVazio.visibility = View.VISIBLE
-            binding.rvCadastros.visibility = View.GONE
+        // 1. Aplica o filtro primário (chip "Sem Padrinho")
+        var listaIntermediaria = if (semPadrinhoAtivo) {
+            listaMestraCriancas.filter { it.padrinho.isNullOrBlank() }
         } else {
-            binding.textEstadoVazio.visibility = View.GONE
-            binding.rvCadastros.visibility = View.VISIBLE
+            listaMestraCriancas
         }
 
-        criancasAdapter.adicionarLista(listaFiltrada)
+        // 2. Aplica o filtro secundário (busca por texto) sobre a lista já filtrada pelo chip
+        val listaFiltradaFinal = if (textoBusca.isNotEmpty()) {
+            val primeiroChar = textoBusca.first()
+            if (primeiroChar.isDigit()) {
+                // Filtra por número do cartão que COMEÇA COM o texto
+                listaIntermediaria.filter { it.numeroCartao.startsWith(textoBusca) }
+            } else {
+                // Filtra por nome que CONTÉM o texto
+                listaIntermediaria.filter { it.nome.contains(textoBusca, ignoreCase = true) }
+            }
+        } else {
+            // Se não há texto de busca, a lista é o resultado do filtro do chip
+            listaIntermediaria
+        }
+
+        // 3. Ordena a lista final por nome
+        val listaOrdenada = listaFiltradaFinal.sortedBy { it.nome }
+
+        // 4. Atualiza a UI
+        if (listaOrdenada.isEmpty()) {
+            binding.textEstadoVazio.text = if (textoBusca.isNotEmpty() || semPadrinhoAtivo) {
+                "Nenhum resultado para sua busca."
+            } else {
+                "Nenhum cadastro encontrado."
+            }
+            binding.textEstadoVazio.isVisible = true
+            binding.rvCadastros.isVisible = false
+        } else {
+            binding.textEstadoVazio.isVisible = false
+            binding.rvCadastros.isVisible = true
+        }
+
+        criancasAdapter.adicionarLista(listaOrdenada)
     }
 
     private fun atualizarEvolucaoCadastro() {
-        if(quantidadeCriancasTotal != ""){
-            val qtdCadastrosFeitosD = qtdCadastrosFeitos
+        if (quantidadeCriancasTotal.isNotEmpty()) {
+            val qtdCadastrosFeitosD = qtdCadastrosFeitos.toDouble()
             val quantidadeCriancasTotalD = quantidadeCriancasTotal.toDouble()
 
             val percentual = if (quantidadeCriancasTotalD > 0) {
                 (qtdCadastrosFeitosD * 100) / quantidadeCriancasTotalD
             } else {
-                0.0 // Evita erro de divisão por zero
+                0.0
             }
 
-            val percentualArredondado = String.format("%.2f", percentual).replace(",", ".")
-            binding.textCadastroXLimite.text = "Cadastros realizados: $qtdCadastrosFeitos / $quantidadeCriancasTotal - ($percentualArredondado%)"
+            val percentualFormatado = String.format("%.2f", percentual)
+            binding.textCadastroXLimite.text = "Cadastros: $qtdCadastrosFeitos / $quantidadeCriancasTotal ($percentualFormatado%)"
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // destruir listener quando não estiver nessa tela
-        eventoSnapshot.remove()
+        if (::eventoSnapshot.isInitialized) {
+            eventoSnapshot.remove()
+        }
     }
 }

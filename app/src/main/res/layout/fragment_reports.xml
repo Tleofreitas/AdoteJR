@@ -63,32 +63,32 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/btnGerarCartoes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:drawablePadding="8dp"
-            android:gravity="center"
-            android:padding="16dp"
-            android:text="Gerar Cartões"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
+<!--        <Button-->
+<!--            android:id="@+id/btnGerarCartoes"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginEnd="8dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:drawablePadding="8dp"-->
+<!--            android:gravity="center"-->
+<!--            android:padding="16dp"-->
+<!--            android:text="Gerar Cartões"-->
+<!--            android:textColor="@color/white"-->
+<!--            android:textSize="20sp" />-->
 
-        <Button
-            android:id="@+id/btnBaixarCartoes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:drawableRight="@drawable/ic_download"
-            android:drawablePadding="8dp"
-            android:gravity="center"
-            android:padding="16dp"
-            android:text="Cartões"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
+<!--        <Button-->
+<!--            android:id="@+id/btnBaixarCartoes"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginEnd="8dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:drawableRight="@drawable/ic_download"-->
+<!--            android:drawablePadding="8dp"-->
+<!--            android:gravity="center"-->
+<!--            android:padding="16dp"-->
+<!--            android:text="Cartões"-->
+<!--            android:textColor="@color/white"-->
+<!--            android:textSize="20sp" />-->
 
         <TextView
             android:id="@+id/textBaixando"
