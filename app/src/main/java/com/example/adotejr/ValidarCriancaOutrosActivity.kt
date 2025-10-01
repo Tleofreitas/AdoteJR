@@ -3,311 +3,228 @@ package com.example.adotejr
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.EditText
-import android.widget.RadioButton
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.example.adotejr.databinding.ActivityValidarCriancaOutrosBinding
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 
 class ValidarCriancaOutrosActivity : AppCompatActivity() {
+
     private val binding by lazy {
         ActivityValidarCriancaOutrosBinding.inflate(layoutInflater)
     }
 
-    // Autenticação
-    private val firebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
-
-    // Banco de dados Firestore
     private val firestore by lazy {
         FirebaseFirestore.getInstance()
     }
 
-    private var idDetalhar: String? = null
-    private var status: String = ""
-
-    override fun onStart() {
-        super.onStart()
-        recuperarDadosIdGerado()
-    }
-
-    private fun recuperarDadosIdGerado() {
-        if (NetworkUtils.conectadoInternet(this)) {
-            if (idDetalhar != null){
-                firestore.collection("Criancas")
-                    .document(idDetalhar!!)
-                    .get()
-                    .addOnSuccessListener { documentSnapshot ->
-                        documentSnapshot.data?.let { dadosCrianca ->
-                            preencherDadosCrianca(dadosCrianca)
-                        }
-                    } .addOnFailureListener { exception ->
-                        Log.e("Firestore", "Error getting documents: ", exception)
-                    }
-            }
-        } else {
-            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
-        }
-    }
-
-    private fun preencherDadosCrianca(dados: Map<String, Any>) {
-        binding.includeFotoCrianca.imagePerfil.let {
-            val foto = dados["foto"] as? String
-            if (!foto.isNullOrEmpty()) {
-                Picasso.get().load(foto).into(it)
-            }
-        }
-
-        binding.editTextNome.setText(dados["nome"] as? String ?: "")
-        binding.includeRegistro.editTextAno.setText(dados["ano"].toString() as? String ?: "")
-
-        binding.includeRegistro.NomePerfilCadastro.text = dados["cadastradoPor"].toString() as? String ?: ""
-        val foto = dados["fotoCadastradoPor"] as? String ?: ""
-        if (!foto.isNullOrEmpty()) {
-            Picasso.get()
-                .load( foto )
-                .into( binding.includeRegistro.imgPerfilCadastro )
-        }
-
-        binding.includeRegistro.NomePerfilValidacao.text = dados["validadoPor"].toString() as? String ?: ""
-        val fotoValidacao = dados["fotoValidadoPor"] as? String ?: ""
-        if (!fotoValidacao.isNullOrEmpty()) {
-            Picasso.get()
-                .load( fotoValidacao )
-                .into( binding.includeRegistro.imgPerfilValidacao )
-        }
-
-        binding.includeRegistro.editPadrinho.setText(dados["padrinho"].toString() as? String ?: "")
-        binding.includeRegistro.editNumeroCartao.setText(dados["numeroCartao"].toString() as? String ?: "")
-
-        val statusfirebase = dados["ativo"] as? String ?: return
-        binding.includeRegistro.radioButtonStatusAtivo.isChecked = statusfirebase == "Sim"
-        binding.includeRegistro.radioButtonStatusInativo.isChecked = statusfirebase == "Não"
-        status = statusfirebase
-
-        if(statusfirebase == "Não"){
-            binding.includeRegistro.editMotivoStatus.isEnabled = true
-        }
-        binding.includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
-
-        val senha = dados["retirouSenha"] as? String ?: return
-        binding.includeRegistro.radioButtonSenhaSim.isChecked = senha == "Sim"
-        binding.includeRegistro.radioButtonSenhaNao.isChecked = senha == "Não"
-
-        val kit = dados["retirouSacola"] as? String ?: return
-        binding.includeRegistro.radioButtonRetiradaSim.isChecked = kit == "Sim"
-        binding.includeRegistro.radioButtonRetiradaNao.isChecked = kit == "Não"
-
-        val blackList = dados["blackList"] as? String ?: return
-        binding.includeRegistro.radioButtonBLSim.isChecked = blackList == "Sim"
-        binding.includeRegistro.radioButtonBLNao.isChecked = blackList == "Não"
-
-        val chegouKit = dados["chegouKit"] as? String ?: return
-        binding.includeRegistro.radioButtonCKSim.isChecked = chegouKit == "Sim"
-        binding.includeRegistro.radioButtonCKNao.isChecked = chegouKit == "Não"
-    }
-
-    private lateinit var statusAtivo: RadioButton
-    private lateinit var statusInativo: RadioButton
-    private lateinit var editTextMotivoStatus: EditText
-    private lateinit var editTextAno: EditText
-    private lateinit var editTextCartao: EditText
-    private lateinit var senhaSim: RadioButton
-    private lateinit var senhaNao: RadioButton
-    private lateinit var kitSim: RadioButton
-    private lateinit var kitNão: RadioButton
-    private lateinit var blackListSim: RadioButton
-    private lateinit var blackListNao: RadioButton
+    private var idCrianca: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        // Inicialize os EditTexts
-        statusAtivo = binding.includeRegistro.radioButtonStatusAtivo
-        statusInativo = binding.includeRegistro.radioButtonStatusInativo
-        editTextMotivoStatus = binding.includeRegistro. editMotivoStatus
-        editTextAno = binding.includeRegistro.editTextAno
-        editTextAno.isEnabled = false
-        editTextCartao = binding.includeRegistro.editNumeroCartao
-        senhaSim = binding.includeRegistro.radioButtonSenhaSim
-        senhaNao = binding.includeRegistro.radioButtonSenhaNao
-        kitSim = binding.includeRegistro.radioButtonRetiradaSim
-        kitNão = binding.includeRegistro.radioButtonRetiradaNao
-        blackListSim = binding.includeRegistro.radioButtonBLSim
-        blackListNao = binding.includeRegistro.radioButtonBLNao
+        idCrianca = intent.extras?.getString("id")
 
-        // Configurando o listener para mudanças no RadioGroup Status
-        binding.includeRegistro.radioGroupStatus.setOnCheckedChangeListener { _, checkedId ->
-            // Atualiza a variável "especial"
-            status =
-                if (checkedId == binding.includeRegistro.radioButtonStatusAtivo.id) "Sim" else "Não"
-
-            // Verifica se o campo deve ser habilitado ou não
-            val habilitarCampo = checkedId == binding.includeRegistro.radioButtonStatusInativo.id
-
-            // Habilita ou desabilita a descrição com base na seleção
-            binding.includeRegistro.InputMotivoStatus.isEnabled = habilitarCampo
-            binding.includeRegistro.editMotivoStatus.isEnabled = habilitarCampo
-
-            // Se voltar para "Ativo", define texto "Apto para contemplação"
-            if (!habilitarCampo) {
-                binding.includeRegistro.editMotivoStatus.setText("Apto para contemplação")
-            } else {
-                binding.includeRegistro.editMotivoStatus.setText("")
-            }
+        if (idCrianca == null) {
+            exibirMensagem("ID da criança não encontrado. Tente novamente.")
+            finish()
+            return
         }
 
-        // Pegar ID passado
-        val bundle = intent.extras
-        if(bundle != null) {
-            idDetalhar = bundle.getString("id").toString()
-        } else {
-            idDetalhar = "null"
-            // idDetalhar = 202544290378846.toString()
-        }
-
-        binding.includeFotoCrianca.fabSelecionar.apply {
-            visibility = View.GONE
-            isEnabled = false
-        }
-
-        incializarToolbar()
+        inicializarToolbar()
+        inicializarComponentes()
         inicializarEventosClique()
+        recuperarDadosCrianca()
     }
 
-    private fun incializarToolbar() {
-        val toolbar = binding.includeToolbar.tbPrincipal
-        setSupportActionBar( toolbar )
+    private fun inicializarToolbar() {
+        setSupportActionBar(binding.includeToolbar.tbPrincipal)
         supportActionBar?.apply {
             title = "Padrinho / Presença / KIT"
             setDisplayHomeAsUpEnabled(true)
         }
     }
 
+    private fun inicializarComponentes() {
+        binding.includeRegistro.editTextAno.isEnabled = false
+        binding.includeFotoCrianca.fabSelecionar.isVisible = false
+
+        binding.includeRegistro.InputMotivoStatus.isEnabled = false
+        binding.includeRegistro.editMotivoStatus.isEnabled = false
+    }
+
     private fun inicializarEventosClique() {
-        binding.btnAtualizarDadosOutrosCrianca.setOnClickListener {
-            // Altera o texto do botão para "Aguarde"
-            binding.btnAtualizarDadosOutrosCrianca.text = "Aguarde..."
+        binding.includeRegistro.radioGroupStatus.setOnCheckedChangeListener { _, checkedId ->
+            val isInativo = checkedId == binding.includeRegistro.radioButtonStatusInativo.id
+            binding.includeRegistro.InputMotivoStatus.isEnabled = isInativo
+            binding.includeRegistro.editMotivoStatus.isEnabled = isInativo
 
-            // Desabilita o botão para evitar novos cliques
-            binding.btnAtualizarDadosOutrosCrianca.isEnabled = false
-
-            // Descrição de Status
-            var descricaoAtivo = editTextMotivoStatus.text.toString()
-
-            if (status == "Não" && descricaoAtivo.isEmpty()) {
-                binding.includeRegistro.InputMotivoStatus.error = "Descreva o motivo da inativação..."
-                exibirMensagem("Descreva as condições especiais...")
-                binding.btnAtualizarDadosOutrosCrianca.text = "Validar"
-                binding.btnAtualizarDadosOutrosCrianca.isEnabled = true
-
+            if (!isInativo) {
+                binding.includeRegistro.editMotivoStatus.setText("Apto para contemplação")
             } else {
-                binding.includeRegistro.InputMotivoStatus.error = null
+                binding.includeRegistro.editMotivoStatus.setText("")
+            }
+        }
 
-                val padrinho = binding.includeRegistro.editPadrinho.text.toString()
+        binding.btnAtualizarDadosOutrosCrianca.setOnClickListener {
+            validarEAtualizarDados()
+        }
+    }
 
-                var senha = when {
-                    binding.includeRegistro.radioButtonSenhaSim.isChecked -> "Sim"
-                    binding.includeRegistro.radioButtonSenhaNao.isChecked -> "Não"
-                    else -> "Nenhum"
+    private fun recuperarDadosCrianca() {
+        if (!NetworkUtils.conectadoInternet(this)) {
+            exibirMensagem("Sem conexão com a internet.")
+            return
+        }
+
+        mostrarProgresso(true)
+
+        firestore.collection("Criancas")
+            .document(idCrianca!!)
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                documentSnapshot.data?.let { dados ->
+                    preencherDadosCrianca(dados)
+                } ?: run {
+                    exibirMensagem("Dados da criança não encontrados.")
+                    finish()
                 }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Firestore", "Erro ao buscar criança: ", exception)
+                exibirMensagem("Erro ao carregar dados. Tente novamente.")
+            }
+            .addOnCompleteListener {
+                mostrarProgresso(false)
+            }
+    }
 
-                var kit = when {
-                    binding.includeRegistro.radioButtonRetiradaSim.isChecked -> "Sim"
-                    binding.includeRegistro.radioButtonRetiradaNao.isChecked -> "Não"
-                    else -> "Nenhum"
-                }
+    private fun preencherDadosCrianca(dados: Map<String, Any>) {
+        binding.apply {
+            (dados["foto"] as? String)?.let { url ->
+                if (url.isNotEmpty()) Picasso.get().load(url).into(includeFotoCrianca.imagePerfil)
+            }
 
-                var blackList = when {
-                    binding.includeRegistro.radioButtonBLSim.isChecked -> "Sim"
-                    binding.includeRegistro.radioButtonBLNao.isChecked -> "Não"
-                    else -> "Nenhum"
-                }
+            editTextNome.setText(dados["nome"] as? String ?: "")
+            includeRegistro.editTextAno.setText(dados["ano"]?.toString() ?: "")
 
-                var chegouKit = when {
-                    binding.includeRegistro.radioButtonCKSim.isChecked -> "Sim"
-                    binding.includeRegistro.radioButtonCKNao.isChecked -> "Não"
-                    else -> "Nenhum"
-                }
+            includeRegistro.NomePerfilCadastro.text = dados["cadastradoPor"]?.toString() ?: "N/A"
+            (dados["fotoCadastradoPor"] as? String)?.let { url ->
+                if (url.isNotEmpty()) Picasso.get().load(url).into(includeRegistro.imgPerfilCadastro)
+            }
 
-                if (NetworkUtils.conectadoInternet(this)) {
-                    val idUsuario = firebaseAuth.currentUser?.uid
-                    if (idUsuario != null){
-                        firestore.collection("Usuarios")
-                            .document( idUsuario )
-                            .get()
-                            .addOnSuccessListener { documentSnapshot ->
-                                val dadosUsuario = documentSnapshot.data
-                                if ( dadosUsuario != null ){
-                                    processarDados(
-                                        status,
-                                        descricaoAtivo,
-                                        senha,
-                                        kit,
-                                        blackList,
-                                        chegouKit,
-                                        padrinho
-                                    )
-                                }
-                            }.addOnFailureListener { exception ->
-                                Log.e("Firestore", "Error getting documents: ", exception)
-                            }
-                    }
-                } else {
-                    binding.btnAtualizarDadosOutrosCrianca.text = "Validar"
-                    binding.btnAtualizarDadosOutrosCrianca.isEnabled = true
-                    exibirMensagem("Verifique a conexão com a internet e tente novamente!")
-                }
+            includeRegistro.NomePerfilValidacao.text = dados["validadoPor"]?.toString() ?: "N/A"
+            (dados["fotoValidadoPor"] as? String)?.let { url ->
+                if (url.isNotEmpty()) Picasso.get().load(url).into(includeRegistro.imgPerfilValidacao)
+            }
+
+            includeRegistro.editPadrinho.setText(dados["padrinho"]?.toString() ?: "")
+            includeRegistro.editNumeroCartao.setText(dados["numeroCartao"]?.toString() ?: "")
+            includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
+
+            val statusAtivo = dados["ativo"] as? String == "Sim"
+            includeRegistro.radioButtonStatusAtivo.isChecked = statusAtivo
+            includeRegistro.radioButtonStatusInativo.isChecked = !statusAtivo
+            includeRegistro.InputMotivoStatus.isEnabled = !statusAtivo
+            includeRegistro.editMotivoStatus.isEnabled = !statusAtivo
+
+            (dados["retirouSenha"] as? String)?.let {
+                includeRegistro.radioButtonSenhaSim.isChecked = it == "Sim"
+                includeRegistro.radioButtonSenhaNao.isChecked = it == "Não"
+            }
+            (dados["retirouSacola"] as? String)?.let {
+                includeRegistro.radioButtonRetiradaSim.isChecked = it == "Sim"
+                includeRegistro.radioButtonRetiradaNao.isChecked = it == "Não"
+            }
+            (dados["blackList"] as? String)?.let {
+                includeRegistro.radioButtonBLSim.isChecked = it == "Sim"
+                includeRegistro.radioButtonBLNao.isChecked = it == "Não"
+            }
+            (dados["chegouKit"] as? String)?.let {
+                includeRegistro.radioButtonCKSim.isChecked = it == "Sim"
+                includeRegistro.radioButtonCKNao.isChecked = it == "Não"
             }
         }
     }
 
-    private fun processarDados(
-        status: String,
-        descricaoAtivo: String,
-        senha: String,
-        kit: String,
-        blackList: String,
-        chegouKit: String,
-        padrinho: String
-    ) {
-        val dados = mapOf(
+    private fun validarEAtualizarDados() {
+        val status = if (binding.includeRegistro.radioButtonStatusAtivo.isChecked) "Sim" else "Não"
+        val motivoStatus = binding.includeRegistro.editMotivoStatus.text.toString()
+
+        if (status == "Não" && motivoStatus.isBlank()) {
+            binding.includeRegistro.InputMotivoStatus.error = "Descreva o motivo da inativação"
+            exibirMensagem("O motivo da inativação é obrigatório.")
+            return
+        } else {
+            binding.includeRegistro.InputMotivoStatus.error = null
+        }
+
+        if (!NetworkUtils.conectadoInternet(this)) {
+            exibirMensagem("Sem conexão com a internet.")
+            return
+        }
+
+        val dadosParaAtualizar = mapOf(
             "ativo" to status,
-            "motivoStatus" to descricaoAtivo,
-            "retirouSenha" to senha,
-            "retirouSacola" to kit,
-            "blackList" to blackList,
-            "chegouKit" to chegouKit,
-            "padrinho" to padrinho
+            "motivoStatus" to if (status == "Sim") "Apto para contemplação" else motivoStatus,
+            "retirouSenha" to if (binding.includeRegistro.radioButtonSenhaSim.isChecked) "Sim" else "Não",
+            "retirouSacola" to if (binding.includeRegistro.radioButtonRetiradaSim.isChecked) "Sim" else "Não",
+            "blackList" to if (binding.includeRegistro.radioButtonBLSim.isChecked) "Sim" else "Não",
+            "chegouKit" to if (binding.includeRegistro.radioButtonCKSim.isChecked) "Sim" else "Não",
+            "padrinho" to binding.includeRegistro.editPadrinho.text.toString()
         )
 
-        atualizarDadosPerfil(idDetalhar.toString(), dados) // Envia os dados ao banco
+        atualizarDadosNoFirestore(dadosParaAtualizar)
     }
 
-    private fun atualizarDadosPerfil(id: String, dados: Map<String, String>) {
+    private fun atualizarDadosNoFirestore(dados: Map<String, Any>) {
+        mostrarProgresso(true)
+
         firestore.collection("Criancas")
-            .document( id )
-            .update( dados )
+            .document(idCrianca!!)
+            .update(dados)
             .addOnSuccessListener {
-                onStart()
-                exibirMensagem("Alterado com Sucesso!")
-                startActivity(
-                    Intent(this, GerenciamentoActivity::class.java).apply {
-                        putExtra("botao_selecionado", R.id.navigation_listagem)
-                    }
-                )
+                exibirMensagem("Dados atualizados com sucesso!")
+                val intent = Intent(this, GerenciamentoActivity::class.java).apply {
+                    putExtra("botao_selecionado", R.id.navigation_listagem)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+                finish()
             }
-            .addOnFailureListener {
-                binding.btnAtualizarDadosOutrosCrianca.text = "Validar"
-                binding.btnAtualizarDadosOutrosCrianca.isEnabled = true
-                exibirMensagem("Erro ao atualizar perfil. Tente novamente.")
+            .addOnFailureListener { exception ->
+                Log.e("Firestore", "Erro ao atualizar dados: ", exception)
+                exibirMensagem("Erro ao atualizar. Tente novamente.")
             }
+            .addOnCompleteListener {
+                mostrarProgresso(false)
+            }
+    }
+
+    /**
+     * Controla a visibilidade do ProgressBar e bloqueia/desbloqueia a interação do usuário.
+     * @param mostrar `true` para exibir o progresso, `false` para esconder.
+     */
+    private fun mostrarProgresso(mostrar: Boolean) {
+        // Usa o ID exato do seu ProgressBar no layout
+        binding.progressBarValidacaoOutros.isVisible = mostrar
+
+        // Desabilita o botão principal para evitar cliques duplos durante a operação
+        binding.btnAtualizarDadosOutrosCrianca.isEnabled = !mostrar
+
+        // Opcional: Bloqueia a interação com o resto da tela enquanto o ProgressBar está visível.
+        if (mostrar) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            )
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+        }
     }
 }
