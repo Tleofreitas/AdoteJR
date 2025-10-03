@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+app:cardElevation="8dp"
+app:cardCornerRadius="8dp">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Item de Menu: Baixar Cartões -->
+    <TextView
+        android:id="@+id/menu_baixar_voluntarios"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:drawableEnd="@drawable/ic_download"
+        android:drawableTint="#FF5722"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:text="Relação de Voluntários" />
+
+    <!-- Item de Menu: Gerar Cartões -->
+    <TextView
+        android:id="@+id/menu_gerar_cartoes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gerar Cartões"
+        android:padding="16dp"
+        android:minWidth="200dp"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- Item de Menu: Baixar Cadastro Completo -->
+    <TextView
+        android:id="@+id/menu_baixar_cadastros"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:drawableEnd="@drawable/ic_download"
+        android:drawableTint="#FF5722"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:text="Cadastro Completo" />
+
+</LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
