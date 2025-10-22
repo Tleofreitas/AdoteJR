@@ -39,6 +39,19 @@ app:cardCornerRadius="8dp">
         android:clickable="true"
         android:focusable="true" />
 
+    <TextView
+        android:id="@+id/btnBaixarCartoes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:drawableEnd="@drawable/ic_download"
+        android:drawableTint="#FF5722"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:text="Baixar Cartões" />
+
     <!-- Item de Menu: Baixar Cadastro Completo -->
     <TextView
         android:id="@+id/btnBaixarCadastros"

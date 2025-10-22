@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA" /> <!-- Permissão de acesso as fotos -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- Permissão de acesso as fotos -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Permissão necessária para Foreground Services -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

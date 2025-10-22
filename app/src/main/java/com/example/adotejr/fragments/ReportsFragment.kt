@@ -1,63 +1,65 @@
 package com.example.adotejr.fragments
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
-import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentReportsBinding
+import com.example.adotejr.utils.DownloadCartaoWorker
 import com.example.adotejr.utils.ExportadorCadastros
 import com.example.adotejr.utils.ExportadorUsuarios
 import com.example.adotejr.utils.GeradorCartaoWorker
 import com.example.adotejr.utils.NetworkUtils
-import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.Firebase
-import com.google.firebase.storage.storage
-import java.io.File
 import java.time.LocalDate
 
 class ReportsFragment : Fragment() {
     private lateinit var binding: FragmentReportsBinding
-    private var callbackExcel: ((Uri) -> Unit)? = null // Variável para armazenar o callback
+    private var callbackExcel: ((Uri) -> Unit)? = null
     private var ano = LocalDate.now().year
-    val REQUEST_FOLDER = 1001
-    val CREATE_DOCUMENT_REQUEST_CODE = 1002
+    private val REQUEST_FOLDER = 1001
+    private val CREATE_DOCUMENT_REQUEST_CODE = 1002
     private var nivelDoUser = ""
     private var numerosParaBaixar: String = ""
+
+    // Launcher para pedir permissão de notificação
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (!isGranted) {
+                Toast.makeText(requireContext(), "Permissão de notificação negada. O progresso não será exibido.", Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private fun validarNivel(): Boolean {
+        if(nivelDoUser == "Admin"){
+            return true
+        } else {
+            Toast.makeText(requireContext(), "Ação não permitida para seu usuário", Toast.LENGTH_LONG).show()
+            return false
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout using the binding
-        binding = FragmentReportsBinding.inflate(
-            inflater, container, false
-        )
+        binding = FragmentReportsBinding.inflate(inflater, container, false)
+        nivelDoUser = arguments?.getString("nivel").toString()
 
-        nivelDoUser = arguments?.getString("nivel").toString() // Obtendo o valor passado
-
-        binding.btnBaixarCartoes.setOnClickListener {
-            if (validarNivel()) {
-                if (NetworkUtils.conectadoInternet(requireContext())) {
-                    // AQUI ENTRA A NOVA LÓGICA CHAMANDO O DIALOG
-                    exibirDialogoDownloadCartoes()
-                } else {
-                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        pedirPermissaoDeNotificacao() // Pede a permissão ao criar a tela
 
         binding.fabMenuListagem.setOnClickListener {
             // Alterna a visibilidade do menu customizado
@@ -126,6 +128,14 @@ class ReportsFragment : Fragment() {
             }
         }
 
+        binding.menuCustom.btnBaixarCartoes.setOnClickListener {
+            if (validarNivel() && NetworkUtils.conectadoInternet(requireContext())) {
+                exibirDialogoDownloadCartoes()
+            } else {
+                Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+            }
+        }
+
         // Listener para o item "Baixar Cartões" dentro do menu customizado
         binding.menuCustom.btnBaixarCadastros.setOnClickListener {
             // Esconde o menu antes de executar a ação
@@ -143,33 +153,6 @@ class ReportsFragment : Fragment() {
         }
 
         return binding.root
-    }
-
-    private fun exibirDialogoDownloadCartoes() {
-        // 1. Infla o layout do seu novo dialog
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_baixar_cartao, null)
-        val inputNumeroCartao = dialogView.findViewById<TextInputEditText>(R.id.download_cartao)
-
-        // 2. Cria e exibe o AlertDialog
-        AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            // O título já está no seu XML, então .setTitle() é opcional
-            .setPositiveButton("Baixar") { _, _ ->
-                val numerosInput = inputNumeroCartao.text.toString().trim()
-                // Abre o seletor de pasta e, quando o usuário escolher,
-                // a lógica de download será executada com os números corretos.
-                selecionarPastaParaDownload(numerosInput)
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
-    private fun selecionarPastaParaDownload(numerosInput: String) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        // Precisamos de uma forma de passar o 'numerosInput' para o onActivityResult.
-        // A forma mais simples é armazená-lo em uma variável de classe.
-        this.numerosParaBaixar = numerosInput // Crie a variável de classe abaixo
-        startActivityForResult(intent, REQUEST_FOLDER)
     }
 
     private fun iniciarTrabalhoDeGeracao(numeroCartao: String?) {
@@ -190,12 +173,9 @@ class ReportsFragment : Fragment() {
         Toast.makeText(requireContext(), "Iniciando geração em segundo plano...", Toast.LENGTH_LONG).show()
     }
 
-    private fun validarNivel(): Boolean {
-        if(nivelDoUser == "Admin"){
-            return true
-        } else {
-            Toast.makeText(requireContext(), "Ação não permitida para seu usuário", Toast.LENGTH_LONG).show()
-            return false
+    private fun pedirPermissaoDeNotificacao() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -213,196 +193,104 @@ class ReportsFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
-            REQUEST_FOLDER -> { // Tratamento para seleção de pasta
+            REQUEST_FOLDER -> {
                 if (resultCode == Activity.RESULT_OK) {
                     data?.data?.let { uri ->
-                        processarDownload(uri, numerosParaBaixar)
+                        // AGORA, EM VEZ DE CHAMAR processarDownload, CHAMAMOS iniciarTrabalhoDeDownload
+                        iniciarTrabalhoDeDownload(uri, numerosParaBaixar)
                     }
                 }
             }
-
-            CREATE_DOCUMENT_REQUEST_CODE -> { // Tratamento para download do arquivo Excel
+            CREATE_DOCUMENT_REQUEST_CODE -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    data?.data?.let { uri ->
-                        callbackExcel?.invoke(uri) // Chama o callback armazenado
-                    }
+                    data?.data?.let { uri -> callbackExcel?.invoke(uri) }
                 }
             }
         }
     }
 
-    private fun processarDownload(pastaDestinoUri: Uri, numerosInput: String) {
+    // NOVA FUNÇÃO PARA DISPARAR O WORKER
+    private fun iniciarTrabalhoDeDownload(pastaDestinoUri: Uri, numerosInput: String) {
+        val prefixos = processarInputParaPrefixos(numerosInput)
+
+        // Se o input foi inválido e não gerou prefixos, não continue.
+        if (prefixos.isEmpty() && numerosInput.trim().isNotEmpty()) {
+            Toast.makeText(requireContext(), "Input de download inválido.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Cria os dados de entrada para o Worker
+        val inputData = Data.Builder()
+            .putStringArray(DownloadCartaoWorker.KEY_PREFIXOS, prefixos.toTypedArray())
+            .putString(DownloadCartaoWorker.KEY_PASTA_URI, pastaDestinoUri.toString())
+            .putInt(DownloadCartaoWorker.KEY_ANO, ano)
+            .build()
+
+        // Cria e enfileira a requisição de trabalho
+        val downloadRequest = OneTimeWorkRequestBuilder<DownloadCartaoWorker>()
+            .setInputData(inputData)
+            .build()
+
+        WorkManager.getInstance(requireContext()).enqueue(downloadRequest)
+
+        Toast.makeText(requireContext(), "Iniciando download em segundo plano...", Toast.LENGTH_LONG).show()
+    }
+
+    // A LÓGICA DE PROCESSAMENTO AGORA RETORNA UMA LISTA DE PREFIXOS
+    private fun processarInputParaPrefixos(numerosInput: String): List<String> {
         val inputNormalizado = numerosInput.trim()
         val prefixosParaBuscar = mutableListOf<String>()
 
-        // Função auxiliar para padronizar qualquer número para o formato de 4 dígitos
         fun formatarNumero(numeroStr: String): String? {
-            // Tenta converter a string para um número inteiro. Se falhar (ex: input "abc"), retorna nulo.
-            val numeroInt = numeroStr.trim().toIntOrNull()
-            // Se a conversão for bem-sucedida, formata para 4 dígitos (ex: 1 -> "0001")
-            // Se for nula, retorna nulo.
-            return numeroInt?.let { String.format("%04d", it) }
+            return numeroStr.trim().toIntOrNull()?.let { String.format("%04d", it) }
         }
 
         when {
-            // --- CASO 3: SEQUÊNCIA (ex: "1-10") ---
             inputNormalizado.contains("-") -> {
                 val partes = inputNormalizado.split("-").map { it.trim() }
                 val inicio = partes.getOrNull(0)?.toIntOrNull()
                 val fim = partes.getOrNull(1)?.toIntOrNull()
-
                 if (inicio != null && fim != null && inicio <= fim) {
                     for (i in inicio..fim) {
-                        // A formatação já está correta aqui, como fizemos antes.
-                        val numeroFormatado = String.format("%04d", i)
-                        prefixosParaBuscar.add("$numeroFormatado-")
+                        prefixosParaBuscar.add("${String.format("%04d", i)}-")
                     }
-                } else {
-                    Toast.makeText(requireContext(), "Intervalo inválido: $inputNormalizado", Toast.LENGTH_LONG).show()
                 }
             }
-
-            // --- CASO 2: ESPECÍFICOS (ex: "1, 5, 12") ---
             inputNormalizado.contains(",") -> {
                 val partes = inputNormalizado.split(",").map { it.trim() }
-                for (numeroStr in partes) {
-                    if (numeroStr.isNotEmpty()) {
-                        // Padroniza cada número antes de criar o prefixo
-                        val numeroFormatado = formatarNumero(numeroStr)
-                        if (numeroFormatado != null) {
-                            prefixosParaBuscar.add("$numeroFormatado-")
-                        } else {
-                            // Informa o usuário se um dos números for inválido
-                            Toast.makeText(requireContext(), "Número inválido na lista: $numeroStr", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                partes.forEach { numeroStr ->
+                    if (numeroStr.isNotEmpty()) formatarNumero(numeroStr)?.let { prefixosParaBuscar.add("$it-") }
                 }
             }
-
-            // --- CASO 1: ÚNICO (ex: "1" ou "01") ---
             inputNormalizado.isNotEmpty() -> {
-                // Padroniza o número antes de criar o prefixo
-                val numeroFormatado = formatarNumero(inputNormalizado)
-                if (numeroFormatado != null) {
-                    prefixosParaBuscar.add("$numeroFormatado-")
-                } else {
-                    Toast.makeText(requireContext(), "Número inválido: $inputNormalizado", Toast.LENGTH_LONG).show()
-                }
-            }
-
-            // --- CASO 4: TODOS (input em branco) ---
-            else -> {
-                // A lista fica vazia, sinalizando para baixar todos.
+                formatarNumero(inputNormalizado)?.let { prefixosParaBuscar.add("$it-") }
             }
         }
-
-        if (prefixosParaBuscar.isEmpty() && inputNormalizado.isNotEmpty()) {
-            // Não prossiga se o usuário digitou algo, mas nenhum prefixo válido foi gerado.
-            return
-        }
-
-        baixarCartoes(pastaDestinoUri, prefixosParaBuscar)
+        return prefixosParaBuscar
     }
 
+    private fun exibirDialogoDownloadCartoes() {
+        // 1. Infla o layout do seu novo dialog
+        // Certifique-se que o nome do layout 'dialog_baixar_cartao' está correto
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_baixar_cartao, null)
+        val inputNumeroCartao = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.download_cartao)
 
-    private fun baixarCartoes(pastaDestinoUri: Uri, prefixos: List<String>) {
-        binding.textBaixando.visibility = View.VISIBLE
-        binding.progressBar.visibility = View.VISIBLE
-
-        val storageRef = Firebase.storage.reference.child("cartoes/$ano/")
-
-        // 1. Sempre listamos TODOS os arquivos do diretório.
-        storageRef.listAll().addOnSuccessListener { listResult ->
-            val todosOsArquivosRemotos = listResult.items
-
-            if (todosOsArquivosRemotos.isEmpty()) {
-                binding.textBaixando.visibility = View.GONE
-                binding.progressBar.visibility = View.GONE
-                Toast.makeText(requireContext(), "Nenhum arquivo encontrado no diretório!", Toast.LENGTH_LONG).show()
-                return@addOnSuccessListener
+        // 2. Cria e exibe o AlertDialog
+        android.app.AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setPositiveButton("Baixar") { _, _ ->
+                val numerosInput = inputNumeroCartao.text.toString().trim()
+                // Abre o seletor de pasta e, quando o usuário escolher, a lógica continua no onActivityResult
+                selecionarPastaParaDownload(numerosInput)
             }
-
-            // 2. Filtramos a lista de arquivos com base nos prefixos.
-            val arquivosParaBaixar = if (prefixos.isEmpty()) {
-                // Se a lista de prefixos estiver vazia, significa "baixar todos".
-                todosOsArquivosRemotos
-            } else {
-                // Se tivermos prefixos, filtramos a lista.
-                todosOsArquivosRemotos.filter { arquivoRemoto ->
-                    // Verifica se o nome do arquivo começa com ALGUM dos prefixos fornecidos.
-                    prefixos.any { prefixo -> arquivoRemoto.name.startsWith(prefixo, ignoreCase = true) }
-                }
-            }
-
-            // 3. Iniciamos o download dos arquivos filtrados.
-            iniciarDownloads(pastaDestinoUri, arquivosParaBaixar)
-
-        }.addOnFailureListener { error ->
-            Toast.makeText(requireContext(), "Erro ao listar arquivos", Toast.LENGTH_LONG).show()
-            Log.e("Firebase", "Erro ao listar arquivos: ${error.message}")
-            binding.textBaixando.visibility = View.GONE
-            binding.progressBar.visibility = View.GONE
-        }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
-
-    // Método para atualizar o progresso do download
-    private fun atualizarProgresso(atual: Int, total: Int) {
-        binding.progressBar.progress = (atual * 100) / total
-        if (atual == total) {
-            binding.textBaixando.visibility = View.GONE
-            binding.progressBar.visibility = View.GONE
-            Toast.makeText(requireContext(), "Download concluído!", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun iniciarDownloads(pastaDestinoUri: Uri, arquivos: List<com.google.firebase.storage.StorageReference>) {
-        val totalArquivos = arquivos.size
-        if (totalArquivos == 0) {
-            binding.textBaixando.visibility = View.GONE
-            binding.progressBar.visibility = View.GONE
-            Toast.makeText(requireContext(), "Nenhum arquivo correspondente encontrado!", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        var arquivosBaixados = 0
-        val pickedDir = DocumentFile.fromTreeUri(requireContext(), pastaDestinoUri)
-
-        if (pickedDir == null || !pickedDir.isDirectory) {
-            // ... (seu código de erro de diretório)
-            Log.e("Download", "Diretório inválido!")
-            binding.textBaixando.visibility = View.GONE
-            binding.progressBar.visibility = View.GONE
-            Toast.makeText(requireContext(), "Erro ao acessar a pasta de destino", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        // Itera sobre cada arquivo para baixar
-        arquivos.forEach { fileRef ->
-            val tempFile = File(requireContext().cacheDir, fileRef.name)
-
-            fileRef.getFile(tempFile).addOnSuccessListener {
-                val newFile = pickedDir.createFile("application/pdf", fileRef.name)
-                newFile?.uri?.let { uri ->
-                    requireContext().contentResolver.openOutputStream(uri)?.use { outputStream ->
-                        tempFile.inputStream().use { inputStream ->
-                            inputStream.copyTo(outputStream)
-                        }
-                    }
-                    tempFile.delete()
-                }
-                arquivosBaixados++
-                atualizarProgresso(arquivosBaixados, totalArquivos)
-            }.addOnFailureListener { error ->
-                // Se um arquivo específico falhar, podemos continuar os outros
-                Log.e("Download", "Erro ao baixar ${fileRef.name}: ${error.message}")
-                arquivosBaixados++ // Incrementa mesmo em falha para a barra de progresso não travar
-                atualizarProgresso(arquivosBaixados, totalArquivos)
-            }
-        }
-    }
-
-    companion object {
-        private const val CREATE_DOCUMENT_REQUEST_CODE = 1
+    private fun selecionarPastaParaDownload(numerosInput: String) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        // Armazena o input do usuário na variável de classe para ser usada no onActivityResult
+        this.numerosParaBaixar = numerosInput
+        startActivityForResult(intent, REQUEST_FOLDER)
     }
 }
