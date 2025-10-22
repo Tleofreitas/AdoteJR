@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Download de Cartões"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Para baixar um único cartão, digite seu número.\nExemplo: 0001\n\nPara baixar mais de um, específicos, separe por vírgula.\nExemplo: 0001,0005\n\nPara baixar uma sequência, separe por traço.\nExemplo, baixar do 01 ao 10: 0001-0010\n\nPara bixa todos, deixe em branco."
+        android:textSize="16sp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/download_cartao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Número do Cartão (Opcional )"
+            android:inputType="text"
+            android:digits="0123456789,-" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

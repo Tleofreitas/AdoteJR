@@ -1,12 +1,9 @@
 package com.example.adotejr.fragments
 
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,8 +21,6 @@ import com.example.adotejr.ValidarCriancaOutrosActivity
 import com.example.adotejr.adapters.CriancasAdapter
 import com.example.adotejr.databinding.FragmentListagemBinding
 import com.example.adotejr.model.Crianca
-import com.example.adotejr.utils.ExportadorCadastros
-import com.example.adotejr.utils.ExportadorUsuarios
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -65,30 +60,6 @@ class ListagemFragment : Fragment() {
         }
         binding.rvCadastros.adapter = criancasAdapter
         binding.rvCadastros.layoutManager = LinearLayoutManager(context)
-
-        binding.fabMenuListagem.setOnClickListener {
-            // Alterna a visibilidade do menu customizado
-            val isMenuVisible = binding.menuCustom.root.isVisible
-            binding.menuCustom.root.isVisible = !isMenuVisible
-        }
-
-        // Listener para o item "Relação de Voluntários" dentro do menu customizado
-        binding.menuCustom.menuBaixarVoluntarios.setOnClickListener {
-            // Esconde o menu antes de executar a ação
-            binding.menuCustom.root.isVisible = false
-        }
-
-        // Listener para o item "Gerar Cartões" dentro do menu customizado
-        binding.menuCustom.menuGerarCartoes.setOnClickListener {
-            // Esconde o menu antes de executar a ação
-            binding.menuCustom.root.isVisible = false
-        }
-
-        // Listener para o item "Baixar Cartões" dentro do menu customizado
-        binding.menuCustom.menuBaixarCadastros.setOnClickListener {
-            // Esconde o menu antes de executar a ação
-            binding.menuCustom.root.isVisible = false
-        }
 
         return binding.root
     }

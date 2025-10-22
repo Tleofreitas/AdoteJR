@@ -14,7 +14,7 @@ app:cardCornerRadius="8dp">
 
     <!-- Item de Menu: Baixar Cartões -->
     <TextView
-        android:id="@+id/menu_baixar_voluntarios"
+        android:id="@+id/btnBaixarUsuarios"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
@@ -28,7 +28,7 @@ app:cardCornerRadius="8dp">
 
     <!-- Item de Menu: Gerar Cartões -->
     <TextView
-        android:id="@+id/menu_gerar_cartoes"
+        android:id="@+id/btnGerarCartoes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Gerar Cartões"
@@ -41,7 +41,7 @@ app:cardCornerRadius="8dp">
 
     <!-- Item de Menu: Baixar Cadastro Completo -->
     <TextView
-        android:id="@+id/menu_baixar_cadastros"
+        android:id="@+id/btnBaixarCadastros"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"

@@ -51,19 +51,6 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <Button
-            android:id="@+id/btnGerarCartoes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:drawablePadding="8dp"
-            android:gravity="center"
-            android:padding="16dp"
-            android:text="Gerar Cartões"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
-
-        <Button
             android:id="@+id/btnBaixarCartoes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -102,34 +89,32 @@
             android:gravity="center"
             android:orientation="horizontal"
             android:padding="8dp">
-
-            <Button
-                android:id="@+id/btnBaixarUsuarios"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:drawableRight="@drawable/ic_download"
-                android:drawablePadding="8dp"
-                android:gravity="center"
-                android:padding="16dp"
-                android:text="Usuários"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
-
-            <Button
-                android:id="@+id/btnBaixarCadastros"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:drawableRight="@drawable/ic_download"
-                android:drawablePadding="8dp"
-                android:gravity="center"
-                android:padding="16dp"
-                android:text="Cadastros"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
         </LinearLayout>
     </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMenuListagem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="Menu de opções de cartões"
+        android:src="@drawable/ic_menu_24"
+        app:backgroundTint="@color/primaria"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/white" />
+
+    <include
+        android:id="@+id/menuCustom"
+        layout="@layout/menu_custom_listagem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/fabMenuListagem"
+        app:layout_constraintEnd_toEndOf="@id/fabMenuListagem"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>
