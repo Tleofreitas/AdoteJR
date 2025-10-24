@@ -14,14 +14,15 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.utils.DownloadCartaoWorker
-import com.example.adotejr.utils.ExportadorCadastros
-import com.example.adotejr.utils.ExportadorUsuarios
+import com.example.adotejr.utils.ExportadorExcelWorker
 import com.example.adotejr.utils.GeradorCartaoWorker
 import com.example.adotejr.utils.NetworkUtils
 import java.time.LocalDate
@@ -67,19 +68,16 @@ class ReportsFragment : Fragment() {
             binding.menuCustom.root.isVisible = !isMenuVisible
         }
 
-        // Listener para o item "Relação de Voluntários" dentro do menu customizado
+        // Listener para o item "Relação de Voluntários"
         binding.menuCustom.btnBaixarUsuarios.setOnClickListener {
-            // Esconde o menu antes de executar a ação
             binding.menuCustom.root.isVisible = false
-
-            if(validarNivel()){
-                if (NetworkUtils.conectadoInternet(requireContext())) {
-                    solicitarLocalParaSalvarExcel { uri ->
-                        ExportadorUsuarios(requireContext()).exportarComDados(uri)
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+            if (validarNivel() && NetworkUtils.conectadoInternet(requireContext())) {
+                // Agora chamamos uma função que dispara o Worker
+                solicitarLocalParaSalvarExcel("voluntarios.xlsx") { uri ->
+                    iniciarTrabalhoDeExportacao(uri, ExportadorExcelWorker.TIPO_USUARIOS)
                 }
+            } else {
+                Toast.makeText(requireContext(), "Verifique a conexão com a internet.", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -136,19 +134,18 @@ class ReportsFragment : Fragment() {
             }
         }
 
-        // Listener para o item "Baixar Cartões" dentro do menu customizado
+        // Listener para o item "Baixar Cadastros" dentro do menu customizado
         binding.menuCustom.btnBaixarCadastros.setOnClickListener {
             // Esconde o menu antes de executar a ação
             binding.menuCustom.root.isVisible = false
 
-            if(validarNivel()){
-                if (NetworkUtils.conectadoInternet(requireContext())) {
-                    solicitarLocalParaSalvarExcel { uri ->
-                        ExportadorCadastros(requireContext()).exportarComDados(uri)
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Verifique a conexão com a internet e tente novamente!", Toast.LENGTH_LONG).show()
+            if (validarNivel() && NetworkUtils.conectadoInternet(requireContext())) {
+                // Também chama a função que dispara o Worker
+                solicitarLocalParaSalvarExcel("cadastros.xlsx") { uri ->
+                    iniciarTrabalhoDeExportacao(uri, ExportadorExcelWorker.TIPO_CADASTROS)
                 }
+            } else {
+                Toast.makeText(requireContext(), "Verifique a conexão com a internet.", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -179,14 +176,56 @@ class ReportsFragment : Fragment() {
         }
     }
 
-    private fun solicitarLocalParaSalvarExcel(callback: (Uri) -> Unit) {
+    private fun solicitarLocalParaSalvarExcel(nomeArquivo: String, callback: (Uri) -> Unit) {
         callbackExcel = callback
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            putExtra(Intent.EXTRA_TITLE, "planilha.xlsx")
+            putExtra(Intent.EXTRA_TITLE, nomeArquivo)
         }
         startActivityForResult(intent, CREATE_DOCUMENT_REQUEST_CODE)
+    }
+
+    // disparar o Worker de exportação
+    private fun iniciarTrabalhoDeExportacao(uri: Uri, tipo: String) {
+        val inputData = Data.Builder()
+            .putString(ExportadorExcelWorker.KEY_URI, uri.toString())
+            .putString(ExportadorExcelWorker.KEY_TIPO_EXPORTACAO, tipo)
+            .build()
+
+        val exportRequest = OneTimeWorkRequestBuilder<ExportadorExcelWorker>()
+            .setInputData(inputData)
+            .build()
+
+        val workManager = WorkManager.getInstance(requireContext())
+        workManager.enqueue(exportRequest)
+
+        Toast.makeText(requireContext(), "Iniciando exportação em segundo plano...", Toast.LENGTH_LONG).show()
+
+        // 1. Obtenha o LiveData do estado do trabalho usando seu ID
+        workManager.getWorkInfoByIdLiveData(exportRequest.id)
+            .observe(viewLifecycleOwner, Observer { workInfo ->
+                // 2. Verifique o estado do trabalho sempre que ele for atualizado
+                if (workInfo != null) {
+                    when (workInfo.state) {
+                        WorkInfo.State.SUCCEEDED -> {
+                            // 3. Se for bem-sucedido, mostre o Toast de sucesso!
+                            Toast.makeText(requireContext(), "Exportação concluída com sucesso!", Toast.LENGTH_LONG).show()
+                            // Opcional: Pare de observar para não receber mais atualizações desnecessárias
+                            workManager.getWorkInfoByIdLiveData(exportRequest.id).removeObservers(viewLifecycleOwner)
+                        }
+                        WorkInfo.State.FAILED -> {
+                            // 4. Se falhar, mostre o Toast de erro!
+                            Toast.makeText(requireContext(), "A exportação falhou. Verifique os logs para mais detalhes.", Toast.LENGTH_LONG).show()
+                            workManager.getWorkInfoByIdLiveData(exportRequest.id).removeObservers(viewLifecycleOwner)
+                        }
+                        // Você pode adicionar lógicas para outros estados se quiser (RUNNING, CANCELLED, etc)
+                        else -> {
+                            // O trabalho está enfileirado ou em andamento. Não fazemos nada aqui.
+                        }
+                    }
+                }
+            })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
