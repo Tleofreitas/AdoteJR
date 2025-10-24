@@ -171,7 +171,11 @@ class ListagemFragment : Fragment() {
                         }
 
                         qtdCadastrosFeitos = listaMestraCriancas.size
-                        atualizarEvolucaoCadastro()
+
+                        // ATUALIZAÇÃO: Chamando a nova função de texto
+                        // Ela irá mostrar o estado padrão (total vs limite)
+                        atualizarTextoContagem()
+
                         filtrarListaLocal()
                     }
             }
@@ -185,9 +189,27 @@ class ListagemFragment : Fragment() {
     /**
      * Orquestra todos os filtros locais (chip e texto) e atualiza o RecyclerView.
      */
+    // Substitua esta função também
+
     private fun filtrarListaLocal() {
         val textoBusca = binding.InputPesquisa.editText?.text.toString().trim()
         val semPadrinhoAtivo = binding.chipSPadrinho.isChecked
+
+        // --- LÓGICA DE ATUALIZAÇÃO DO TEXTO ---
+        if (semPadrinhoAtivo) {
+            // Se o chip "S/Padrinho" está ativo, calculamos a contagem específica
+            val qtdSemPadrinho = listaMestraCriancas.count { it.padrinho.isNullOrBlank() }
+            atualizarTextoContagem(
+                label = "S/ Padrinho",
+                valor = qtdSemPadrinho,
+                total = qtdCadastrosFeitos // O total aqui é o número de cadastros feitos
+            )
+        } else {
+            // Se o chip não está ativo, mostramos a contagem padrão (total vs limite)
+            atualizarTextoContagem()
+        }
+        // --- FIM DA LÓGICA DE ATUALIZAÇÃO DO TEXTO ---
+
 
         // 1. Aplica o filtro primário (chip "Sem Padrinho")
         var listaIntermediaria = if (semPadrinhoAtivo) {
@@ -196,25 +218,20 @@ class ListagemFragment : Fragment() {
             listaMestraCriancas
         }
 
-        // 2. Aplica o filtro secundário (busca por texto) sobre a lista já filtrada pelo chip
+        // O resto da função continua exatamente igual...
         val listaFiltradaFinal = if (textoBusca.isNotEmpty()) {
             val primeiroChar = textoBusca.first()
             if (primeiroChar.isDigit()) {
-                // Filtra por número do cartão que COMEÇA COM o texto
                 listaIntermediaria.filter { it.numeroCartao.startsWith(textoBusca) }
             } else {
-                // Filtra por nome que CONTÉM o texto
                 listaIntermediaria.filter { it.nome.contains(textoBusca, ignoreCase = true) }
             }
         } else {
-            // Se não há texto de busca, a lista é o resultado do filtro do chip
             listaIntermediaria
         }
 
-        // 3. Ordena a lista final por nome
         val listaOrdenada = listaFiltradaFinal.sortedBy { it.nome }
 
-        // 4. Atualiza a UI
         if (listaOrdenada.isEmpty()) {
             binding.textEstadoVazio.text = if (textoBusca.isNotEmpty() || semPadrinhoAtivo) {
                 "Nenhum resultado para sua busca."
@@ -231,19 +248,42 @@ class ListagemFragment : Fragment() {
         criancasAdapter.adicionarLista(listaOrdenada)
     }
 
-    private fun atualizarEvolucaoCadastro() {
-        if (quantidadeCriancasTotal.isNotEmpty()) {
-            val qtdCadastrosFeitosD = qtdCadastrosFeitos.toDouble()
-            val quantidadeCriancasTotalD = quantidadeCriancasTotal.toDouble()
-
-            val percentual = if (quantidadeCriancasTotalD > 0) {
-                (qtdCadastrosFeitosD * 100) / quantidadeCriancasTotalD
+    /**
+     * Atualiza o texto de contagem. Pode ser usada para mostrar o total de cadastros
+     * ou uma contagem específica, como a de crianças sem padrinho.
+     *
+     * @param label O texto que descreve a contagem (ex: "Cadastros", "S/ Padrinho").
+     * @param valor O valor principal da contagem (ex: qtd de cadastros, qtd sem padrinho).
+     * @param total O valor total para o cálculo do percentual.
+     */
+    private fun atualizarTextoContagem(
+        label: String? = null,
+        valor: Int? = null,
+        total: Int? = null
+    ) {
+        if (label != null && valor != null && total != null) {
+            // --- Caminho 2: Exibir contagem específica (ex: Sem Padrinho) ---
+            val totalDouble = total.toDouble()
+            val percentual = if (totalDouble > 0) {
+                (valor.toDouble() * 100) / totalDouble
             } else {
                 0.0
             }
+            val percentualFormatado = String.format("%.0f", percentual) // Arredondado para inteiro
+            binding.textCadastroXLimite.text = "$label: $valor / $total ($percentualFormatado%)"
 
-            val percentualFormatado = String.format("%.2f", percentual)
-            binding.textCadastroXLimite.text = "Cadastros: $qtdCadastrosFeitos / $quantidadeCriancasTotal ($percentualFormatado%)"
+        } else {
+            // --- Caminho 1: Exibir contagem padrão (Total de Cadastros vs Limite) ---
+            if (quantidadeCriancasTotal.isNotEmpty()) {
+                val quantidadeCriancasTotalD = quantidadeCriancasTotal.toDouble()
+                val percentual = if (quantidadeCriancasTotalD > 0) {
+                    (qtdCadastrosFeitos.toDouble() * 100) / quantidadeCriancasTotalD
+                } else {
+                    0.0
+                }
+                val percentualFormatado = String.format("%.2f", percentual)
+                binding.textCadastroXLimite.text = "Cadastros: $qtdCadastrosFeitos / $quantidadeCriancasTotal ($percentualFormatado%)"
+            }
         }
     }
 
