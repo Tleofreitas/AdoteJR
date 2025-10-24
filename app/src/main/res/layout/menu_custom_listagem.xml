@@ -12,6 +12,32 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Item de Menu: Gerar Cartões -->
+        <TextView
+            android:id="@+id/btnGerarCartoes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Gerar Cartões"
+            android:padding="16dp"
+            android:minWidth="200dp"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnBaixarCartoes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:drawableEnd="@drawable/ic_download"
+            android:drawableTint="#FF5722"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:text="Baixar Cartões" />
+
         <!-- Item de Menu: Padrinhos -->
         <TextView
             android:id="@+id/btnControlePadrinhos"
