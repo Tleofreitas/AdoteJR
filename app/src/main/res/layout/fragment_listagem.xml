@@ -56,39 +56,6 @@
                 android:textColor="@color/azulEscuro"
                 android:textStyle="bold" />
 
-<!--            <RadioGroup-->
-<!--                android:id="@+id/rgFiltroTipo"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:orientation="horizontal">-->
-
-<!--                <RadioButton-->
-<!--                    android:id="@+id/rbNome"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:checked="true"-->
-<!--                    android:paddingRight="8dp"-->
-<!--                    android:text="Nome"-->
-<!--                    android:textColor="@color/black" />-->
-
-<!--                <RadioButton-->
-<!--                    android:id="@+id/rbCpf"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:paddingRight="8dp"-->
-<!--                    android:text="CPF"-->
-<!--                    android:textColor="@color/black" />-->
-
-<!--                <RadioButton-->
-<!--                    android:id="@+id/rbNCartao"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:paddingRight="8dp"-->
-<!--                    android:text="N° Cartão"-->
-<!--                    android:textColor="@color/black" />-->
-<!--            </RadioGroup>-->
-            <!-- Dentro do seu LinearLayout (ou CardView) de filtros -->
-
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupFiltro"
                 android:layout_width="wrap_content"
@@ -174,6 +141,32 @@
         tools:listitem="@layout/item_cadastros">
 
     </androidx.recyclerview.widget.RecyclerView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMenuListagem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="Menu de opções de listagem"
+        android:src="@drawable/ic_menu_24"
+        app:backgroundTint="@color/primaria"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/white" />
+
+    <include
+        android:id="@+id/menuCustom"
+        layout="@layout/menu_custom_listagem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/fabMenuListagem"
+        app:layout_constraintEnd_toEndOf="@id/fabMenuListagem"
+        tools:visibility="visible" />
 
     <ProgressBar
         android:id="@+id/progressBarListagem"
