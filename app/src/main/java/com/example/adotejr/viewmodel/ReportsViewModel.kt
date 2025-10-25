@@ -1,5 +1,7 @@
 package com.example.adotejr.viewmodel
 
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.formatter.PercentFormatter
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,6 +10,9 @@ import com.example.adotejr.model.Crianca
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 
 // 1. A classe herda de ViewModel. Isso dá a ela "superpoderes",
 //    como sobreviver a rotações de tela.
@@ -54,6 +59,35 @@ class ReportsViewModel : ViewModel() {
                     _estadoDaTela.value = EstadoDaTela.ERRO
                 }
         }
+    }
+
+    // --- CÓDIGO PARA O GRÁFICO DE GÊNERO ---
+    // 1. O novo "prato" que conterá os dados prontos para o gráfico de pizza.
+    private val _dadosGraficoSexo = MutableLiveData<PieData>()
+    val dadosGraficoSexo: LiveData<PieData> = _dadosGraficoSexo
+
+    // 2. A função que o Fragment chamará para processar os dados.
+    fun processarDadosGraficoSexo(lista: List<Crianca>, cores: List<Int>, pieChart: PieChart) {
+        // Conta quantos são meninos e meninas
+        val contagemPorSexo = lista.groupingBy { it.sexo }.eachCount()
+        val meninos = contagemPorSexo["Masculino"] ?: 0
+        val meninas = contagemPorSexo["Feminino"] ?: 0
+
+        // Cria as "fatias" da pizza
+        val entradas = mutableListOf<PieEntry>()
+        entradas.add(PieEntry(meninos.toFloat(), "Meninos"))
+        entradas.add(PieEntry(meninas.toFloat(), "Meninas"))
+
+        // Agrupa as fatias em um "conjunto de dados" (DataSet)
+        val dataSet = PieDataSet(entradas, "")
+        dataSet.colors = cores // Define as cores que o Fragment nos passou
+        dataSet.valueTextSize = 12f // Tamanho do texto dos valores
+
+        // Coloca o conjunto de dados no "prato" final (PieData)
+        val dadosFinais = PieData(dataSet)
+        // Define que os valores devem ser formatados como porcentagem (ex: "45.8 %")
+        dadosFinais.setValueFormatter(PercentFormatter(pieChart)) // Passamos a referência do gráfico
+        _dadosGraficoSexo.value = dadosFinais // O prato está pronto!
     }
 }
 

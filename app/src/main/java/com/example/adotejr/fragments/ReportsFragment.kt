@@ -1,5 +1,6 @@
 package com.example.adotejr.fragments
 
+import com.github.mikephil.charting.data.PieData
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -19,6 +20,7 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.utils.ExportadorExcelWorker
 import com.example.adotejr.utils.NetworkUtils
@@ -139,9 +141,46 @@ class ReportsFragment : Fragment() {
         // Observador para a lista de crianças.
         viewModel.listaCriancas.observe(viewLifecycleOwner) { lista ->
             if (lista.isNotEmpty()) {
-                Toast.makeText(requireContext(), "${lista.size} crianças carregadas!", Toast.LENGTH_SHORT).show()
-                // Em breve, aqui chamaremos as funções para criar os gráficos.
+                // Define as cores que queremos para o gráfico
+                val coresSexo = listOf(
+                    requireContext().getColor(R.color.grafico_azul_menino), // Cor para Meninos
+                    requireContext().getColor(R.color.grafico_rosa_menina)  // Cor para Meninas
+                )
+                // Pede ao ViewModel para processar os dados para o gráfico de sexo
+                viewModel.processarDadosGraficoSexo(lista, coresSexo, binding.pieChartSexo)
             }
+        }
+
+        // --- NOVO OBSERVADOR PARA OS DADOS DO GRÁFICO ---
+        viewModel.dadosGraficoSexo.observe(viewLifecycleOwner) { dadosDoGrafico ->
+            // Quando os dados processados do gráfico chegam, configuramos a view
+            configurarGraficoSexo(dadosDoGrafico)
+        }
+    }
+
+    private fun configurarGraficoSexo(data: PieData) {
+        binding.pieChartSexo.apply {
+            // 1. Passa os dados para o gráfico
+            this.data = data
+
+            // 2. Configurações de Estilo e Aparência
+            description.isEnabled = false // Remove a descrição padrão
+            legend.isEnabled = true // Habilita a legenda
+            legend.setDrawInside(false)
+            legend.form = com.github.mikephil.charting.components.Legend.LegendForm.SQUARE // Deixa o ícone da cor quadrado
+            setUsePercentValues(true) // Mostra os valores em porcentagem
+            setEntryLabelTextSize(12f) // Tamanho do texto das fatias (Meninos, Meninas)
+            data.setValueTextColor(requireContext().getColor(R.color.white)) // Define a cor do número para branco
+            setEntryLabelColor(requireContext().getColor(R.color.white)) // Cor do texto das fatias
+            centerText = "Gênero" // Texto no centro do "buraco"
+            setCenterTextSize(16f)
+            setDrawHoleEnabled(true) // Desenha o buraco no meio
+            holeRadius = 40f
+            transparentCircleRadius = 45f
+
+            // 3. Animação e Atualização
+            animateY(1000) // Animação de 1 segundo
+            invalidate() // Manda o gráfico se redesenhar
         }
     }
 

@@ -12,6 +12,11 @@
     <!-- <color name="vermelhoTomate">#FF6347</color> -->
     <color name="azul">#488399</color>
     <color name="cinza">#ffe8cd</color>
+    <!-- NOVAS CORES PARA OS GRÁFICOS -->
+    <color name="grafico_azul_menino">#0077B6</color> <!-- Um azul vibrante, mas sério -->
+    <color name="grafico_rosa_menina">#E56B6F</color> <!-- Um rosa/coral suave que combina com o laranja -->
+
+
 <!--    #ffd19b-->
 <!--    #DCDCDC-->
 
