@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
@@ -21,16 +22,18 @@ import androidx.work.WorkManager
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.utils.ExportadorExcelWorker
 import com.example.adotejr.utils.NetworkUtils
+import com.example.adotejr.viewmodel.EstadoDaTela
+import com.example.adotejr.viewmodel.ReportsViewModel
 import java.time.LocalDate
 
 class ReportsFragment : Fragment() {
     private lateinit var binding: FragmentReportsBinding
     private var callbackExcel: ((Uri) -> Unit)? = null
-    private var ano = LocalDate.now().year
     private val CREATE_DOCUMENT_REQUEST_CODE = 1002
     private var nivelDoUser = ""
 
-    // Launcher para pedir permissão de notificação
+    private val viewModel: ReportsViewModel by viewModels()
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (!isGranted) {
@@ -38,35 +41,50 @@ class ReportsFragment : Fragment() {
             }
         }
 
-    private fun validarNivel(): Boolean {
-        if(nivelDoUser == "Admin"){
-            return true
-        } else {
-            Toast.makeText(requireContext(), "Ação não permitida para seu usuário", Toast.LENGTH_LONG).show()
-            return false
-        }
-    }
+    // --- CICLO DE VIDA DO FRAGMENT ---
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Responsabilidade ÚNICA: Criar a view e obter argumentos.
         binding = FragmentReportsBinding.inflate(inflater, container, false)
         nivelDoUser = arguments?.getString("nivel").toString()
+        return binding.root
+    }
 
-        pedirPermissaoDeNotificacao() // Pede a permissão ao criar a tela
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
+        // Ponto central para configurar a UI e iniciar a lógica.
+        pedirPermissaoDeNotificacao()
+        configurarListenersDeClique()
+        configurarObservadores()
+
+        // Faz o pedido inicial dos dados para os gráficos.
+        val anoAtual = LocalDate.now().year
+        viewModel.carregarDadosDoAno(anoAtual)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CREATE_DOCUMENT_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            data?.data?.let { uri -> callbackExcel?.invoke(uri) }
+        }
+    }
+
+    // --- CONFIGURAÇÃO DA UI E OBSERVERS ---
+
+    private fun configurarListenersDeClique() {
+        // Listener para o FAB principal, que mostra/esconde o menu.
         binding.fabMenuListagem.setOnClickListener {
-            // Alterna a visibilidade do menu customizado
-            val isMenuVisible = binding.menuCustom.root.isVisible
-            binding.menuCustom.root.isVisible = !isMenuVisible
+            binding.menuCustom.root.isVisible = !binding.menuCustom.root.isVisible
         }
 
-        // Listener para o item "Relação de Voluntários"
+        // Listener para o item "Relação de Voluntários".
         binding.menuCustom.btnBaixarUsuarios.setOnClickListener {
             binding.menuCustom.root.isVisible = false
             if (validarNivel() && NetworkUtils.conectadoInternet(requireContext())) {
-                // Agora chamamos uma função que dispara o Worker
                 solicitarLocalParaSalvarExcel("voluntarios.xlsx") { uri ->
                     iniciarTrabalhoDeExportacao(uri, ExportadorExcelWorker.TIPO_USUARIOS)
                 }
@@ -75,13 +93,10 @@ class ReportsFragment : Fragment() {
             }
         }
 
-        // Listener para o item "Baixar Cadastros" dentro do menu customizado
+        // Listener para o item "Baixar Cadastros".
         binding.menuCustom.btnBaixarCadastros.setOnClickListener {
-            // Esconde o menu antes de executar a ação
             binding.menuCustom.root.isVisible = false
-
             if (validarNivel() && NetworkUtils.conectadoInternet(requireContext())) {
-                // Também chama a função que dispara o Worker
                 solicitarLocalParaSalvarExcel("cadastros.xlsx") { uri ->
                     iniciarTrabalhoDeExportacao(uri, ExportadorExcelWorker.TIPO_CADASTROS)
                 }
@@ -89,8 +104,56 @@ class ReportsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Verifique a conexão com a internet.", Toast.LENGTH_LONG).show()
             }
         }
+    }
 
-        return binding.root
+    private fun configurarObservadores() {
+        // Observador para o estado da tela (Carregando, Sucesso, Erro, Vazio).
+        viewModel.estadoDaTela.observe(viewLifecycleOwner) { estado ->
+            when (estado) {
+                EstadoDaTela.CARREGANDO -> {
+                    binding.progressBarReports.isVisible = true
+                    binding.groupDashboard.isVisible = false
+                    binding.textEstadoVazioReports.isVisible = false
+                }
+                EstadoDaTela.SUCESSO -> {
+                    binding.progressBarReports.isVisible = false
+                    binding.groupDashboard.isVisible = true
+                    binding.textEstadoVazioReports.isVisible = false
+                }
+                EstadoDaTela.ERRO -> {
+                    binding.progressBarReports.isVisible = false
+                    binding.groupDashboard.isVisible = false
+                    binding.textEstadoVazioReports.text = "Ocorreu um erro ao carregar os dados."
+                    binding.textEstadoVazioReports.isVisible = true
+                }
+                EstadoDaTela.VAZIO -> {
+                    binding.progressBarReports.isVisible = false
+                    binding.groupDashboard.isVisible = false
+                    binding.textEstadoVazioReports.text = "Nenhum dado encontrado para este ano."
+                    binding.textEstadoVazioReports.isVisible = true
+                }
+                null -> {}
+            }
+        }
+
+        // Observador para a lista de crianças.
+        viewModel.listaCriancas.observe(viewLifecycleOwner) { lista ->
+            if (lista.isNotEmpty()) {
+                Toast.makeText(requireContext(), "${lista.size} crianças carregadas!", Toast.LENGTH_SHORT).show()
+                // Em breve, aqui chamaremos as funções para criar os gráficos.
+            }
+        }
+    }
+
+    // --- LÓGICA DE NEGÓCIO E FUNÇÕES DE SUPORTE ---
+
+    private fun validarNivel(): Boolean {
+        if (nivelDoUser == "Admin") {
+            return true
+        } else {
+            Toast.makeText(requireContext(), "Ação não permitida para seu usuário", Toast.LENGTH_LONG).show()
+            return false
+        }
     }
 
     private fun pedirPermissaoDeNotificacao() {
@@ -109,7 +172,6 @@ class ReportsFragment : Fragment() {
         startActivityForResult(intent, CREATE_DOCUMENT_REQUEST_CODE)
     }
 
-    // disparar o Worker de exportação
     private fun iniciarTrabalhoDeExportacao(uri: Uri, tipo: String) {
         val inputData = Data.Builder()
             .putString(ExportadorExcelWorker.KEY_URI, uri.toString())
@@ -125,41 +187,21 @@ class ReportsFragment : Fragment() {
 
         Toast.makeText(requireContext(), "Iniciando exportação em segundo plano...", Toast.LENGTH_LONG).show()
 
-        // 1. Obtenha o LiveData do estado do trabalho usando seu ID
         workManager.getWorkInfoByIdLiveData(exportRequest.id)
             .observe(viewLifecycleOwner, Observer { workInfo ->
-                // 2. Verifique o estado do trabalho sempre que ele for atualizado
                 if (workInfo != null) {
                     when (workInfo.state) {
                         WorkInfo.State.SUCCEEDED -> {
-                            // 3. Se for bem-sucedido, mostre o Toast de sucesso!
                             Toast.makeText(requireContext(), "Exportação concluída com sucesso!", Toast.LENGTH_LONG).show()
-                            // Opcional: Pare de observar para não receber mais atualizações desnecessárias
                             workManager.getWorkInfoByIdLiveData(exportRequest.id).removeObservers(viewLifecycleOwner)
                         }
                         WorkInfo.State.FAILED -> {
-                            // 4. Se falhar, mostre o Toast de erro!
                             Toast.makeText(requireContext(), "A exportação falhou. Verifique os logs para mais detalhes.", Toast.LENGTH_LONG).show()
                             workManager.getWorkInfoByIdLiveData(exportRequest.id).removeObservers(viewLifecycleOwner)
                         }
-                        // Você pode adicionar lógicas para outros estados se quiser (RUNNING, CANCELLED, etc)
-                        else -> {
-                            // O trabalho está enfileirado ou em andamento. Não fazemos nada aqui.
-                        }
+                        else -> {}
                     }
                 }
             })
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        when (requestCode) {
-            CREATE_DOCUMENT_REQUEST_CODE -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    data?.data?.let { uri -> callbackExcel?.invoke(uri) }
-                }
-            }
-        }
     }
 }
