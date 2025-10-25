@@ -69,4 +69,12 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Para a biblioteca de gráficos
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Para o ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2") // Versão pode variar
+    implementation("androidx.fragment:fragment-ktx:1.6.1") // Ajuda a conectar o Fragment ao ViewModel
+
 }
