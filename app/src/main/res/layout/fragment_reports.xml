@@ -104,7 +104,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="PCD X Não PCD"
+                        android:text="PCD"
                         android:textStyle="bold"
                         android:layout_marginTop="8dp"/>
                     <com.github.mikephil.charting.charts.PieChart
@@ -114,127 +114,36 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Linha 2: Gráfico de Barras - Faixa Etária Geral -->
+            <!-- Linha 2: Gráfico de Barras - Faixa Etária -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_faixa_etaria_geral"
+                android:id="@+id/card_faixa_etaria_agrupado"
                 android:layout_width="0dp"
-                android:layout_height="350dp"
+                android:layout_height="400dp"
                 android:layout_margin="8dp"
                 app:cardElevation="4dp"
                 app:cardCornerRadius="8dp"
-                app:layout_constraintTop_toBottomOf="@id/card_sexo"
+                app:layout_constraintTop_toBottomOf="@id/card_pcd"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <LinearLayout
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="8dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Faixa Etária por Gênero"
+                    android:textStyle="bold"
+                    android:layout_gravity="center_horizontal"/>
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/barChartFaixaEtariaAgrupado"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Quantidade por Faixa Etária (Geral )"
-                        android:textStyle="bold"
-                        android:layout_gravity="center_horizontal"/>
-                    <com.github.mikephil.charting.charts.BarChart
-                        android:id="@+id/barChartFaixaEtariaGeral"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Linha 3: Gráfico de Barras - Faixa Etária Meninos -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_faixa_etaria_meninos"
-                android:layout_width="0dp"
-                android:layout_height="350dp"
-                android:layout_margin="8dp"
-                app:cardElevation="4dp"
-                app:cardCornerRadius="8dp"
-                app:layout_constraintTop_toBottomOf="@id/card_faixa_etaria_geral"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Faixa Etária - Meninos"
-                        android:textStyle="bold"
-                        android:layout_gravity="center_horizontal"/>
-                    <com.github.mikephil.charting.charts.BarChart
-                        android:id="@+id/barChartFaixaEtariaMeninos"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Linha 4: Gráfico de Barras - Faixa Etária Meninas -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_faixa_etaria_meninas"
-                android:layout_width="0dp"
-                android:layout_height="350dp"
-                android:layout_margin="8dp"
-                app:cardElevation="4dp"
-                app:cardCornerRadius="8dp"
-                app:layout_constraintTop_toBottomOf="@id/card_faixa_etaria_meninos"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Faixa Etária - Meninas"
-                        android:textStyle="bold"
-                        android:layout_gravity="center_horizontal"/>
-                    <com.github.mikephil.charting.charts.BarChart
-                        android:id="@+id/barChartFaixaEtariaMeninas"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ÚLTIMA LINHA: Gráfico de Apadrinhamento -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_apadrinhamento"
-                android:layout_width="0dp"
-                android:layout_height="280dp"
-                android:layout_margin="8dp"
-                app:cardElevation="4dp"
-                app:cardCornerRadius="8dp"
-                app:layout_constraintTop_toBottomOf="@id/card_faixa_etaria_meninas"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Status de Apadrinhamento"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
-                    <com.github.mikephil.charting.charts.PieChart
-                        android:id="@+id/pieChartApadrinhamento"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
     <!-- SEU FAB E MENU CUSTOMIZADO PERMANECEM INTOCADOS -->

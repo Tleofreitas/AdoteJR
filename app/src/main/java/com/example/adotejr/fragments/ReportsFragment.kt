@@ -1,6 +1,5 @@
 package com.example.adotejr.fragments
 
-import com.github.mikephil.charting.data.PieData
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -26,6 +25,9 @@ import com.example.adotejr.utils.ExportadorExcelWorker
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.viewmodel.EstadoDaTela
 import com.example.adotejr.viewmodel.ReportsViewModel
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import java.time.LocalDate
 
 class ReportsFragment : Fragment() {
@@ -76,7 +78,6 @@ class ReportsFragment : Fragment() {
     }
 
     // --- CONFIGURAÇÃO DA UI E OBSERVERS ---
-
     private fun configurarListenersDeClique() {
         // Listener para o FAB principal, que mostra/esconde o menu.
         binding.fabMenuListagem.setOnClickListener {
@@ -141,20 +142,43 @@ class ReportsFragment : Fragment() {
         // Observador para a lista de crianças.
         viewModel.listaCriancas.observe(viewLifecycleOwner) { lista ->
             if (lista.isNotEmpty()) {
-                // Define as cores que queremos para o gráfico
+                // --- Processamento para o Gráfico de Gênero ---
                 val coresSexo = listOf(
                     requireContext().getColor(R.color.grafico_azul_menino), // Cor para Meninos
                     requireContext().getColor(R.color.grafico_rosa_menina)  // Cor para Meninas
                 )
                 // Pede ao ViewModel para processar os dados para o gráfico de sexo
                 viewModel.processarDadosGraficoSexo(lista, coresSexo, binding.pieChartSexo)
+
+                // --- Processamento para o Gráfico PCD ---
+                val coresPcd = listOf(
+                    requireContext().getColor(R.color.grafico_roxo),
+                    requireContext().getColor(R.color.grafico_verde)
+                )
+                viewModel.processarDadosGraficoPcd(lista, coresPcd, binding.pieChartPcd)
+
+                // --- Processamento para o Gráfico Agrupado ---
+                viewModel.processarDadosFaixaEtariaAgrupado(
+                    lista,
+                    requireContext().getColor(R.color.grafico_azul_menino),
+                    requireContext().getColor(R.color.grafico_rosa_menina)
+                )
             }
         }
 
-        // --- NOVO OBSERVADOR PARA OS DADOS DO GRÁFICO ---
+        // Observador para os dados do gráfico de Gênero
         viewModel.dadosGraficoSexo.observe(viewLifecycleOwner) { dadosDoGrafico ->
-            // Quando os dados processados do gráfico chegam, configuramos a view
             configurarGraficoSexo(dadosDoGrafico)
+        }
+
+        // --- Observador para os dados do Gráfico PCD ---
+        viewModel.dadosGraficoPcd.observe(viewLifecycleOwner) { dadosDoGrafico ->
+            configurarGraficoPcd(dadosDoGrafico)
+        }
+
+        // --- Observador para o Gráfico Agrupado ---
+        viewModel.dadosGraficoFaixaEtariaAgrupado.observe(viewLifecycleOwner) { dadosDoGrafico ->
+            configurarGraficoFaixaEtariaAgrupado(dadosDoGrafico)
         }
     }
 
@@ -165,9 +189,13 @@ class ReportsFragment : Fragment() {
 
             // 2. Configurações de Estilo e Aparência
             description.isEnabled = false // Remove a descrição padrão
-            legend.isEnabled = true // Habilita a legenda
-            legend.setDrawInside(false)
-            legend.form = com.github.mikephil.charting.components.Legend.LegendForm.SQUARE // Deixa o ícone da cor quadrado
+            legend.apply {
+                isEnabled = true
+                verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
+                horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+                orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
+                setDrawInside(false)
+            }
             setUsePercentValues(true) // Mostra os valores em porcentagem
             setEntryLabelTextSize(12f) // Tamanho do texto das fatias (Meninos, Meninas)
             data.setValueTextColor(requireContext().getColor(R.color.white)) // Define a cor do número para branco
@@ -181,6 +209,86 @@ class ReportsFragment : Fragment() {
             // 3. Animação e Atualização
             animateY(1000) // Animação de 1 segundo
             invalidate() // Manda o gráfico se redesenhar
+        }
+    }
+
+    private fun configurarGraficoPcd(data: PieData) {
+        binding.pieChartPcd.apply {
+            // 1. Passa os dados para o gráfico
+            this.data = data
+            data.setValueTextColor(requireContext().getColor(R.color.white)) // Números em branco
+
+            // 2. Configurações de Estilo e Aparência
+            description.isEnabled = false
+            legend.apply {
+                isEnabled = true
+                verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
+                horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+                orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
+                setDrawInside(false)
+            }
+            setUsePercentValues(true)
+            setEntryLabelTextSize(12f)
+            setEntryLabelColor(requireContext().getColor(R.color.white))
+            centerText = "PCD" // Texto no centro
+            setCenterTextSize(16f)
+            setDrawHoleEnabled(true)
+            holeRadius = 40f
+            transparentCircleRadius = 45f
+
+            // 3. Animação e Atualização
+            animateY(1000)
+            invalidate()
+        }
+    }
+
+    private fun configurarGraficoFaixaEtariaAgrupado(data: BarData) {
+        // Configurações para agrupar as barras
+        val groupSpace = 0.4f
+        val barSpace = 0.05f // Espaço entre barras do mesmo grupo
+        val barWidth = 0.25f // Largura de cada barra
+        // (barWidth + barSpace) * 2 + groupSpace = 1.0
+
+        data.barWidth = barWidth
+
+        binding.barChartFaixaEtariaAgrupado.apply {
+            this.data = data
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setDrawBarShadow(false)
+
+            // Eixo X
+            xAxis.apply {
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                axisMinimum = 0f
+                // Centraliza os labels entre os grupos de barras
+                // Acesse a lista de labels através do viewModel
+                axisMaximum = viewModel.labelsFaixaEtaria.size.toFloat()
+                setCenterAxisLabels(true)
+                valueFormatter = IndexAxisValueFormatter(viewModel.labelsFaixaEtaria)
+            }
+
+            // Eixo Y
+            axisLeft.setDrawGridLines(true)
+            axisLeft.axisMinimum = 0f
+            axisRight.isEnabled = false
+
+            // Legenda
+            legend.apply {
+                isEnabled = true
+                verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
+                horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+                orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
+                setDrawInside(false)
+            }
+
+            // Agrupamento
+            groupBars(0f, groupSpace, barSpace)
+
+            animateY(1500)
+            invalidate()
         }
     }
 

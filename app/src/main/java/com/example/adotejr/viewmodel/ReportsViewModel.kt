@@ -7,6 +7,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.adotejr.model.Crianca
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -62,7 +65,7 @@ class ReportsViewModel : ViewModel() {
     }
 
     // --- CÓDIGO PARA O GRÁFICO DE GÊNERO ---
-    // 1. O novo "prato" que conterá os dados prontos para o gráfico de pizza.
+    // 1. "prato" que conterá os dados prontos para o gráfico de pizza.
     private val _dadosGraficoSexo = MutableLiveData<PieData>()
     val dadosGraficoSexo: LiveData<PieData> = _dadosGraficoSexo
 
@@ -88,6 +91,79 @@ class ReportsViewModel : ViewModel() {
         // Define que os valores devem ser formatados como porcentagem (ex: "45.8 %")
         dadosFinais.setValueFormatter(PercentFormatter(pieChart)) // Passamos a referência do gráfico
         _dadosGraficoSexo.value = dadosFinais // O prato está pronto!
+    }
+
+    // --- CÓDIGO PARA O GRÁFICO PCD ---
+    // 1. "prato" para os dados do gráfico PCD.
+    private val _dadosGraficoPcd = MutableLiveData<PieData>()
+    val dadosGraficoPcd: LiveData<PieData> = _dadosGraficoPcd
+
+    // 2. Processar os dados de PCD.
+    fun processarDadosGraficoPcd(lista: List<Crianca>, cores: List<Int>, pieChart: PieChart) {
+        // Conta quantos são "Sim" e quantos são "Não"
+        val contagemPorPcd = lista.groupingBy { it.especial }.eachCount()
+        val sim = contagemPorPcd["Sim"] ?: 0
+        val nao = contagemPorPcd["Não"] ?: 0
+
+        // Cria as "fatias" da pizza
+        val entradas = mutableListOf<PieEntry>()
+        entradas.add(PieEntry(sim.toFloat(), "Sim"))
+        entradas.add(PieEntry(nao.toFloat(), "Não"))
+
+        // Agrupa as fatias em um DataSet (com label vazio, como aprendemos)
+        val dataSet = PieDataSet(entradas, "")
+        dataSet.colors = cores
+        dataSet.valueTextSize = 12f
+
+        // Prepara os dados finais com o formatador de porcentagem
+        val dadosFinais = PieData(dataSet)
+        dadosFinais.setValueFormatter(PercentFormatter(pieChart))
+
+        // Coloca o prato pronto no balcão
+        _dadosGraficoPcd.value = dadosFinais
+    }
+
+    // --- CÓDIGO PARA O GRÁFICO DE BARRAS AGRUPADO ---
+    private val _dadosGraficoFaixaEtariaAgrupado = MutableLiveData<BarData>()
+    val dadosGraficoFaixaEtariaAgrupado: LiveData<BarData> = _dadosGraficoFaixaEtariaAgrupado
+
+    val labelsFaixaEtaria = listOf("0-3 anos", "4-6 anos", "7-9 anos", "10-12 anos", "13-15 anos")
+
+    fun processarDadosFaixaEtariaAgrupado(lista: List<Crianca>, corMeninos: Int, corMeninas: Int) {
+        val contagemMeninos = mutableMapOf("0-3 anos" to 0, "4-6 anos" to 0, "7-9 anos" to 0, "10-12 anos" to 0, "13-15 anos" to 0)
+        val contagemMeninas = mutableMapOf("0-3 anos" to 0, "4-6 anos" to 0, "7-9 anos" to 0, "10-12 anos" to 0, "13-15 anos" to 0)
+
+        for (crianca in lista) {
+            val faixa = when (crianca.idade) {
+                in 0..3 -> "0-3 anos"    // Idades 0, 1, 2, 3
+                in 4..6 -> "4-6 anos"    // Idades 4, 5, 6
+                in 7..9 -> "7-9 anos"    // Idades 7, 8, 9 (Corrigido para "6-9 anos" para manter o label)
+                in 10..12 -> "10-12 anos"   // Idades 10, 11, 12 (Corrigido para "9-12 anos")
+                in 13..15 -> "13-15 anos"  // Idades 13, 14, 15
+                else -> null
+            }
+
+            if (faixa != null) {
+                if (crianca.sexo == "Masculino") {
+                    contagemMeninos[faixa] = contagemMeninos[faixa]!! + 1
+                } else if (crianca.sexo == "Feminino") {
+                    contagemMeninas[faixa] = contagemMeninas[faixa]!! + 1
+                }
+            }
+        }
+
+        val entradasMeninos = labelsFaixaEtaria.mapIndexed { index, label ->
+            BarEntry(index.toFloat(), contagemMeninos[label]?.toFloat() ?: 0f)
+        }
+        val entradasMeninas = labelsFaixaEtaria.mapIndexed { index, label ->
+            BarEntry(index.toFloat(), contagemMeninas[label]?.toFloat() ?: 0f)
+        }
+
+        val dataSetMeninos = BarDataSet(entradasMeninos, "Meninos").apply { color = corMeninos }
+        val dataSetMeninas = BarDataSet(entradasMeninas, "Meninas").apply { color = corMeninas }
+
+        val dadosFinais = BarData(dataSetMeninos, dataSetMeninas)
+        _dadosGraficoFaixaEtariaAgrupado.value = dadosFinais
     }
 }
 

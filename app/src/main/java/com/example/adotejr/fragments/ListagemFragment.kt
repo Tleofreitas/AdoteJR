@@ -152,52 +152,66 @@ class ListagemFragment : Fragment() {
     /**
      * Orquestra a busca no Firestore e a atualização em lote.
      */
+    // Em ListagemFragment.kt
+
     private fun processarAtualizacaoPadrinhos(numerosInput: String, nomePadrinho: String) {
         if (!NetworkUtils.conectadoInternet(requireContext())) {
             Toast.makeText(requireContext(), "Sem conexão com a internet.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Converte a string de input (ex: "1, 5-7") em uma lista de números formatados (ex: ["0001", "0005", "0006", "0007"])
-        val listaNumerosCartao = processarInputParaNumeros(numerosInput)
+        val listaCompletaNumeros = processarInputParaNumeros(numerosInput)
 
-        if (listaNumerosCartao.isEmpty()) {
+        if (listaCompletaNumeros.isEmpty()) {
             Toast.makeText(requireContext(), "Formato de números de cartão inválido.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        Toast.makeText(requireContext(), "Buscando cartões para atualizar...", Toast.LENGTH_SHORT).show()
+        // "Quebra" a lista grande em listas menores de até 30 itens cada.
+        val pedacosDaLista = listaCompletaNumeros.chunked(30)
+        var cadastrosAtualizadosNoTotal = 0
+        var falhas = 0
 
-        // Busca no Firestore todos os documentos cujo 'numeroCartao' está na nossa lista
-        firestore.collection("Criancas")
-            .whereIn("numeroCartao", listaNumerosCartao)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    Toast.makeText(requireContext(), "Nenhum cartão encontrado com os números fornecidos.", Toast.LENGTH_LONG).show()
-                    return@addOnSuccessListener
-                }
+        Toast.makeText(requireContext(), "Iniciando atualização em ${pedacosDaLista.size} lotes...", Toast.LENGTH_SHORT).show()
 
-                // Usa um WriteBatch para atualizar todos os documentos encontrados de uma só vez
-                val batch = firestore.batch()
-                querySnapshot.documents.forEach { document ->
-                    batch.update(document.reference, "padrinho", nomePadrinho)
-                }
+        // Itera sobre cada "pedaço" da lista
+        pedacosDaLista.forEach { pedaco ->
+            firestore.collection("Criancas")
+                .whereIn("numeroCartao", pedaco) // Agora a consulta usa uma lista pequena
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    if (!querySnapshot.isEmpty) {
+                        val batch = firestore.batch()
+                        querySnapshot.documents.forEach { document ->
+                            batch.update(document.reference, "padrinho", nomePadrinho)
+                        }
 
-                // Envia o lote para o Firestore
-                batch.commit()
-                    .addOnSuccessListener {
-                        Toast.makeText(requireContext(), "${querySnapshot.size()} cadastro(s) atualizado(s) com sucesso!", Toast.LENGTH_LONG).show()
+                        batch.commit().addOnSuccessListener {
+                            cadastrosAtualizadosNoTotal += querySnapshot.size()
+                        }.addOnFailureListener {
+                            falhas++
+                        }
                     }
-                    .addOnFailureListener { e ->
-                        Log.e("FirestoreBatch", "Erro ao atualizar padrinhos", e)
-                        Toast.makeText(requireContext(), "Erro ao atualizar. Tente novamente.", Toast.LENGTH_LONG).show()
-                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FirestoreQuery", "Erro ao buscar lote de cartões", e)
+                    falhas++
+                }
+        }
+
+        // ATENÇÃO: Como as chamadas são assíncronas, o feedback final pode não ser 100% preciso
+        // sobre o tempo, mas é uma boa indicação para o usuário.
+        // Uma solução mais complexa envolveria Coroutines com `await()` ou `CountDownLatch`.
+        // Por simplicidade e eficácia, um Toast genérico ao final é suficiente.
+        // Usamos um Handler para dar tempo das operações começarem.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            if (falhas > 0) {
+                Toast.makeText(requireContext(), "Atualização concluída com algumas falhas. Verifique os dados.", Toast.LENGTH_LONG).show()
+            } else {
+                // Este Toast pode aparecer antes de todos os lotes terminarem, mas confirma que o processo foi disparado.
+                Toast.makeText(requireContext(), "Processo de atualização enviado. Os dados serão atualizados em breve.", Toast.LENGTH_LONG).show()
             }
-            .addOnFailureListener { e ->
-                Log.e("FirestoreQuery", "Erro ao buscar cartões", e)
-                Toast.makeText(requireContext(), "Erro ao buscar cartões. Tente novamente.", Toast.LENGTH_LONG).show()
-            }
+        }, 3000) // Atraso de 3 segundos para dar um feedback.
     }
 
     private fun processarInputParaNumeros(numerosInput: String): List<String> {
@@ -205,7 +219,17 @@ class ListagemFragment : Fragment() {
         val listaNumeros = mutableListOf<String>()
 
         when {
-            // Caso 1: Intervalo (ex: "10-15")
+            // 1. PRIMEIRO, verifica se é uma lista separada por vírgulas.
+            inputNormalizado.contains(",") -> {
+                val partes = inputNormalizado.split(",").map { it.trim() }
+                partes.forEach { numeroStr ->
+                    if (numeroStr.isNotEmpty()) {
+                        listaNumeros.add(numeroStr)
+                    }
+                }
+            }
+
+            // 2. SÓ SE NÃO FOR UMA LISTA, verifica se é um intervalo.
             inputNormalizado.contains("-") -> {
                 val partes = inputNormalizado.split("-").map { it.trim() }
                 val inicio = partes.getOrNull(0)?.toIntOrNull()
@@ -213,26 +237,18 @@ class ListagemFragment : Fragment() {
 
                 if (inicio != null && fim != null && inicio <= fim) {
                     for (i in inicio..fim) {
-                        // Adiciona o número como string, sem formatação. Ex: "10", "11", "12"...
                         listaNumeros.add(i.toString())
                     }
-                }
-            }
-
-            // Caso 2: Lista com vírgula (ex: "1, 25, 325")
-            inputNormalizado.contains(",") -> {
-                val partes = inputNormalizado.split(",").map { it.trim() }
-                partes.forEach { numeroStr ->
-                    // Adiciona cada número da lista, se não estiver vazio.
-                    if (numeroStr.isNotEmpty()) {
-                        listaNumeros.add(numeroStr)
+                } else {
+                    // Se o formato do intervalo for inválido, trata como um número único
+                    if (inputNormalizado.isNotEmpty()) {
+                        listaNumeros.add(inputNormalizado)
                     }
                 }
             }
 
-            // Caso 3: Número único (ex: "325")
+            // 3. Se não for nenhum dos anteriores, é um número único.
             inputNormalizado.isNotEmpty() -> {
-                // Adiciona o número digitado diretamente.
                 listaNumeros.add(inputNormalizado)
             }
         }
@@ -353,7 +369,6 @@ class ListagemFragment : Fragment() {
                     // 2. Criar e mostrar o AlertDialog
                     AlertDialog.Builder(requireContext())
                         .setView(dialogView)
-                        .setTitle("Gerar Cartões") // Adicionar um título é uma boa prática
                         .setPositiveButton("Gerar") { _, _ ->
                             // A LÓGICA AQUI DENTRO MUDA
                             val numerosCartao = inputNumeroCartao.text.toString().trim()
@@ -518,7 +533,6 @@ class ListagemFragment : Fragment() {
     /**
      * Orquestra todos os filtros locais (chip e texto) e atualiza o RecyclerView.
      */
-    // Substitua esta função também
 
     private fun filtrarListaLocal() {
         val textoBusca = binding.InputPesquisa.editText?.text.toString().trim()
@@ -539,28 +553,41 @@ class ListagemFragment : Fragment() {
         }
         // --- FIM DA LÓGICA DE ATUALIZAÇÃO DO TEXTO ---
 
-
         // 1. Aplica o filtro primário (chip "Sem Padrinho")
-        var listaIntermediaria = if (semPadrinhoAtivo) {
+        val listaIntermediaria = if (semPadrinhoAtivo) {
             listaMestraCriancas.filter { it.padrinho.isNullOrBlank() }
         } else {
             listaMestraCriancas
         }
 
-        // O resto da função continua exatamente igual...
-        val listaFiltradaFinal = if (textoBusca.isNotEmpty()) {
-            val primeiroChar = textoBusca.first()
-            if (primeiroChar.isDigit()) {
-                listaIntermediaria.filter { it.numeroCartao.startsWith(textoBusca) }
-            } else {
-                listaIntermediaria.filter { it.nome.contains(textoBusca, ignoreCase = true) }
+        // 2. Aplica o filtro secundário (busca por texto) sobre a lista já filtrada
+        var listaFiltrada = if (textoBusca.isNotEmpty()) {
+            when (binding.chipGroupFiltro.checkedChipId) {
+                R.id.chipCpf -> listaIntermediaria.filter {
+                    it.cpf.contains(textoBusca, ignoreCase = true)
+                }
+                R.id.chipNCartao -> listaIntermediaria.filter {
+                    it.numeroCartao.startsWith(textoBusca, ignoreCase = true)
+                }
+                // O padrão (e o caso R.id.chipNome) é buscar por nome
+                else -> listaIntermediaria.filter {
+                    it.nome.contains(textoBusca, ignoreCase = true)
+                }
             }
         } else {
+            // Se não há texto de busca, a lista é o resultado do filtro do chip "S/ Padrinho"
             listaIntermediaria
         }
 
-        val listaOrdenada = listaFiltradaFinal.sortedBy { it.nome }
+        // 3. Ordena a lista final dinamicamente com base no chip selecionado
+        val listaOrdenada = when (binding.chipGroupFiltro.checkedChipId) {
+            R.id.chipCpf -> listaFiltrada.sortedBy { it.cpf }
+            R.id.chipNCartao -> listaFiltrada.sortedBy { it.numeroCartao.toIntOrNull() ?: 0 } // Ordena numericamente
+            // O padrão (e o caso R.id.chipNome) é ordenar por nome
+            else -> listaFiltrada.sortedBy { it.nome }
+        }
 
+        // 4. Atualiza a UI
         if (listaOrdenada.isEmpty()) {
             binding.textEstadoVazio.text = if (textoBusca.isNotEmpty() || semPadrinhoAtivo) {
                 "Nenhum resultado para sua busca."

@@ -15,6 +15,9 @@
     <!-- NOVAS CORES PARA OS GRÁFICOS -->
     <color name="grafico_azul_menino">#0077B6</color> <!-- Um azul vibrante, mas sério -->
     <color name="grafico_rosa_menina">#E56B6F</color> <!-- Um rosa/coral suave que combina com o laranja -->
+    <!-- NOVAS CORES PARA O GRÁFICO PCD -->
+    <color name="grafico_verde">#2A9D8F</color> <!-- Verde-azulado -->
+    <color name="grafico_roxo">#6A4C93</color> <!-- Roxo suave -->
 
 
 <!--    #ffd19b-->
