@@ -12,6 +12,20 @@ app:cardCornerRadius="8dp">
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/btnExportarPdf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Salvar Relatório (PDF)"
+        android:padding="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:drawableEnd="@drawable/ic_pdf"
+        android:drawablePadding="16dp"
+        android:drawableTint="@color/vermelhoCarmim" />
+
     <!-- Item de Menu: Baixar Users -->
     <TextView
         android:id="@+id/btnBaixarUsuarios"

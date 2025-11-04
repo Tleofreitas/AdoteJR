@@ -3,9 +3,11 @@ package com.example.adotejr.fragments
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +24,7 @@ import androidx.work.WorkManager
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentReportsBinding
 import com.example.adotejr.utils.ExportadorExcelWorker
+import com.example.adotejr.utils.GeradorDePdf
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.viewmodel.EstadoDaTela
 import com.example.adotejr.viewmodel.ReportsViewModel
@@ -35,6 +38,8 @@ class ReportsFragment : Fragment() {
     private var callbackExcel: ((Uri) -> Unit)? = null
     private val CREATE_DOCUMENT_REQUEST_CODE = 1002
     private var nivelDoUser = ""
+    // constante para o request code do PDF
+    private val CREATE_PDF_REQUEST_CODE = 1003
 
     private val viewModel: ReportsViewModel by viewModels()
 
@@ -46,7 +51,6 @@ class ReportsFragment : Fragment() {
         }
 
     // --- CICLO DE VIDA DO FRAGMENT ---
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -69,13 +73,79 @@ class ReportsFragment : Fragment() {
         val anoAtual = LocalDate.now().year
         viewModel.carregarDadosDoAno(anoAtual)
     }
-
+    /*
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == CREATE_DOCUMENT_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri -> callbackExcel?.invoke(uri) }
         }
+    } */
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                CREATE_DOCUMENT_REQUEST_CODE -> {
+                    data?.data?.let { uri -> callbackExcel?.invoke(uri) }
+                }
+                // NOVO CASE PARA O PDF
+                CREATE_PDF_REQUEST_CODE -> {
+                    data?.data?.let { uri ->
+                        gerarRelatorioCompletoEmPdf(uri)
+                    }
+                }
+            }
+        }
     }
+
+    // --- FUNÇÃO QUE ORQUESTRA A GERAÇÃO DO PDF ---
+    private fun gerarRelatorioCompletoEmPdf(uri: Uri) {
+        // Força os gráficos a terminarem qualquer animação e se redesenharem
+        binding.pieChartSexo.notifyDataSetChanged()
+        binding.pieChartSexo.invalidate()
+        binding.pieChartPcd.notifyDataSetChanged()
+        binding.pieChartPcd.invalidate()
+        binding.barChartFaixaEtariaAgrupado.notifyDataSetChanged()
+        binding.barChartFaixaEtariaAgrupado.invalidate()
+
+        // Pega os bitmaps
+        val bitmapSexo: Bitmap? = binding.pieChartSexo.chartBitmap
+        val bitmapPcd: Bitmap? = binding.pieChartPcd.chartBitmap
+        val bitmapFaixaEtaria: Bitmap? = binding.barChartFaixaEtariaAgrupado.chartBitmap
+
+        // --- LOGS DE DEPURAÇÃO ---
+        Log.d("PDF_DEBUG", "Bitmap Sexo: ${if (bitmapSexo != null) "Existe" else "NULO"}")
+        Log.d("PDF_DEBUG", "Bitmap PCD: ${if (bitmapPcd != null) "Existe" else "NULO"}")
+        Log.d("PDF_DEBUG", "Bitmap Faixa Etária: ${if (bitmapFaixaEtaria != null) "Existe" else "NULO"}")
+
+        if (bitmapSexo == null || bitmapPcd == null || bitmapFaixaEtaria == null) {
+            Toast.makeText(requireContext(), "Erro: Um ou mais gráficos não foram renderizados. Tente novamente em alguns segundos.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Verifica se TODOS os bitmaps foram criados com sucesso
+        if (bitmapSexo == null || bitmapPcd == null || bitmapFaixaEtaria == null) {
+            Toast.makeText(requireContext(), "Erro: Gráficos ainda não foram renderizados completamente. Tente novamente.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 2. Pede ao ViewModel para gerar o texto de análise
+        val textoAnalise = viewModel.gerarAnaliseTextual()
+        val tituloRelatorio = "Relatório de Cadastros - ${LocalDate.now().year}"
+
+        // 3. Chama o GeradorDePdf para fazer o trabalho pesado
+        GeradorDePdf(requireContext()).criarPdf(
+            uri,
+            tituloRelatorio,
+            textoAnalise,
+            bitmapSexo,
+            bitmapPcd,
+            bitmapFaixaEtaria
+        )
+
+        Toast.makeText(requireContext(), "Relatório PDF salvo com sucesso!", Toast.LENGTH_LONG).show()
+    }
+
 
     // --- CONFIGURAÇÃO DA UI E OBSERVERS ---
     private fun configurarListenersDeClique() {
@@ -105,6 +175,14 @@ class ReportsFragment : Fragment() {
                 }
             } else {
                 Toast.makeText(requireContext(), "Verifique a conexão com a internet.", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // --- LISTENER PARA O BOTÃO DE EXPORTAR PDF ---
+        binding.menuCustom.btnExportarPdf.setOnClickListener {
+            binding.menuCustom.root.isVisible = false
+            if (validarNivel()) {
+                solicitarLocalParaSalvarPdf("Relatorio_Dashboard.pdf")
             }
         }
     }
@@ -292,8 +370,17 @@ class ReportsFragment : Fragment() {
         }
     }
 
-    // --- LÓGICA DE NEGÓCIO E FUNÇÕES DE SUPORTE ---
+    // --- FUNÇÃO PARA PEDIR O LOCAL DE SALVAMENTO DO PDF ---
+    private fun solicitarLocalParaSalvarPdf(nomeArquivo: String) {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/pdf" // O tipo agora é PDF
+            putExtra(Intent.EXTRA_TITLE, nomeArquivo)
+        }
+        startActivityForResult(intent, CREATE_PDF_REQUEST_CODE)
+    }
 
+    // --- LÓGICA DE NEGÓCIO E FUNÇÕES DE SUPORTE ---
     private fun validarNivel(): Boolean {
         if (nivelDoUser == "Admin") {
             return true
