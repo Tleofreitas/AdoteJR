@@ -2,13 +2,12 @@ package com.example.adotejr.utils
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
-import android.graphics.Rect
+import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
+import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.util.Log
 import java.io.IOException
 
 class GeradorDePdf(private val context: Context) {
@@ -16,85 +15,116 @@ class GeradorDePdf(private val context: Context) {
     fun criarPdf(
         uri: Uri,
         titulo: String,
-        analise: String,
-        bitmapGrafico1: Bitmap,
-        bitmapGrafico2: Bitmap,
-        bitmapGrafico3: Bitmap
+        analiseSexo: String,
+        analisePcd: String,
+        analiseFaixaEtaria: String,
+        bitmapGraficoSexo: Bitmap,
+        bitmapGraficoPcd: Bitmap,
+        bitmapGraficoFaixaEtaria: Bitmap
     ) {
+        // --- CONFIGURAÇÕES GERAIS ---
         val larguraPagina = 595
         val alturaPagina = 842
         val margem = 40f
+        val larguraUtil = larguraPagina - 2 * margem
 
         val documentoPdf = PdfDocument()
         val paginaInfo = PdfDocument.PageInfo.Builder(larguraPagina, alturaPagina, 1).create()
         val pagina = documentoPdf.startPage(paginaInfo)
         val canvas = pagina.canvas
 
-        val paintTitulo = TextPaint().apply {
-            color = Color.BLACK
-            textSize = 18f
-            isFakeBoldText = true
-        }
-        val paintTexto = TextPaint().apply {
-            color = Color.DKGRAY
-            textSize = 12f
-        }
+        // ... (código dos paints continua o mesmo) ...
+        val paintTitulo = TextPaint().apply { /*...*/ textAlign = Paint.Align.CENTER }
+        val paintTexto = TextPaint().apply { /*...*/ }
 
         var yAtual = margem
 
-        // --- Título ---
-        canvas.drawText(titulo, margem, yAtual, paintTitulo)
-        yAtual += 40
-        Log.d("PDF_GERADOR", "Título desenhado. Posição Y atual: $yAtual")
+        // --- TÍTULO PRINCIPAL ---
+        canvas.drawText(titulo, (larguraPagina / 2).toFloat(), yAtual, paintTitulo)
+        yAtual += 50
 
-        // --- Análise ---
-        val layoutAnalise = StaticLayout.Builder.obtain(
-            analise, 0, analise.length, paintTexto, (larguraPagina - 2 * margem).toInt()
-        ).build()
+        // --- SEÇÃO SUPERIOR: GRÁFICOS DE PIZZA LADO A LADO ---
+        val larguraGraficoPizza = (larguraUtil / 2) - 20 // Um pouco mais de espaço entre eles
+
+        // --- Bloco da Esquerda (Gênero) ---
+        val xPizzaEsquerda = margem
+        // Calcula a altura proporcional
+        val alturaProporcionalPizza1 = larguraGraficoPizza * (bitmapGraficoSexo.height.toFloat() / bitmapGraficoSexo.width.toFloat())
+        val destinoPizza1 = android.graphics.Rect(
+            xPizzaEsquerda.toInt(),
+            yAtual.toInt(),
+            (xPizzaEsquerda + larguraGraficoPizza).toInt(),
+            (yAtual + alturaProporcionalPizza1).toInt()
+        )
+        canvas.drawBitmap(bitmapGraficoSexo, null, destinoPizza1, null)
+
+        // Análise do Gráfico de Gênero
+        val yAnalisePizza1 = yAtual + alturaProporcionalPizza1 + 10
+        val layoutAnaliseSexo = StaticLayout.Builder.obtain(
+            analiseSexo, 0, analiseSexo.length, paintTexto, larguraGraficoPizza.toInt()
+        ).setAlignment(Layout.Alignment.ALIGN_CENTER).build()
         canvas.save()
-        canvas.translate(margem, yAtual)
-        layoutAnalise.draw(canvas)
+        canvas.translate(xPizzaEsquerda, yAnalisePizza1)
+        layoutAnaliseSexo.draw(canvas)
         canvas.restore()
-        yAtual += layoutAnalise.height + 30
-        Log.d("PDF_GERADOR", "Análise desenhada. Posição Y atual: $yAtual")
 
-        // --- LÓGICA DE DESENHO DOS GRÁFICOS SIMPLIFICADA ---
+        // --- Bloco da Direita (PCD) ---
+        val xPizzaDireita = margem + larguraGraficoPizza + 40
+        // Calcula a altura proporcional
+        val alturaProporcionalPizza2 = larguraGraficoPizza * (bitmapGraficoPcd.height.toFloat() / bitmapGraficoPcd.width.toFloat())
+        val destinoPizza2 = android.graphics.Rect(
+            xPizzaDireita.toInt(),
+            yAtual.toInt(),
+            (xPizzaDireita + larguraGraficoPizza).toInt(),
+            (yAtual + alturaProporcionalPizza2).toInt()
+        )
+        canvas.drawBitmap(bitmapGraficoPcd, null, destinoPizza2, null)
 
-        // Função auxiliar para desenhar um bitmap com logs
-        fun desenharBitmap(bitmap: Bitmap, nomeGrafico: String): Float {
-            // Define uma altura fixa para cada gráfico para garantir consistência
-            val alturaGrafico = 180f
-            val larguraCanvas = larguraPagina - 2 * margem
+        // Análise do Gráfico de PCD
+        val yAnalisePizza2 = yAtual + alturaProporcionalPizza2 + 10
+        val layoutAnalisePcd = StaticLayout.Builder.obtain(
+            analisePcd, 0, analisePcd.length, paintTexto, larguraGraficoPizza.toInt()
+        ).setAlignment(Layout.Alignment.ALIGN_CENTER).build()
+        canvas.save()
+        canvas.translate(xPizzaDireita, yAnalisePizza2)
+        layoutAnalisePcd.draw(canvas)
+        canvas.restore()
 
-            // Calcula a largura do bitmap mantendo a proporção
-            val larguraBitmap = (bitmap.width.toFloat() / bitmap.height.toFloat()) * alturaGrafico
+        // Atualiza a posição Y para depois da seção de pizzas
+        val alturaSessaoCima = maxOf(
+            alturaProporcionalPizza1 + layoutAnaliseSexo.height,
+            alturaProporcionalPizza2 + layoutAnalisePcd.height
+        )
+        yAtual += alturaSessaoCima + 40 // Espaço extra
 
-            val destino = Rect(
-                margem.toInt(),
-                yAtual.toInt(),
-                (margem + larguraBitmap).toInt().coerceAtMost(larguraCanvas.toInt() + margem.toInt()),
-                (yAtual + alturaGrafico).toInt()
-            )
+        // --- SEÇÃO INFERIOR: GRÁFICO DE BARRAS ---
+        // 1. Definimos uma altura máxima que queremos para o gráfico de barras.
+        val alturaMaximaBarra = 280f
 
-            Log.d("PDF_GERADOR", "Desenhando $nomeGrafico em: Left=${destino.left}, Top=${destino.top}, Right=${destino.right}, Bottom=${destino.bottom}")
+        // 2. Calculamos a LARGURA proporcional com base na ALTURA máxima, para não achatar.
+        val larguraProporcionalBarra = alturaMaximaBarra * (bitmapGraficoFaixaEtaria.width.toFloat() / bitmapGraficoFaixaEtaria.height.toFloat())
 
-            // Verifica se o gráfico vai caber na página
-            if (destino.bottom > alturaPagina - margem) {
-                Log.e("PDF_GERADOR", "$nomeGrafico não cabe na página. Posição Y final seria ${destino.bottom}")
-                return 0f // Retorna 0 para não incrementar yAtual
-            }
+        // 3. Centralizamos o gráfico na página.
+        val xGraficoBarra = (larguraPagina - larguraProporcionalBarra) / 2
 
-            canvas.drawBitmap(bitmap, null, destino, null)
-            return alturaGrafico + 20f // Retorna a altura desenhada + espaçamento
-        }
+        val destinoBarra = android.graphics.Rect(
+            xGraficoBarra.toInt(),
+            yAtual.toInt(),
+            (xGraficoBarra + larguraProporcionalBarra).toInt(),
+            (yAtual + alturaMaximaBarra).toInt()
+        )
+        canvas.drawBitmap(bitmapGraficoFaixaEtaria, null, destinoBarra, null)
 
-        // Desenha cada gráfico
-        yAtual += desenharBitmap(bitmapGrafico1, "Gráfico de Sexo")
-        yAtual += desenharBitmap(bitmapGrafico2, "Gráfico de PCD")
-        yAtual += desenharBitmap(bitmapGrafico3, "Gráfico de Faixa Etária")
+        val yAnaliseBarra = yAtual + alturaMaximaBarra + 15
+        val layoutAnaliseBarra = StaticLayout.Builder.obtain(
+            analiseFaixaEtaria, 0, analiseFaixaEtaria.length, paintTexto, larguraUtil.toInt()
+        ).setAlignment(Layout.Alignment.ALIGN_CENTER).build()
+        canvas.save()
+        canvas.translate(margem, yAnaliseBarra)
+        layoutAnaliseBarra.draw(canvas)
+        canvas.restore()
 
-        // --- FIM DA LÓGICA SIMPLIFICADA ---
-
+        // --- FINALIZAÇÃO ---
         documentoPdf.finishPage(pagina)
         try {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->

@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -100,44 +99,28 @@ class ReportsFragment : Fragment() {
 
     // --- FUNÇÃO QUE ORQUESTRA A GERAÇÃO DO PDF ---
     private fun gerarRelatorioCompletoEmPdf(uri: Uri) {
-        // Força os gráficos a terminarem qualquer animação e se redesenharem
-        binding.pieChartSexo.notifyDataSetChanged()
-        binding.pieChartSexo.invalidate()
-        binding.pieChartPcd.notifyDataSetChanged()
-        binding.pieChartPcd.invalidate()
-        binding.barChartFaixaEtariaAgrupado.notifyDataSetChanged()
-        binding.barChartFaixaEtariaAgrupado.invalidate()
-
-        // Pega os bitmaps
         val bitmapSexo: Bitmap? = binding.pieChartSexo.chartBitmap
         val bitmapPcd: Bitmap? = binding.pieChartPcd.chartBitmap
         val bitmapFaixaEtaria: Bitmap? = binding.barChartFaixaEtariaAgrupado.chartBitmap
 
-        // --- LOGS DE DEPURAÇÃO ---
-        Log.d("PDF_DEBUG", "Bitmap Sexo: ${if (bitmapSexo != null) "Existe" else "NULO"}")
-        Log.d("PDF_DEBUG", "Bitmap PCD: ${if (bitmapPcd != null) "Existe" else "NULO"}")
-        Log.d("PDF_DEBUG", "Bitmap Faixa Etária: ${if (bitmapFaixaEtaria != null) "Existe" else "NULO"}")
-
         if (bitmapSexo == null || bitmapPcd == null || bitmapFaixaEtaria == null) {
-            Toast.makeText(requireContext(), "Erro: Um ou mais gráficos não foram renderizados. Tente novamente em alguns segundos.", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Erro: Gráficos ainda não foram renderizados.", Toast.LENGTH_LONG).show()
             return
         }
 
-        // Verifica se TODOS os bitmaps foram criados com sucesso
-        if (bitmapSexo == null || bitmapPcd == null || bitmapFaixaEtaria == null) {
-            Toast.makeText(requireContext(), "Erro: Gráficos ainda não foram renderizados completamente. Tente novamente.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        // 2. Pede ao ViewModel para gerar o texto de análise
-        val textoAnalise = viewModel.gerarAnaliseTextual()
+        // Pede ao ViewModel para gerar CADA texto de análise separadamente
+        val analiseSexo = viewModel.gerarAnaliseGraficoSexo()
+        val analisePcd = viewModel.gerarAnaliseGraficoPcd()
+        val analiseFaixaEtaria = viewModel.gerarAnaliseGraficoFaixaEtaria()
         val tituloRelatorio = "Relatório de Cadastros - ${LocalDate.now().year}"
 
-        // 3. Chama o GeradorDePdf para fazer o trabalho pesado
+        // Chama o GeradorDePdf com os novos parâmetros
         GeradorDePdf(requireContext()).criarPdf(
             uri,
             tituloRelatorio,
-            textoAnalise,
+            analiseSexo,
+            analisePcd,
+            analiseFaixaEtaria,
             bitmapSexo,
             bitmapPcd,
             bitmapFaixaEtaria
@@ -145,7 +128,6 @@ class ReportsFragment : Fragment() {
 
         Toast.makeText(requireContext(), "Relatório PDF salvo com sucesso!", Toast.LENGTH_LONG).show()
     }
-
 
     // --- CONFIGURAÇÃO DA UI E OBSERVERS ---
     private fun configurarListenersDeClique() {
@@ -188,54 +170,45 @@ class ReportsFragment : Fragment() {
     }
 
     private fun configurarObservadores() {
-        // Observador para o estado da tela (Carregando, Sucesso, Erro, Vazio).
+        // O observador do estado da tela é simples.
+        // Ele não controla mais a visibilidade dos gráficos.
         viewModel.estadoDaTela.observe(viewLifecycleOwner) { estado ->
-            when (estado) {
-                EstadoDaTela.CARREGANDO -> {
-                    binding.progressBarReports.isVisible = true
-                    binding.groupDashboard.isVisible = false
-                    binding.textEstadoVazioReports.isVisible = false
-                }
-                EstadoDaTela.SUCESSO -> {
-                    binding.progressBarReports.isVisible = false
-                    binding.groupDashboard.isVisible = true
-                    binding.textEstadoVazioReports.isVisible = false
-                }
-                EstadoDaTela.ERRO -> {
-                    binding.progressBarReports.isVisible = false
-                    binding.groupDashboard.isVisible = false
-                    binding.textEstadoVazioReports.text = "Ocorreu um erro ao carregar os dados."
-                    binding.textEstadoVazioReports.isVisible = true
-                }
-                EstadoDaTela.VAZIO -> {
-                    binding.progressBarReports.isVisible = false
-                    binding.groupDashboard.isVisible = false
-                    binding.textEstadoVazioReports.text = "Nenhum dado encontrado para este ano."
-                    binding.textEstadoVazioReports.isVisible = true
-                }
-                null -> {}
+            if (estado == EstadoDaTela.ERRO || estado == EstadoDaTela.VAZIO) {
+                // Se der erro ou não houver dados, podemos mostrar uma mensagem geral
+                // ou tratar de outra forma, como esconder todos os cards.
+                // Por enquanto, um Toast pode ser suficiente.
+                Toast.makeText(requireContext(), "Não foi possível carregar os dados.", Toast.LENGTH_SHORT).show()
+                // Esconde todas as progress bars em caso de erro/vazio
+                binding.progressSexo.isVisible = false
+                binding.progressPcd.isVisible = false
+                binding.progressFaixaEtaria.isVisible = false
             }
         }
 
-        // Observador para a lista de crianças.
+        // Quando a lista de crianças chega, ele manda o ViewModel processar os dados para cada gráfico.
         viewModel.listaCriancas.observe(viewLifecycleOwner) { lista ->
             if (lista.isNotEmpty()) {
-                // --- Processamento para o Gráfico de Gênero ---
-                val coresSexo = listOf(
-                    requireContext().getColor(R.color.grafico_azul_menino), // Cor para Meninos
-                    requireContext().getColor(R.color.grafico_rosa_menina)  // Cor para Meninas
-                )
                 // Pede ao ViewModel para processar os dados para o gráfico de sexo
-                viewModel.processarDadosGraficoSexo(lista, coresSexo, binding.pieChartSexo)
-
-                // --- Processamento para o Gráfico PCD ---
-                val coresPcd = listOf(
-                    requireContext().getColor(R.color.grafico_roxo),
-                    requireContext().getColor(R.color.grafico_verde)
+                viewModel.processarDadosGraficoSexo(
+                    lista,
+                    listOf(
+                        requireContext().getColor(R.color.grafico_azul_menino),
+                        requireContext().getColor(R.color.grafico_rosa_menina)
+                    ),
+                    binding.pieChartSexo
                 )
-                viewModel.processarDadosGraficoPcd(lista, coresPcd, binding.pieChartPcd)
 
-                // --- Processamento para o Gráfico Agrupado ---
+                // Pede para processar os dados de PCD
+                viewModel.processarDadosGraficoPcd(
+                    lista,
+                    listOf(
+                        requireContext().getColor(R.color.grafico_roxo),
+                        requireContext().getColor(R.color.grafico_verde)
+                    ),
+                    binding.pieChartPcd
+                )
+
+                // Pede para processar os dados de Faixa Etária
                 viewModel.processarDadosFaixaEtariaAgrupado(
                     lista,
                     requireContext().getColor(R.color.grafico_azul_menino),
@@ -246,16 +219,23 @@ class ReportsFragment : Fragment() {
 
         // Observador para os dados do gráfico de Gênero
         viewModel.dadosGraficoSexo.observe(viewLifecycleOwner) { dadosDoGrafico ->
+            // Quando os dados chegam:
+            binding.progressSexo.isVisible = false // Esconde a progress bar
+            binding.pieChartSexo.isVisible = true   // Mostra o gráfico
             configurarGraficoSexo(dadosDoGrafico)
         }
 
-        // --- Observador para os dados do Gráfico PCD ---
+        // Observador para os dados do Gráfico PCD
         viewModel.dadosGraficoPcd.observe(viewLifecycleOwner) { dadosDoGrafico ->
+            binding.progressPcd.isVisible = false
+            binding.pieChartPcd.isVisible = true
             configurarGraficoPcd(dadosDoGrafico)
         }
 
-        // --- Observador para o Gráfico Agrupado ---
+        // Observador para o Gráfico Agrupado
         viewModel.dadosGraficoFaixaEtariaAgrupado.observe(viewLifecycleOwner) { dadosDoGrafico ->
+            binding.progressFaixaEtaria.isVisible = false
+            binding.barChartFaixaEtariaAgrupado.isVisible = true
             configurarGraficoFaixaEtariaAgrupado(dadosDoGrafico)
         }
     }

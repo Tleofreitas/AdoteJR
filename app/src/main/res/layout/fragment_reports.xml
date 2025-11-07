@@ -24,29 +24,6 @@
             android:layout_height="wrap_content"
             android:padding="8dp">
 
-            <!-- Views de Estado: Loading e Vazio -->
-            <ProgressBar
-                android:id="@+id/progressBarReports"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                tools:visibility="visible"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <TextView
-                android:id="@+id/textEstadoVazioReports"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nenhum dado para exibir."
-                android:visibility="gone"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
-
             <!-- Grupo de Views para os Dashboards -->
             <androidx.constraintlayout.widget.Group
                 android:id="@+id/group_dashboard"
@@ -67,22 +44,34 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/card_pcd">
 
-                <LinearLayout
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center">
-                    <TextView
+                    android:layout_height="match_parent">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Meninos X Meninas"
+                            android:textStyle="bold"
+                            android:layout_marginTop="8dp"/>
+                        <com.github.mikephil.charting.charts.PieChart
+                            android:id="@+id/pieChartSexo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="invisible" />
+                    </LinearLayout>
+                    <ProgressBar
+                        android:id="@+id/progress_sexo"
+                        style="?android:attr/progressBarStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Meninos X Meninas"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
-                    <com.github.mikephil.charting.charts.PieChart
-                        android:id="@+id/pieChartSexo"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
+                        android:layout_gravity="center" />
+                </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
@@ -96,22 +85,34 @@
                 app:layout_constraintStart_toEndOf="@id/card_sexo"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <LinearLayout
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center">
-                    <TextView
+                    android:layout_height="match_parent">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PCD"
+                            android:textStyle="bold"
+                            android:layout_marginTop="8dp"/>
+                        <com.github.mikephil.charting.charts.PieChart
+                            android:id="@+id/pieChartPcd"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="invisible" />
+                    </LinearLayout>
+                    <ProgressBar
+                        android:id="@+id/progressPcd"
+                        style="?android:attr/progressBarStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="PCD"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
-                    <com.github.mikephil.charting.charts.PieChart
-                        android:id="@+id/pieChartPcd"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
+                        android:layout_gravity="center" />
+                </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Linha 2: Gráfico de Barras - Faixa Etária -->
@@ -126,22 +127,35 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="8dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Faixa Etária por Gênero"
-                    android:textStyle="bold"
-                    android:layout_gravity="center_horizontal"/>
-                <com.github.mikephil.charting.charts.BarChart
-                    android:id="@+id/barChartFaixaEtariaAgrupado"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </LinearLayout>
+                    android:layout_height="match_parent">
+
+                    <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Faixa Etária por Gênero"
+                        android:textStyle="bold"
+                        android:layout_gravity="center_horizontal"/>
+                    <com.github.mikephil.charting.charts.BarChart
+                        android:id="@+id/barChartFaixaEtariaAgrupado"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="invisible" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progress_faixa_etaria"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

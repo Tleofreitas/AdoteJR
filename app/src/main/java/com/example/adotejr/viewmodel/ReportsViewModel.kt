@@ -166,69 +166,53 @@ class ReportsViewModel : ViewModel() {
     }
 
     // --- FUNÇÃO DE ANÁLISE TEXTUAL ---
+    fun gerarAnaliseGraficoSexo(): String {
+        val dados = dadosGraficoSexo.value ?: return "Dados de gênero indisponíveis."
+        val total = listaCriancas.value?.size?.toFloat() ?: return ""
+        if (total == 0f) return ""
 
-    fun gerarAnaliseTextual(): String {
-        val dadosSexo = dadosGraficoSexo.value
-        val dadosPcd = dadosGraficoPcd.value
-        val dadosFaixaEtaria = dadosGraficoFaixaEtariaAgrupado.value
-        val totalCriancas = listaCriancas.value?.size ?: 0
+        val meninos = dados.dataSet.getEntryForIndex(0).value
+        val meninas = dados.dataSet.getEntryForIndex(1).value
+        val percentualMeninas = (meninas / total) * 100
 
-        if (totalCriancas == 0) {
-            return "Não há dados de cadastro para analisar."
+        return "A base é composta por ${meninas.toInt()} meninas (${String.format("%.1f", percentualMeninas)}%) e ${meninos.toInt()} meninos."
+    }
+
+    fun gerarAnaliseGraficoPcd(): String {
+        val dados = dadosGraficoPcd.value ?: return "Dados de PCD indisponíveis."
+        val total = listaCriancas.value?.size?.toFloat() ?: return ""
+        if (total == 0f) return ""
+
+        val simPcd = dados.dataSet.getEntryForIndex(0).value
+        return if (simPcd > 0) {
+            val percentualPcd = (simPcd / total) * 100
+            "Foram identificados ${simPcd.toInt()} cadastros de crianças com deficiência (PCD), representando ${String.format("%.1f", percentualPcd)}% do total."
+        } else {
+            "Não foram identificados cadastros de crianças com deficiência (PCD)."
         }
+    }
 
-        val analise = StringBuilder()
-        analise.append("Análise geral com base em $totalCriancas cadastros realizados.\n\n")
+    fun gerarAnaliseGraficoFaixaEtaria(): String {
+        val dados = dadosGraficoFaixaEtariaAgrupado.value ?: return "Dados de faixa etária indisponíveis."
+        var maiorContagemTotal = 0f
+        var faixaMaisConcentrada = ""
 
-        // 1. Análise de Gênero
-        if (dadosSexo != null) {
-            val meninos = dadosSexo.dataSet.getEntryForIndex(0).value
-            val meninas = dadosSexo.dataSet.getEntryForIndex(1).value
-            val percentualMeninas = (meninas / totalCriancas) * 100
+        labelsFaixaEtaria.forEachIndexed { index, label ->
+            val contagemMasc = dados.getDataSetByLabel("Meninos", false)?.getEntryForIndex(index)?.y ?: 0f
+            val contagemFem = dados.getDataSetByLabel("Meninas", false)?.getEntryForIndex(index)?.y ?: 0f
+            val contagemTotalDaFaixa = contagemMasc + contagemFem
 
-            analise.append("• Gênero: A base é composta por ${meninas.toInt()} meninas (${String.format("%.1f", percentualMeninas)}%) e ${meninos.toInt()} meninos.\n")
-        }
-
-        // 2. Análise de PCD
-        if (dadosPcd != null) {
-            val simPcd = dadosPcd.dataSet.getEntryForIndex(0).value
-            if (simPcd > 0) {
-                val percentualPcd = (simPcd / totalCriancas) * 100
-                analise.append("• Acessibilidade: Foram identificados ${simPcd.toInt()} cadastros de crianças com deficiência (PCD), representando ${String.format("%.1f", percentualPcd)}% do total.\n")
-            } else {
-                analise.append("• Acessibilidade: Não foram identificados cadastros de crianças com deficiência (PCD).\n")
+            if (contagemTotalDaFaixa > maiorContagemTotal) {
+                maiorContagemTotal = contagemTotalDaFaixa
+                faixaMaisConcentrada = label
             }
         }
 
-        // 3. Análise de Faixa Etária
-        if (dadosFaixaEtaria != null) {
-            var maiorContagemTotal = 0f
-            var faixaMaisConcentrada = ""
-
-            // Itera sobre cada faixa etária (cada posição no eixo X)
-            labelsFaixaEtaria.forEachIndexed { index, label ->
-                // Pega os DataSets de meninos e meninas
-                val dataSetMeninos = dadosFaixaEtaria.getDataSetByLabel("Meninos", false)
-                val dataSetMeninas = dadosFaixaEtaria.getDataSetByLabel("Meninas", false)
-
-                // Pega a contagem para a faixa atual (índice)
-                val contagemMasc = dataSetMeninos?.getEntryForIndex(index)?.y ?: 0f
-                val contagemFem = dataSetMeninas?.getEntryForIndex(index)?.y ?: 0f
-                val contagemTotalDaFaixa = contagemMasc + contagemFem
-
-                // Compara com a maior contagem encontrada até agora
-                if (contagemTotalDaFaixa > maiorContagemTotal) {
-                    maiorContagemTotal = contagemTotalDaFaixa
-                    faixaMaisConcentrada = label
-                }
-            }
-
-            if (maiorContagemTotal > 0) {
-                analise.append("• Faixa Etária: A maior concentração de cadastros está na faixa de $faixaMaisConcentrada, com ${maiorContagemTotal.toInt()} crianças.\n")
-            }
+        return if (maiorContagemTotal > 0) {
+            "A maior concentração de cadastros está na faixa de $faixaMaisConcentrada, com ${maiorContagemTotal.toInt()} crianças."
+        } else {
+            ""
         }
-
-        return analise.toString()
     }
 }
 
