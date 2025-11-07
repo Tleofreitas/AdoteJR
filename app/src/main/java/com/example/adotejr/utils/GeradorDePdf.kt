@@ -9,6 +9,7 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import java.io.IOException
+import kotlin.math.max
 
 class GeradorDePdf(private val context: Context) {
 
@@ -34,8 +35,17 @@ class GeradorDePdf(private val context: Context) {
         val canvas = pagina.canvas
 
         // ... (código dos paints continua o mesmo) ...
-        val paintTitulo = TextPaint().apply { /*...*/ textAlign = Paint.Align.CENTER }
-        val paintTexto = TextPaint().apply { /*...*/ }
+        val paintTitulo = TextPaint().apply {
+            color = android.graphics.Color.BLACK
+            textSize = 18f
+            isFakeBoldText = true
+            textAlign = Paint.Align.CENTER
+        }
+        val paintTexto = TextPaint().apply {
+            color = android.graphics.Color.DKGRAY
+            textSize = 10f
+        }
+
 
         var yAtual = margem
 
@@ -91,9 +101,9 @@ class GeradorDePdf(private val context: Context) {
         canvas.restore()
 
         // Atualiza a posição Y para depois da seção de pizzas
-        val alturaSessaoCima = maxOf(
-            alturaProporcionalPizza1 + layoutAnaliseSexo.height,
-            alturaProporcionalPizza2 + layoutAnalisePcd.height
+        val alturaSessaoCima = max(
+            (alturaProporcionalPizza1 + layoutAnaliseSexo.height).toInt(),
+            (alturaProporcionalPizza2 + layoutAnalisePcd.height).toInt()
         )
         yAtual += alturaSessaoCima + 40 // Espaço extra
 

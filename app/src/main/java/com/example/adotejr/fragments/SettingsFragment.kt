@@ -131,6 +131,15 @@ class SettingsFragment : Fragment() {
                 salvarDefinicoes()
             }
         }
+
+        binding.btnGerenciarVoluntarios.setOnClickListener {
+            // Padrão de mercado para navegação entre fragments
+            parentFragmentManager.beginTransaction().apply {
+                replace(R.id.fragment_container, GerenciamentoVoluntariosFragment()) // Substitui o fragment atual pelo novo
+                addToBackStack(null) // ESSENCIAL: Adiciona a transação à pilha, para o botão "voltar" funcionar
+                commit() // Executa a transação
+            }
+        }
     }
 
     private fun validarTodosOsCampos(): Boolean {

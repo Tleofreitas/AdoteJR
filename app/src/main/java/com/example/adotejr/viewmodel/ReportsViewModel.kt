@@ -174,8 +174,9 @@ class ReportsViewModel : ViewModel() {
         val meninos = dados.dataSet.getEntryForIndex(0).value
         val meninas = dados.dataSet.getEntryForIndex(1).value
         val percentualMeninas = (meninas / total) * 100
+        val percentualMeninos = (meninos / total) * 100
 
-        return "A base é composta por ${meninas.toInt()} meninas (${String.format("%.1f", percentualMeninas)}%) e ${meninos.toInt()} meninos."
+        return "A base é composta por ${meninas.toInt()} meninas (${String.format("%.1f", percentualMeninas)}%) e ${meninos.toInt()} meninos (${String.format("%.1f", percentualMeninos)}%)."
     }
 
     fun gerarAnaliseGraficoPcd(): String {
