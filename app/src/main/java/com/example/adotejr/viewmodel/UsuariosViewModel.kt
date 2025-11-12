@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.adotejr.model.Usuario
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 
 class UsuariosViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     // "Prato" para a lista de usuários
     private val _listaUsuarios = MutableLiveData<List<Usuario>>()
@@ -44,5 +46,56 @@ class UsuariosViewModel : ViewModel() {
                     _estadoDaTela.value = EstadoDaTela.ERRO
                 }
         }
+    }
+
+    fun atualizarNivelUsuario(usuarioId: String, novoNivel: String) {
+        viewModelScope.launch {
+            firestore.collection("Usuarios").document(usuarioId)
+                .update("nivel", novoNivel)
+                .addOnSuccessListener {
+                    // Sucesso! Agora precisamos recarregar a lista para a UI refletir a mudança.
+                    carregarUsuarios()
+                }
+                .addOnFailureListener {
+                    // TODO: Tratar o erro, talvez com um LiveData de evento único
+                }
+        }
+    }
+
+    fun excluirUsuario(usuarioId: String) {
+        viewModelScope.launch {
+            // Caminho para a foto do usuário no Storage / inclui o nome do arquivo "perfil.jpg"
+            val fotoRef = storage.reference.child("fotos/usuarios/$usuarioId/perfil.jpg")
+
+            // Passo 1: Tenta deletar a foto no Storage
+            fotoRef.delete()
+                .addOnSuccessListener {
+                    // Foto deletada com sucesso! Agora, deleta o documento.
+                    deletarDocumentoFirestore(usuarioId)
+                }
+                .addOnFailureListener { exception ->
+                    if (exception is com.google.firebase.storage.StorageException &&
+                        exception.errorCode == com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
+                        // O arquivo da foto não existia, então podemos prosseguir.
+                        deletarDocumentoFirestore(usuarioId)
+                    } else {
+                        // Ocorreu um erro real.
+                        // TODO: Tratar este erro.
+                    }
+                }
+        }
+    }
+
+    // Função auxiliar para evitar duplicação de código
+    private fun deletarDocumentoFirestore(usuarioId: String) {
+        firestore.collection("Usuarios").document(usuarioId)
+            .delete()
+            .addOnSuccessListener {
+                // Sucesso! Recarrega a lista para a UI refletir a mudança.
+                carregarUsuarios()
+            }
+            .addOnFailureListener {
+                // TODO: Tratar o erro de exclusão do documento.
+            }
     }
 }

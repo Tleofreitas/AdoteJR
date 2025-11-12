@@ -21,11 +21,16 @@ class GerenciamentoVoluntariosFragment : Fragment() {
         return binding.root
     }
 
+    private var nivelUsuarioLogado: String = "User" // Variável para guardar o nível
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Cria uma instância do nosso adaptador
-        val adapter = ViewPagerAdapter(this)
+        // Recebe o nível que o SettingsFragment enviou
+        nivelUsuarioLogado = arguments?.getString("nivel") ?: "User"
+
+        // 1. Cria uma instância do nosso adaptador e passa o nível
+        val adapter = ViewPagerAdapter(this, nivelUsuarioLogado)
         binding.viewPager.adapter = adapter
 
         // 2. Conecta o TabLayout com o ViewPager2
@@ -41,15 +46,23 @@ class GerenciamentoVoluntariosFragment : Fragment() {
     }
 }
 
-private class ViewPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
-
+private class ViewPagerAdapter(
+    fragment: Fragment,
+    private val nivelUsuario: String
+) : FragmentStateAdapter(fragment) {
     override fun getItemCount(): Int = 2 // Temos 2 abas
 
     override fun createFragment(position: Int): Fragment {
         // Retorna o fragment correto com base na posição da aba
         return when (position) {
-            0 -> UsuariosFragment() // Posição 0 é a aba "Usuários"
-            1 -> LideresFragment() // Posição 1 é a aba "Líderes"
+            // Posição 0 é a aba "Usuários"
+            0 -> UsuariosFragment().apply {
+                // Passa o nível para o UsuariosFragment
+                arguments = Bundle().apply {
+                    putString("nivelUsuarioLogado", nivelUsuario)
+                }
+            }
+            1 -> LideresFragment()  // Posição 1 é a aba "Líderes"
             else -> throw IllegalStateException("Posição de aba inválida")
         }
     }

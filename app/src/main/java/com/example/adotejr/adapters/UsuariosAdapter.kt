@@ -2,6 +2,7 @@ package com.example.adotejr.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.adotejr.R
 import com.example.adotejr.databinding.ItemUsuarioBinding
@@ -12,6 +13,7 @@ import com.squareup.picasso.Picasso
 // Uma para o clique em editar, e outra para o clique em excluir.
 // Elas nos permitirão tratar os cliques lá no Fragment.
 class UsuariosAdapter(
+    private val nivelUsuarioLogado: String,
     private val onEditarClick: (Usuario) -> Unit,
     private val onExcluirClick: (Usuario) -> Unit
 ) : RecyclerView.Adapter<UsuariosAdapter.UsuarioViewHolder>() {
@@ -37,12 +39,18 @@ class UsuariosAdapter(
                 binding.imgUsuario.setImageResource(R.drawable.perfil)
             }
 
-            // Configura os cliques nos botões
-            binding.btnEditarNivel.setOnClickListener {
-                onEditarClick(usuario) // Chama a função de callback passada pelo Fragment
-            }
-            binding.btnExcluirUsuario.setOnClickListener {
-                onExcluirClick(usuario) // Chama a função de callback passada pelo Fragment
+            // Configura os cliques nos botões / VISIBILIDADE
+            if (nivelUsuarioLogado == "Admin") {
+                binding.btnEditarNivel.isVisible = true
+                binding.btnExcluirUsuario.isVisible = true
+
+                // Configura os cliques SÓ SE os botões estiverem visíveis
+                binding.btnEditarNivel.setOnClickListener { onEditarClick(usuario) }
+                binding.btnExcluirUsuario.setOnClickListener { onExcluirClick(usuario) }
+            } else {
+                // Se não for Admin, esconde os botões
+                binding.btnEditarNivel.isVisible = false
+                binding.btnExcluirUsuario.isVisible = false
             }
         }
     }

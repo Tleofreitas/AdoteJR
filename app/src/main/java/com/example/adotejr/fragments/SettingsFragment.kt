@@ -133,11 +133,20 @@ class SettingsFragment : Fragment() {
         }
 
         binding.btnGerenciarVoluntarios.setOnClickListener {
-            // Padrão de mercado para navegação entre fragments
+            // 1. Cria a instância do próximo fragment
+            val gerenciamentoVoluntariosFragment = GerenciamentoVoluntariosFragment()
+
+            // 2. Cria um "pacote" (Bundle) para enviar os dados
+            gerenciamentoVoluntariosFragment.arguments = Bundle().apply {
+                // Coloca o nível do usuário, que este fragment já conhece, no pacote
+                putString("nivel", nivelDoUser)
+            }
+
+            // 3. Inicia a transação, agora com o fragment já configurado
             parentFragmentManager.beginTransaction().apply {
-                replace(R.id.fragment_container, GerenciamentoVoluntariosFragment()) // Substitui o fragment atual pelo novo
-                addToBackStack(null) // ESSENCIAL: Adiciona a transação à pilha, para o botão "voltar" funcionar
-                commit() // Executa a transação
+                replace(R.id.fragment_container, gerenciamentoVoluntariosFragment)
+                addToBackStack(null)
+                commit()
             }
         }
     }
