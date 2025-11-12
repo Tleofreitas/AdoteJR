@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".fragments.GerenciamentoVoluntariosFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <!-- 1. O contêiner que permite deslizar entre as telas -->
+    <!-- Ele agora vem PRIMEIRO para ocupar a maior parte da tela -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-</FrameLayout>
+    <!-- 2. A barra de abas (TabLayout ) -->
+    <!-- Ela agora vem por ÚLTIMO, ficando na parte inferior -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        app:tabTextColor="@color/azulEscuro"
+        app:tabIndicatorColor="@color/primaria"
+        app:tabGravity="fill"
+        app:tabMode="fixed" />
+
+</LinearLayout>

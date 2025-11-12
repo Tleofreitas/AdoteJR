@@ -1,0 +1,5 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/azulEscuro" /> <!-- Cor de fundo do chip -->
+    <corners android:radius="16dp" /> <!-- Bordas arredondadas -->
+</shape>
