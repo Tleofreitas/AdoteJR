@@ -60,7 +60,7 @@ tools:context=".ValidarCriancaOutrosActivity">
 
     <include
         android:id="@+id/includeRegistro"
-        layout="@layout/dados_registro"
+        layout="@layout/dados_registro_validacao"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

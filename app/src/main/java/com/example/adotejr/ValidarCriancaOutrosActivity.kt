@@ -113,16 +113,6 @@ class ValidarCriancaOutrosActivity : AppCompatActivity() {
             editTextNome.setText(dados["nome"] as? String ?: "")
             includeRegistro.editTextAno.setText(dados["ano"]?.toString() ?: "")
 
-            includeRegistro.NomePerfilCadastro.text = dados["cadastradoPor"]?.toString() ?: "N/A"
-            (dados["fotoCadastradoPor"] as? String)?.let { url ->
-                if (url.isNotEmpty()) Picasso.get().load(url).into(includeRegistro.imgPerfilCadastro)
-            }
-
-            includeRegistro.NomePerfilValidacao.text = dados["validadoPor"]?.toString() ?: "N/A"
-            (dados["fotoValidadoPor"] as? String)?.let { url ->
-                if (url.isNotEmpty()) Picasso.get().load(url).into(includeRegistro.imgPerfilValidacao)
-            }
-
             includeRegistro.editPadrinho.setText(dados["padrinho"]?.toString() ?: "")
             includeRegistro.editNumeroCartao.setText(dados["numeroCartao"]?.toString() ?: "")
             includeRegistro.editMotivoStatus.setText(dados["motivoStatus"] as? String ?: "")
