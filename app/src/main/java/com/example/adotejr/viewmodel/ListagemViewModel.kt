@@ -134,9 +134,77 @@ class ListagemViewModel : ViewModel() {
         _textoContagem.value = texto
     }
 
-    // Ação para atualizar padrinhos (será implementada no próximo passo)
+    // --- LÓGICA DE ATUALIZAÇÃO DE PADRINHOS ---
     fun atualizarPadrinhos(numerosInput: String, nomePadrinho: String) {
-        // Lógica será movida para cá
+        val listaCompletaNumeros = processarInputParaNumeros(numerosInput)
+
+        if (listaCompletaNumeros.isEmpty()) {
+            _eventoDeFeedback.value = "Formato de números de cartão inválido."
+            return
+        }
+
+        // "Quebra" a lista grande em listas menores de até 30 itens cada.
+        val pedacosDaLista = listaCompletaNumeros.chunked(30)
+        var falhas = 0
+
+        _eventoDeFeedback.value = "Iniciando atualização em ${pedacosDaLista.size} lotes..."
+
+        // Itera sobre cada "pedaço" da lista
+        pedacosDaLista.forEach { pedaco ->
+            firestore.collection("Criancas")
+                .whereIn("numeroCartao", pedaco)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    if (!querySnapshot.isEmpty) {
+                        val batch = firestore.batch()
+                        querySnapshot.documents.forEach { document ->
+                            batch.update(document.reference, "padrinho", nomePadrinho)
+                        }
+                        batch.commit().addOnFailureListener {
+                            falhas++
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("ListagemViewModel", "Erro ao buscar lote de cartões", e)
+                    falhas++
+                }
+        }
+    }
+
+    private fun processarInputParaNumeros(numerosInput: String): List<String> {
+        val inputNormalizado = numerosInput.trim()
+        val listaNumeros = mutableListOf<String>()
+
+        when {
+            inputNormalizado.contains(",") -> {
+                val partes = inputNormalizado.split(",").map { it.trim() }
+                partes.forEach { numeroStr ->
+                    if (numeroStr.isNotEmpty()) {
+                        listaNumeros.add(numeroStr)
+                    }
+                }
+            }
+            inputNormalizado.contains("-") -> {
+                val partes = inputNormalizado.split("-").map { it.trim() }
+                val inicio = partes.getOrNull(0)?.toIntOrNull()
+                val fim = partes.getOrNull(1)?.toIntOrNull()
+
+                if (inicio != null && fim != null && inicio <= fim) {
+                    for (i in inicio..fim) {
+                        listaNumeros.add(i.toString())
+                    }
+                } else {
+                    if (inputNormalizado.isNotEmpty()) {
+                        listaNumeros.add(inputNormalizado)
+                    }
+                }
+            }
+            inputNormalizado.isNotEmpty() -> {
+                listaNumeros.add(inputNormalizado)
+            }
+        }
+        return listaNumeros
     }
 
     fun feedbackConsumido() {
