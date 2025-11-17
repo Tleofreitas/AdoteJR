@@ -16,6 +16,7 @@
         android:text="Administração de Voluntários"
         android:textAppearance="?attr/textAppearanceHeadline6"
         android:textColor="@color/azulEscuro"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

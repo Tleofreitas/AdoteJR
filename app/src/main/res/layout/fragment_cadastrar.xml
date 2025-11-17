@@ -20,20 +20,40 @@
         app:layout_constraintVertical_bias="0.5">
 
         <TextView
-            android:id="@+id/textCrianca"
+            android:id="@+id/textCadastro"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            android:text="Dados da Criança"
+            android:text="Cadastro"
+            android:textAlignment="center"
             android:textAppearance="?attr/textAppearanceHeadline6"
             android:textColor="@color/azulEscuro"
+            android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textCrianca"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="Dados da Criança"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="@color/azulEscuro"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textCadastro" />
+
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/InputCPF"
@@ -57,165 +77,165 @@
                 android:maxLength="14" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
-            android:id="@+id/btnChecarCpf"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="@color/destaque"
-            android:text="Checar"
-            app:cornerRadius="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/InputNome"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/InputCPF" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/InputNome"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/InputCPF">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editTextNome"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Nome completo" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <include
-            android:id="@+id/includeDadosPCD"
-            layout="@layout/dados_pcd"
-            android:layout_width="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/InputNome" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/InputDtNascimento"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="4dp"
-                    app:counterEnabled="true"
-                    app:counterMaxLength="10"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/includeDadosPCD">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editTextDtNascimento"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Data de Nascimento"
-                        android:inputType="datetime|date"
-                        android:maxLength="10" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/InputIdade"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    app:counterMaxLength="2"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/InputDtNascimento"
-                    app:layout_constraintTop_toBottomOf="@+id/includeDadosPCD">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editTextIdade"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:enabled="false"
-                        android:hint="Idade"
-                        android:inputType="number"
-                        android:maxLength="2"
-                        android:text="0" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <include
-                    android:id="@+id/includeDadosCriancaSacola"
-                    layout="@layout/dados_crianca_sacola"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/InputIdade" />
-
-                <include
-                    android:id="@+id/includeDadosResponsavel"
-                    layout="@layout/dados_responsavel"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/includeDadosCriancaSacola" />
-
-                <include
-                    android:id="@+id/includeEndereco"
-                    layout="@layout/endereco_crianca"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/includeDadosResponsavel" />
-
-                <TextView
-                    android:id="@+id/textFoto"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:text="Foto da Criança"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    android:textColor="@color/azulEscuro"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/includeEndereco" />
-
-                <include
-                    android:id="@+id/includeFotoCrianca"
-                    layout="@layout/selecionar_imagem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textFoto" />
-
                 <Button
-                    android:id="@+id/btnCadastrarCrianca"
+                    android:id="@+id/btnChecarCpf"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:layout_marginBottom="32dp"
-                    android:text="Cadastrar"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:backgroundTint="@color/destaque"
+                    android:text="Checar"
                     app:cornerRadius="8dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintBottom_toTopOf="@+id/InputNome"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/InputCPF" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/InputNome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="16dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/includeFotoCrianca" />
+                    app:layout_constraintTop_toBottomOf="@+id/InputCPF">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editTextNome"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Nome completo" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <include
+                    android:id="@+id/includeDadosPCD"
+                    layout="@layout/dados_pcd"
+                    android:layout_width="0dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/InputNome" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/InputDtNascimento"
+                            android:layout_width="200dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="4dp"
+                            app:counterEnabled="true"
+                            app:counterMaxLength="10"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/includeDadosPCD">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTextDtNascimento"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Data de Nascimento"
+                                android:inputType="datetime|date"
+                                android:maxLength="10" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/InputIdade"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="4dp"
+                            android:layout_marginEnd="16dp"
+                            app:counterMaxLength="2"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/InputDtNascimento"
+                            app:layout_constraintTop_toBottomOf="@+id/includeDadosPCD">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTextIdade"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:enabled="false"
+                                android:hint="Idade"
+                                android:inputType="number"
+                                android:maxLength="2"
+                                android:text="0" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <include
+                            android:id="@+id/includeDadosCriancaSacola"
+                            layout="@layout/dados_crianca_sacola"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="24dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.5"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/InputIdade" />
+
+                        <include
+                            android:id="@+id/includeDadosResponsavel"
+                            layout="@layout/dados_responsavel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.5"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/includeDadosCriancaSacola" />
+
+                        <include
+                            android:id="@+id/includeEndereco"
+                            layout="@layout/endereco_crianca"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.5"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/includeDadosResponsavel" />
+
+                        <TextView
+                            android:id="@+id/textFoto"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:text="Foto da Criança"
+                            android:textAppearance="?attr/textAppearanceHeadline6"
+                            android:textColor="@color/azulEscuro"
+                            android:textStyle="bold"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="1.0"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/includeEndereco" />
+
+                        <include
+                            android:id="@+id/includeFotoCrianca"
+                            layout="@layout/selecionar_imagem"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.5"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textFoto" />
+
+                        <Button
+                            android:id="@+id/btnCadastrarCrianca"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="32dp"
+                            android:layout_marginBottom="32dp"
+                            android:text="Cadastrar"
+                            app:cornerRadius="8dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.5"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/includeFotoCrianca" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

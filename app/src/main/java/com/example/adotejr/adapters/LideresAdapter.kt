@@ -1,6 +1,7 @@
 package com.example.adotejr.adapters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.adotejr.databinding.ItemLiderBinding
@@ -20,12 +21,23 @@ class LideresAdapter(
         fun bind(lider: Lider) {
             binding.textNomeLider.text = lider.nome
 
-            // Configura os cliques nos botões, chamando os callbacks
-            binding.btnEditarLider.setOnClickListener {
-                onEditarClick(lider)
-            }
-            binding.btnExcluirLider.setOnClickListener {
-                onExcluirClick(lider)
+            // --- LÓGICA DE CONTROLE DE BOTÕES ---
+            // Verifica se o nome do líder é "Igreja" (ignorando maiúsculas/minúsculas)
+            if (lider.nome.equals("Igreja", ignoreCase = true)) {
+                // Se for o líder "Igreja", esconde os botões
+                binding.btnEditarLider.visibility = View.GONE
+                binding.btnExcluirLider.visibility = View.GONE
+            } else {
+                // Se for qualquer outro líder, mostra os botões e configura os cliques
+                binding.btnEditarLider.visibility = View.VISIBLE
+                binding.btnExcluirLider.visibility = View.VISIBLE
+
+                binding.btnEditarLider.setOnClickListener {
+                    onEditarClick(lider)
+                }
+                binding.btnExcluirLider.setOnClickListener {
+                    onExcluirClick(lider)
+                }
             }
         }
     }
