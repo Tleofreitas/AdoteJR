@@ -1,8 +1,11 @@
+// Em utils/DownloadCartaoWorker.kt
+
 package com.example.adotejr.utils
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -19,28 +22,28 @@ import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.time.LocalDate
-import android.content.pm.ServiceInfo
 
 class DownloadCartaoWorker(private val context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     companion object {
-        const val KEY_PREFIXOS = "KEY_PREFIXOS"
+        const val KEY_NUMEROS_INPUT = "KEY_NUMEROS_INPUT"
         const val KEY_PASTA_URI = "KEY_PASTA_URI"
         const val KEY_ANO = "KEY_ANO"
-        const val NOTIFICATION_ID = 2 // Use um ID diferente do GeradorCartaoWorker
+        const val NOTIFICATION_ID = 2
         const val CHANNEL_ID = "download_channel"
     }
 
     override suspend fun doWork(): Result {
-        // 1. Obter os dados passados pelo Fragment
-        val prefixosArray = inputData.getStringArray(KEY_PREFIXOS) ?: emptyArray()
+        val numerosInput = inputData.getString(KEY_NUMEROS_INPUT) ?: ""
         val pastaDestinoUriStr = inputData.getString(KEY_PASTA_URI) ?: return Result.failure()
         val ano = inputData.getInt(KEY_ANO, LocalDate.now().year)
         val pastaDestinoUri = pastaDestinoUriStr.toUri()
 
-        // Criar notificação inicial e rodar como serviço em primeiro plano
+        // Processa o input para obter os NÚMEROS DE CARTÃO (não mais prefixos)
+        val numerosParaBuscar = processarInputParaNumeros(numerosInput)
+
         val foregroundInfo = createForegroundInfo("Iniciando download...")
         setForeground(foregroundInfo)
 
@@ -53,11 +56,15 @@ class DownloadCartaoWorker(private val context: Context, params: WorkerParameter
                 return Result.success()
             }
 
-            val arquivosParaBaixar = if (prefixosArray.isEmpty()) {
-                todosOsArquivosRemotos
+            // LÓGICA DE FILTRAGEM ATUALIZADA
+            val arquivosParaBaixar = if (numerosParaBuscar.isEmpty() && numerosInput.trim().isNotEmpty()) {
+                emptyList()
+            } else if (numerosParaBuscar.isEmpty()) {
+                todosOsArquivosRemotos // Baixar todos
             } else {
+                // Filtra buscando se o NOME DO ARQUIVO começa com "{numeroCartao}-"
                 todosOsArquivosRemotos.filter { arquivoRemoto ->
-                    prefixosArray.any { prefixo -> arquivoRemoto.name.startsWith(prefixo, ignoreCase = true) }
+                    numerosParaBuscar.any { numero -> arquivoRemoto.name.startsWith("$numero-", ignoreCase = true) }
                 }
             }
 
@@ -74,25 +81,19 @@ class DownloadCartaoWorker(private val context: Context, params: WorkerParameter
 
             var arquivosBaixados = 0
             arquivosParaBaixar.forEach { fileRef ->
-                val progressoAtual = (arquivosBaixados * 100) / totalArquivos
                 updateNotification("Baixando ${fileRef.name}", totalArquivos, arquivosBaixados, false)
-
                 try {
                     val tempFile = File(context.cacheDir, fileRef.name)
                     fileRef.getFile(tempFile).await()
-
                     val newFile = pickedDir.createFile("application/pdf", fileRef.name)
                     newFile?.uri?.let { uri ->
                         context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                            tempFile.inputStream().use { inputStream ->
-                                inputStream.copyTo(outputStream)
-                            }
+                            tempFile.inputStream().use { inputStream -> inputStream.copyTo(outputStream) }
                         }
                     }
                     tempFile.delete()
                 } catch (e: Exception) {
                     Log.e("DownloadWorker", "Falha ao baixar ${fileRef.name}", e)
-                    // Continua para o próximo arquivo
                 }
                 arquivosBaixados++
             }
@@ -107,21 +108,55 @@ class DownloadCartaoWorker(private val context: Context, params: WorkerParameter
         }
     }
 
+    // FUNÇÃO DE PARSING CORRIGIDA - EXATAMENTE A VERSÃO DO SEU VIEWMODEL
+    private fun processarInputParaNumeros(numerosInput: String): List<String> {
+        val inputNormalizado = numerosInput.trim()
+        val listaNumeros = mutableListOf<String>()
+
+        when {
+            inputNormalizado.contains(",") -> {
+                val partes = inputNormalizado.split(",").map { it.trim() }
+                partes.forEach { numeroStr ->
+                    if (numeroStr.isNotEmpty()) {
+                        listaNumeros.add(numeroStr)
+                    }
+                }
+            }
+            inputNormalizado.contains("-") -> {
+                val partes = inputNormalizado.split("-").map { it.trim() }
+                val inicio = partes.getOrNull(0)?.toIntOrNull()
+                val fim = partes.getOrNull(1)?.toIntOrNull()
+
+                if (inicio != null && fim != null && inicio <= fim) {
+                    for (i in inicio..fim) {
+                        listaNumeros.add(i.toString())
+                    }
+                } else {
+                    if (inputNormalizado.isNotEmpty()) {
+                        listaNumeros.add(inputNormalizado)
+                    }
+                }
+            }
+            inputNormalizado.isNotEmpty() -> {
+                listaNumeros.add(inputNormalizado)
+            }
+        }
+        return listaNumeros
+    }
+
+    // O resto do arquivo (createForegroundInfo, updateNotification, createNotificationChannel)
+    // permanece exatamente o mesmo.
     private fun createForegroundInfo(progress: String): ForegroundInfo {
         createNotificationChannel()
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setContentTitle("Download de Cartões")
             .setTicker(progress)
             .setContentText(progress)
-            .setSmallIcon(R.drawable.ic_download) // Use seu ícone de download
+            .setSmallIcon(R.drawable.ic_download)
             .setOngoing(true)
             .build()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ForegroundInfo(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC // <-- A linha chave da correção
-            )
+            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
             ForegroundInfo(NOTIFICATION_ID, notification)
         }
@@ -131,7 +166,7 @@ class DownloadCartaoWorker(private val context: Context, params: WorkerParameter
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Download de Cartões")
             .setSmallIcon(R.drawable.ic_download)
-            .setOngoing(!isFinished) // A notificação pode ser dispensada se o trabalho terminou
+            .setOngoing(!isFinished)
 
         if (isFinished) {
             builder.setContentText(text).setProgress(0, 0, false)

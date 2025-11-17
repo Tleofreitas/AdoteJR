@@ -93,7 +93,17 @@ class ListagemViewModel : ViewModel() {
         // 2. Filtro por Texto (aplicado sobre a lista já filtrada acima)
         val listaFiltrada = if (filtroTexto.isNotEmpty()) {
             when (filtroChipId) {
-                R.id.chipCpf -> listaIntermediaria.filter { it.cpf.contains(filtroTexto, ignoreCase = true) }
+                R.id.chipCpf -> {
+                    // Remove toda a pontuação do texto que o usuário digitou
+                    val textoBuscaNormalizado = filtroTexto.replace(Regex("[.\\-/]"), "")
+                    listaIntermediaria.filter { crianca ->
+                        // Remove toda a pontuação do CPF da criança no banco de dados
+                        val cpfNormalizado = crianca.cpf.replace(Regex("[.\\-/]"), "")
+                        // Compara os dois textos normalizados
+                        cpfNormalizado.contains(textoBuscaNormalizado, ignoreCase = true)
+                    }
+                }
+
                 R.id.chipNCartao -> listaIntermediaria.filter { it.numeroCartao.startsWith(filtroTexto, ignoreCase = true) }
                 else -> listaIntermediaria.filter { it.nome.contains(filtroTexto, ignoreCase = true) }
             }
