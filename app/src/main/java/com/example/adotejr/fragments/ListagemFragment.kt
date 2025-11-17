@@ -675,8 +675,6 @@ class ListagemFragment : Fragment() {
         return prefixosParaBuscar
     }
 
-    // Em ListagemFragment.kt, adicione esta função completa
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
