@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.pdf.PdfDocument
 import android.os.Build
 import android.util.Log
@@ -200,32 +201,60 @@ class GeradorCartaoWorker(appContext: Context, workerParams: WorkerParameters) :
         }
     }
 
-    private fun desenharViewParaBitmap(view: View): android.graphics.Bitmap {
-        // 1. Defina a LARGURA do conteúdo. 800px é um bom valor para alta qualidade.
-        val larguraConteudo = 800
-        val specLargura = View.MeasureSpec.makeMeasureSpec(larguraConteudo, View.MeasureSpec.EXACTLY)
+    private fun desenharViewParaBitmap(view: View): Bitmap {
+        // 1. Define a LARGURA EXATA que o seu layout deve ter.
+        //    Vamos usar um valor próximo à largura de um celular comum em pixels. 1080px é um ótimo padrão.
+        val larguraFixa = 1080
 
-        // 2. Deixe a ALTURA ser calculada dinamicamente pelo sistema.
-        //    Isso garante que NADA será cortado.
-        val specAltura = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        // 2. Define a ALTURA como livre (WRAP_CONTENT).
+        val alturaLivre = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
 
-        // 3. Meça a view para que ela calcule suas dimensões internas.
-        //    Como a view foi criada com o contexto perfeito, a altura medida
-        //    agora será consistente em todos os dispositivos.
-        view.measure(specLargura, specAltura)
-        val alturaConteudo = view.measuredHeight // Usamos a altura que a view nos diz que precisa.
+        // 3. Força a medição da view com essas especificações.
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(larguraFixa, View.MeasureSpec.EXACTLY),
+            alturaLivre
+        )
 
-        // 4. Crie o bitmap final com as dimensões EXATAS que foram calculadas.
-        //    A largura é a que definimos, e a altura é a que a view pediu.
-        val bitmapFinal = android.graphics.Bitmap.createBitmap(larguraConteudo, alturaConteudo, android.graphics.Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmapFinal)
+        // 4. Pega a altura que a view calculou que precisa.
+        val alturaMedida = view.measuredHeight
 
-        // 5. Posicione e desenhe a view no canvas.
-        view.layout(0, 0, larguraConteudo, alturaConteudo)
+        // 5. Define o posicionamento da view (layout).
+        view.layout(0, 0, larguraFixa, alturaMedida)
+
+        // 6. Cria o bitmap com as dimensões exatas e desenha a view nele.
+        val bitmap = Bitmap.createBitmap(larguraFixa, alturaMedida, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
         view.draw(canvas)
 
-        Log.d("GeradorWorker", "Gerando bitmap final com dimensões DINÂMICAS E CORRETAS: $larguraConteudo x $alturaConteudo")
-        return bitmapFinal
+        Log.d("GeradorWorker", "RESET: Bitmap gerado com LARGURA FIXA ($larguraFixa) e ALTURA MEDIDA ($alturaMedida)")
+        return bitmap
+    }
+
+    private fun converterBitmapParaPdfBytes(bitmap: Bitmap): ByteArray {
+        // ABORDAGEM SIMPLES: O PDF terá o tamanho exato do bitmap.
+        // Isso remove qualquer variável de A4, margens ou centralização.
+        // O objetivo é ter um PDF que seja um "espelho" 1:1 do bitmap gerado.
+
+        // 1. Cria um documento PDF.
+        val pdfDocument = PdfDocument()
+
+        // 2. Cria uma página com as dimensões EXATAS do bitmap.
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+
+        // 3. Desenha o bitmap na página, começando no canto superior esquerdo (0, 0).
+        page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+
+        // 4. Finaliza a página.
+        pdfDocument.finishPage(page)
+
+        // 5. Converte para bytes.
+        val outputStream = ByteArrayOutputStream()
+        pdfDocument.writeTo(outputStream)
+        pdfDocument.close()
+
+        Log.d("GeradorWorker", "RESET: PDF gerado com as dimensões do bitmap (${bitmap.width}x${bitmap.height})")
+        return outputStream.toByteArray()
     }
 
     private suspend fun salvarPdfFirebase(bitmap: android.graphics.Bitmap, id: String, ano: Int, nCartao: String) {
@@ -264,36 +293,6 @@ class GeradorCartaoWorker(appContext: Context, workerParams: WorkerParameters) :
         } catch (e: Exception) {
             Log.e("GeradorService", "FALHA GERAL no salvamento do arquivo: $nomeArquivo", e)
         }
-    }
-
-    private fun converterBitmapParaPdfBytes(bitmap: Bitmap): ByteArray {
-        // 1. Cria um novo documento PDF em memória.
-        val pdfDocument = PdfDocument()
-
-        // 2. Define as informações da página (largura e altura) com base no tamanho do bitmap.
-        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
-
-        // 3. Inicia uma nova página no documento.
-        val page = pdfDocument.startPage(pageInfo)
-
-        // 4. Obtém o "canvas" (a área de desenho) da página e desenha o bitmap nela.
-        val canvas = page.canvas
-        canvas.drawBitmap(bitmap, 0f, 0f, null)
-
-        // 5. Finaliza a página, confirmando o desenho.
-        pdfDocument.finishPage(page)
-
-        // 6. Prepara um "fluxo de saída" em memória para receber os dados do PDF.
-        val outputStream = ByteArrayOutputStream()
-
-        // 7. Escreve o conteúdo do documento PDF completo nesse fluxo de saída.
-        pdfDocument.writeTo(outputStream)
-
-        // 8. Fecha o documento para liberar recursos.
-        pdfDocument.close()
-
-        // 9. Converte o fluxo de saída para um ByteArray e o retorna.
-        return outputStream.toByteArray()
     }
 
     // Função para criar a notificação que o WorkManager precisa
