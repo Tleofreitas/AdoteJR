@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.ConsultaFragment">
+
+    <!-- O ViewPager2 ocupa a maior parte da tela, exibindo o conteúdo da aba selecionada -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPagerConsulta"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/tabLayoutConsulta"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- O TabLayout fica na parte inferior, mostrando os títulos das abas -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayoutConsulta"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tabIndicatorColor="@color/azulEscuro"
+        app:tabTextColor="@color/azulEscuro"
+        app:tabMode="fixed"
+        app:tabGravity="fill"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

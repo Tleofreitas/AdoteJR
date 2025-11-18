@@ -1,5 +1,3 @@
-// Em fragments/ListagemFragment.kt
-
 package com.example.adotejr.fragments
 
 import android.app.Activity
@@ -28,7 +26,7 @@ import com.example.adotejr.R
 import com.example.adotejr.ValidarCriancaActivity
 import com.example.adotejr.ValidarCriancaOutrosActivity
 import com.example.adotejr.adapters.CriancasAdapter
-import com.example.adotejr.databinding.FragmentListagemBinding
+import com.example.adotejr.databinding.FragmentAnaliseBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.utils.DownloadCartaoWorker
 import com.example.adotejr.utils.GeradorCartaoWorker
@@ -40,9 +38,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 import java.time.LocalDate
 
-class ListagemFragment : Fragment() {
+class AnaliseFragment : Fragment() {
 
-    private lateinit var binding: FragmentListagemBinding
+    private lateinit var binding: FragmentAnaliseBinding
     private lateinit var criancasAdapter: CriancasAdapter
     private var nivelDoUser = ""
 
@@ -60,7 +58,7 @@ class ListagemFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentListagemBinding.inflate(inflater, container, false)
+        binding = FragmentAnaliseBinding.inflate(inflater, container, false)
         nivelDoUser = arguments?.getString("nivel").toString()
         return binding.root
     }

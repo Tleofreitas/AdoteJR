@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
 import com.example.adotejr.fragments.CadastrarFragment
 import com.example.adotejr.fragments.ContaFragment
-import com.example.adotejr.fragments.ListagemFragment
+import com.example.adotejr.fragments.AnaliseFragment
 import com.example.adotejr.fragments.ReportsFragment
 import com.example.adotejr.fragments.SettingsFragment
 import com.example.adotejr.utils.NetworkUtils
@@ -80,7 +80,7 @@ class GerenciamentoActivity : AppCompatActivity() {
                     }
                 }
                 R.id.navigation_listagem -> {
-                    ListagemFragment().apply {
+                    AnaliseFragment().apply {
                         arguments = Bundle().apply {
                             putString("nivel", nivelDoUser)
                         }
