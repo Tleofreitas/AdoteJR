@@ -7,7 +7,7 @@
     android:background="@color/white"
     tools:context=".fragments.PresencaFragment">
 
-    <!-- Título da Tela -->
+    <!-- Título e Ano (sem alterações ) -->
     <TextView
         android:id="@+id/textTituloPresenca"
         android:layout_width="wrap_content"
@@ -48,7 +48,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textView10" />
 
-    <!-- Card de Filtro e Busca -->
+    <!-- Card de Filtro e Busca (COM ALTERAÇÕES) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardFiltroPresenca"
         android:layout_width="0dp"
@@ -68,6 +68,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Tipo de Presença (sem alteração) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -75,7 +76,6 @@
                 android:textColor="@color/azulEscuro"
                 android:textStyle="bold" />
 
-            <!-- Chips para selecionar o tipo de presença -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupPresenca"
                 android:layout_width="wrap_content"
@@ -96,12 +96,41 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Retirada de Kit" />
-
             </com.google.android.material.chip.ChipGroup>
 
-            <!-- Campo de busca pelo nome do responsável -->
+            <!-- NOVO: RadioGroup para o Critério de Busca -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Buscar por:"
+                android:textColor="@color/azulEscuro"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/radioGroupCriterioBusca"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/radioBuscaResponsavel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Responsável" />
+
+                <RadioButton
+                    android:id="@+id/radioBuscaCrianca"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="Criança" />
+            </RadioGroup>
+
+            <!-- Campo de busca (com hint dinâmico) -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/inputBuscaResponsavel"
+                android:id="@+id/inputLayoutBusca"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -111,6 +140,7 @@
                 app:startIconDrawable="@drawable/ic_search">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextBusca"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Buscar por nome do responsável..." />
@@ -118,7 +148,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- RecyclerView para listar os filhos -->
+    <!-- RecyclerView, Botão e Indicadores de Estado (sem alterações) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFilhosPresenca"
         android:layout_width="0dp"
@@ -131,7 +161,6 @@
         app:layout_constraintTop_toBottomOf="@id/cardFiltroPresenca"
         tools:listitem="@layout/item_filho_presenca" />
 
-    <!-- Botão de Ação -->
     <Button
         android:id="@+id/btnMarcarPresenca"
         style="@style/Widget.App.Button"
@@ -143,7 +172,6 @@
         app:layout_constraintEnd_toEndOf="@id/cardFiltroPresenca"
         app:layout_constraintStart_toStartOf="@id/cardFiltroPresenca" />
 
-    <!-- Indicadores de Estado -->
     <ProgressBar
         android:id="@+id/progressBarPresenca"
         android:layout_width="wrap_content"
@@ -159,7 +187,7 @@
         android:id="@+id/textEstadoVazioPresenca"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nenhum resultado. Busque pelo nome do responsável."
+        android:text="Nenhum resultado. Busque pelo nome."
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/rvFilhosPresenca"
         app:layout_constraintEnd_toEndOf="@+id/rvFilhosPresenca"
