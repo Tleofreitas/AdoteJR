@@ -9,9 +9,7 @@ import com.example.adotejr.fragments.AnaliseFragment
 import com.example.adotejr.fragments.PresencaFragment
 
 // 1. O Adapter precisa saber sobre o FragmentManager e o Ciclo de Vida para funcionar.
-class ConsultaViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle,
-                               private val nivelUsuario: String
-) :
+class ConsultaViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle, private val nivelUsuario: String) :
     FragmentStateAdapter(fragmentManager, lifecycle) {
 
     // 2. Esta função diz ao ViewPager2 quantos "slides" ou abas ele terá.
