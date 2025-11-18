@@ -18,11 +18,8 @@
     <!-- NOVAS CORES PARA O GRÁFICO PCD -->
     <color name="grafico_verde">#2A9D8F</color> <!-- Verde-azulado -->
     <color name="grafico_roxo">#6A4C93</color> <!-- Roxo suave -->
-
-
+    <color name="cinzaBorda">#DCDCDC</color>
 <!--    #ffd19b-->
-<!--    #DCDCDC-->
-
 <!--    <color name="azulClaro">#219EBC</color>-->
 <!--    <color name="azulMaisClaro">#8ECAE6</color>-->
 <!--    FB8500 laranja-->
