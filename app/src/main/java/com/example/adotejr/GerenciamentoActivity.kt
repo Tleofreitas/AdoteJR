@@ -4,11 +4,10 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
 import com.example.adotejr.fragments.CadastrarFragment
+import com.example.adotejr.fragments.ConsultaFragment
 import com.example.adotejr.fragments.ContaFragment
-import com.example.adotejr.fragments.AnaliseFragment
 import com.example.adotejr.fragments.ReportsFragment
 import com.example.adotejr.fragments.SettingsFragment
 import com.example.adotejr.utils.NetworkUtils
@@ -64,38 +63,57 @@ class GerenciamentoActivity : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         binding.bottomNavigation.setOnItemSelectedListener { item ->
-            val selectedFragment: Fragment = when (item.itemId) {
+            when (item.itemId) {
                 R.id.navigation_reports -> {
-                    ReportsFragment().apply {
+                    val reportsFragment = ReportsFragment().apply {
                         arguments = Bundle().apply {
                             putString("nivel", nivelDoUser)
                         }
                     }
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, reportsFragment)
+                        .commit()
                 }
                 R.id.navigation_definir -> {
-                    SettingsFragment().apply {
+                    val settingsFragment = SettingsFragment().apply {
                         arguments = Bundle().apply {
                             putString("nivel", nivelDoUser)
                         }
                     }
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, settingsFragment)
+                        .commit()
                 }
+
                 R.id.navigation_listagem -> {
-                    AnaliseFragment().apply {
-                        arguments = Bundle().apply {
-                            putString("nivel", nivelDoUser)
-                        }
+                    // 1. Cria a instância do ConsultaFragment
+                    val consultaFragment = ConsultaFragment()
+                    // 2. Cria o Bundle e passa o 'nivelDoUser' para ele
+                    consultaFragment.arguments = Bundle().apply {
+                        putString("nivel", nivelDoUser)
                     }
+                    // 3. Inicia a transação para substituir o container pelo ConsultaFragment
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, consultaFragment)
+                        .commit()
                 }
 
-                R.id.navigation_cadastrar -> CadastrarFragment()
-                R.id.navigation_perfil -> ContaFragment()
-                else -> CadastrarFragment() // Fragmento padrão
+                R.id.navigation_cadastrar -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, CadastrarFragment())
+                        .commit()
+                }
+                R.id.navigation_perfil -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, ContaFragment())
+                        .commit()
+                }
+                else -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, CadastrarFragment())
+                        .commit()
+                }
             }
-
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, selectedFragment)
-                .commit()
-
             true
         }
     }

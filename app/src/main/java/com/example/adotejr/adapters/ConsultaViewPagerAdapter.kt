@@ -1,5 +1,6 @@
 package com.example.adotejr.adapters
 
+import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
@@ -8,7 +9,9 @@ import com.example.adotejr.fragments.AnaliseFragment
 import com.example.adotejr.fragments.PresencaFragment
 
 // 1. O Adapter precisa saber sobre o FragmentManager e o Ciclo de Vida para funcionar.
-class ConsultaViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) :
+class ConsultaViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle,
+                               private val nivelUsuario: String
+) :
     FragmentStateAdapter(fragmentManager, lifecycle) {
 
     // 2. Esta função diz ao ViewPager2 quantos "slides" ou abas ele terá.
@@ -22,8 +25,24 @@ class ConsultaViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Life
     override fun createFragment(position: Int): Fragment {
         // Usamos um 'when' para decidir qual fragmento retornar.
         return when (position) {
-            0 -> AnaliseFragment()    // Se a posição for 0 (a primeira aba), retorna o AnaliseFragment.
-            1 -> PresencaFragment()   // Se a posição for 1 (a segunda aba), retorna o PresencaFragment.
+            // Se a posição for 0 (a primeira aba), retorna o AnaliseFragment.
+            0 -> {
+                // Cria o AnaliseFragment e passa o nível do usuário para ele
+                AnaliseFragment().apply {
+                    arguments = Bundle().apply {
+                        putString("nivel", nivelUsuario)
+                    }
+                }
+            }
+            // Se a posição for 1 (a segunda aba), retorna o PresencaFragment.
+            1 -> {
+                // Cria o PresencaFragment e também passa o nível do usuário
+                PresencaFragment().apply {
+                    arguments = Bundle().apply {
+                        putString("nivel", nivelUsuario)
+                    }
+                }
+            }
             else -> throw IllegalStateException("Posição de aba inválida") // Segurança extra.
         }
     }
