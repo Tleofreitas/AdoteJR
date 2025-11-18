@@ -6,27 +6,45 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
+    <!-- Título da Tela -->
     <TextView
-        android:id="@+id/textView10"
-        android:layout_width="40dp"
+        android:id="@+id/textTituloGeral"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Ano:"
+        android:text="Listagem Geral"
+        android:textAppearance="?attr/textAppearanceHeadline6"
         android:textColor="@color/azulEscuro"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/txtAno"
-        android:layout_width="50dp"
+        android:id="@+id/textView10"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Ano:"
+        android:textColor="@color/azulEscuro"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/textTituloGeral"
+        app:layout_constraintEnd_toStartOf="@+id/txtAno"
+        app:layout_constraintTop_toTopOf="@+id/textTituloGeral" />
+
+    <TextView
+        android:id="@+id/txtAno"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
         android:text="2025"
         android:textColor="@color/black"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/textView10"
-        app:layout_constraintStart_toEndOf="@+id/textView10"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textView10" />
 
     <com.google.android.material.card.MaterialCardView
@@ -40,7 +58,7 @@
         app:cardCornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtAno">
+        app:layout_constraintTop_toBottomOf="@+id/textTituloGeral">
 
         <!-- Linha com título "Ano:", Spinner e RadioGroup com título -->
         <LinearLayout

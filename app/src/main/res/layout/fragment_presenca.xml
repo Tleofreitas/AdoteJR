@@ -1,15 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-tools:context=".fragments.PresencaFragment">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".fragments.PresencaFragment">
 
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center"
-    android:text="Tela de Presença (em construção )"
-    android:textSize="20sp" />
+    <!-- Título da Tela -->
+    <TextView
+        android:id="@+id/textTituloPresenca"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Controle de Presença"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:textColor="@color/azulEscuro"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/textView10"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Ano:"
+        android:textColor="@color/azulEscuro"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/textTituloPresenca"
+        app:layout_constraintEnd_toStartOf="@+id/txtAno"
+        app:layout_constraintTop_toTopOf="@+id/textTituloPresenca" />
+
+    <TextView
+        android:id="@+id/txtAno"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="2025"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/textView10"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textView10" />
+
+    <!-- Card de Filtro e Busca -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardFiltroPresenca"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textTituloPresenca">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipo de Presença:"
+                android:textColor="@color/azulEscuro"
+                android:textStyle="bold" />
+
+            <!-- Chips para selecionar o tipo de presença -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupPresenca"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipRetiradaSenha"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Retirada de Senha" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipRetiradaKit"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Retirada de Kit" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Campo de busca pelo nome do responsável -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/inputBuscaResponsavel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:boxStrokeColor="@color/primaria"
+                app:endIconMode="clear_text"
+                app:endIconTint="@color/black"
+                app:startIconDrawable="@drawable/ic_search">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Buscar por nome do responsável..." />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- RecyclerView para listar os filhos -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFilhosPresenca"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnMarcarPresenca"
+        app:layout_constraintEnd_toEndOf="@id/cardFiltroPresenca"
+        app:layout_constraintStart_toStartOf="@id/cardFiltroPresenca"
+        app:layout_constraintTop_toBottomOf="@id/cardFiltroPresenca"
+        tools:listitem="@layout/item_filho_presenca" />
+
+    <!-- Botão de Ação -->
+    <Button
+        android:id="@+id/btnMarcarPresenca"
+        style="@style/Widget.App.Button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Marcar Presença"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/cardFiltroPresenca"
+        app:layout_constraintStart_toStartOf="@id/cardFiltroPresenca" />
+
+    <!-- Indicadores de Estado -->
+    <ProgressBar
+        android:id="@+id/progressBarPresenca"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/rvFilhosPresenca"
+        app:layout_constraintEnd_toEndOf="@+id/rvFilhosPresenca"
+        app:layout_constraintStart_toStartOf="@+id/rvFilhosPresenca"
+        app:layout_constraintTop_toTopOf="@+id/rvFilhosPresenca"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textEstadoVazioPresenca"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nenhum resultado. Busque pelo nome do responsável."
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/rvFilhosPresenca"
+        app:layout_constraintEnd_toEndOf="@+id/rvFilhosPresenca"
+        app:layout_constraintStart_toStartOf="@+id/rvFilhosPresenca"
+        app:layout_constraintTop_toTopOf="@+id/rvFilhosPresenca"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
