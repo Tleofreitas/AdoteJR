@@ -1,19 +1,22 @@
 package com.example.adotejr.viewmodel
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.model.FilhoPresenca
+import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import kotlinx.coroutines.delay
 
-class PresencaViewModel : ViewModel() {
+
+class PresencaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val firestore = FirebaseFirestore.getInstance()
     private var eventoSnapshot: ListenerRegistration? = null
@@ -40,6 +43,11 @@ class PresencaViewModel : ViewModel() {
     }
 
     private fun carregarDadosIniciais() {
+        if (!NetworkUtils.conectadoInternet(getApplication())) {
+            _mensagemFeedback.value = "Sem conexão com a internet."
+            _estadoDaTela.value = EstadoDaTela.ERRO // Mostra um estado de erro
+            return
+        }
         _estadoDaTela.value = EstadoDaTela.CARREGANDO
         val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
 
@@ -75,51 +83,6 @@ class PresencaViewModel : ViewModel() {
         }
 
         filtrarListaMestra()
-    }
-
-    /**
-     * 3. LÓGICA DE BUSCA: Agora filtra a lista em memória.
-     * * @param textoBusca O que o usuário digitou.
-     * * @param criterio "responsavel" ou "nome".
-     * * @param tipoPresenca "SENHA" ou "KIT", vindo do Chip.
-     */
-    fun buscarCadastros(textoBusca: String, criterio: String, tipoPresenca: String) {
-        if (textoBusca.length < 3) {
-            limparBusca()
-            return
-        }
-
-        // 1. Primeiro, filtra a lista mestra para incluir apenas crianças que AINDA NÃO retiraram.
-        val listaAindaNaoRetirou = listaMestraCriancas.filter { crianca ->
-            val campoASerVerificado = if (tipoPresenca == "SENHA") crianca.retirouSenha else crianca.retirouSacola
-            // Considera "Não", nulo ou em branco como "não retirou".
-            campoASerVerificado.equals("Não", ignoreCase = true) || campoASerVerificado.isNullOrBlank()
-        }
-
-        // 2. Agora, aplica a busca por texto NESSA LISTA JÁ FILTRADA.
-        val resultados = listaAindaNaoRetirou.filter { crianca ->
-            val campoParaBuscar = if (criterio == "nome") crianca.nome else crianca.responsavel
-            campoParaBuscar.contains(textoBusca, ignoreCase = true)
-        }
-
-        // Agrupa os resultados pelo responsável para evitar duplicatas na lista principal.
-        val responsaveisEncontrados = resultados.map { it.responsavel }.distinct()
-
-        // Pega o estado de seleção atual antes de criar a nova lista.
-        val selecaoAtual = _listaFilhos.value?.filter { it.selecionado }?.map { it.id } ?: emptyList()
-
-        val listaFinal = listaMestraCriancas.filter { crianca ->
-            crianca.responsavel in responsaveisEncontrados
-        }.map { crianca ->
-            // Recria o objeto, mas agora PRESERVA o estado de 'selecionado'.
-            FilhoPresenca(
-                id = crianca.id,
-                nome = crianca.nome,
-                selecionado = crianca.id in selecaoAtual
-            )
-        }
-        _listaFilhos.value = listaFinal.sortedBy { it.nome }
-        _estadoDaTela.value = if (listaFinal.isEmpty()) EstadoDaTela.VAZIO else EstadoDaTela.SUCESSO
     }
 
     /**
@@ -186,6 +149,11 @@ class PresencaViewModel : ViewModel() {
      * Atualiza o campo de presença para uma lista de IDs de crianças.
      */
     fun marcarPresenca() {
+        // 2. VERIFICAÇÃO ANTES DE MARCAR A PRESENÇA
+        if (!NetworkUtils.conectadoInternet(getApplication())) {
+            _mensagemFeedback.value = "Sem conexão. A presença não foi marcada."
+            return
+        }
         // Obtém a lista de IDs a partir do LiveData, que é a fonte da verdade.
         val idsSelecionados = _listaFilhos.value?.filter { it.selecionado }?.map { it.id } ?: emptyList()
 
