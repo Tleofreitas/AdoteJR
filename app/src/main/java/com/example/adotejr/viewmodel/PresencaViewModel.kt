@@ -8,143 +8,134 @@ import androidx.lifecycle.viewModelScope
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.model.FilhoPresenca
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class PresencaViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
+    private var eventoSnapshot: ListenerRegistration? = null
 
-    // LiveData para a lista de filhos a ser exibida no RecyclerView.
+    // 1. LISTA MESTRA: Guardará todas as crianças do ano na memória.
+    private var listaMestraCriancas = listOf<Crianca>()
+
+    // LiveData para a UI (sem alterações)
     private val _listaFilhos = MutableLiveData<List<FilhoPresenca>>()
     val listaFilhos: LiveData<List<FilhoPresenca>> = _listaFilhos
-
-    // LiveData para controlar a UI (ProgressBar, texto de "vazio", etc.).
     private val _estadoDaTela = MutableLiveData<EstadoDaTela>()
     val estadoDaTela: LiveData<EstadoDaTela> = _estadoDaTela
-
-    // LiveData para enviar mensagens de feedback (Toasts) para o Fragment.
     private val _mensagemFeedback = MutableLiveData<String>()
     val mensagemFeedback: LiveData<String> = _mensagemFeedback
 
+    init {
+        // 2. CARGA INICIAL: Carrega todos os dados do ano atual assim que o ViewModel é criado.
+        carregarDadosIniciais()
+    }
+
+    private fun carregarDadosIniciais() {
+        _estadoDaTela.value = EstadoDaTela.CARREGANDO
+        val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
+
+        eventoSnapshot?.remove() // Garante que não haja listeners duplicados
+        eventoSnapshot = firestore.collection("Criancas")
+            .whereEqualTo("ano", anoAtual)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("PresencaViewModel", "Erro ao carregar dados", error)
+                    _estadoDaTela.value = EstadoDaTela.ERRO
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    listaMestraCriancas = snapshot.toObjects(Crianca::class.java)
+                    // Após carregar, podemos mudar o estado para sucesso ou vazio.
+                    _estadoDaTela.value = if (listaMestraCriancas.isEmpty()) EstadoDaTela.VAZIO else EstadoDaTela.SUCESSO
+                }
+            }
+    }
+
     /**
-     * Ponto de entrada para a busca. Ele decide qual tipo de busca fazer.
+     * 3. LÓGICA DE BUSCA: Agora filtra a lista em memória.
      * @param textoBusca O que o usuário digitou.
-     * @param criterio "responsavel" ou "nome" (vindo do RadioGroup).
+     * @param criterio "responsavel" ou "nome".
      */
     fun buscarCadastros(textoBusca: String, criterio: String) {
-        // Se a busca for muito curta, apenas limpamos os resultados.
         if (textoBusca.length < 3) {
             limparBusca()
             return
         }
 
-        _estadoDaTela.value = EstadoDaTela.CARREGANDO
-        viewModelScope.launch {
-            try {
-                if (criterio == "nome") {
-                    // Se a busca é por nome de criança, fazemos em 2 etapas.
-                    buscarResponsavelPeloFilho(textoBusca)
-                } else {
-                    // Se a busca é por responsável, é direto.
-                    buscarFilhosPorResponsavel(textoBusca, isPrefixSearch = true)
-                }
-            } catch (e: Exception) {
-                Log.e("PresencaViewModel", "Exceção na busca", e)
-                _estadoDaTela.value = EstadoDaTela.ERRO
-            }
-        }
-    }
-
-    /**
-     * Etapa 1 (Busca por Criança): Encontra o nome do responsável a partir do nome do filho.
-     */
-    private fun buscarResponsavelPeloFilho(nomeFilho: String) {
-        firestore.collection("Criancas")
-            .orderBy("nome")
-            .startAt(nomeFilho)
-            .endAt(nomeFilho + '\uf8ff')
-            .limit(1) // Só precisamos de 1 resultado para achar o responsável.
-            .get()
-            .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
-                    _estadoDaTela.value = EstadoDaTela.VAZIO
-                    _listaFilhos.value = emptyList()
-                } else {
-                    val responsavel = snapshot.documents.first().getString("responsavel")
-                    if (responsavel != null) {
-                        // Etapa 2: Agora que temos o responsável, buscamos todos os filhos dele.
-                        buscarFilhosPorResponsavel(responsavel, isPrefixSearch = false)
-                    } else {
-                        _estadoDaTela.value = EstadoDaTela.VAZIO
-                        _listaFilhos.value = emptyList()
-                    }
-                }
-            }
-            .addOnFailureListener {
-                Log.e("PresencaViewModel", "Erro ao buscar responsável", it)
-                _estadoDaTela.value = EstadoDaTela.ERRO
-            }
-    }
-
-    /**
-     * Busca final: Pega todos os filhos de um responsável.
-     * @param nomeResponsavel O nome para buscar.
-     * @param isPrefixSearch Se a busca é por prefixo (começa com) ou nome exato.
-     */
-    private fun buscarFilhosPorResponsavel(nomeResponsavel: String, isPrefixSearch: Boolean) {
-        val query = if (isPrefixSearch) {
-            // Busca por prefixo (ex: "João" encontra "João da Silva").
-            firestore.collection("Criancas")
-                .orderBy("responsavel")
-                .startAt(nomeResponsavel)
-                .endAt(nomeResponsavel + '\uf8ff')
-        } else {
-            // Busca exata (ex: "João da Silva" encontra apenas ele).
-            firestore.collection("Criancas").whereEqualTo("responsavel", nomeResponsavel)
+        // Filtra a lista mestra com base no critério e no texto.
+        val resultados = listaMestraCriancas.filter { crianca ->
+            val campoParaBuscar = if (criterio == "nome") crianca.nome else crianca.responsavel
+            campoParaBuscar.contains(textoBusca, ignoreCase = true)
         }
 
-        query.get()
-            .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
-                    _estadoDaTela.value = EstadoDaTela.VAZIO
-                    _listaFilhos.value = emptyList()
-                } else {
-                    // Converte os documentos do Firestore para a nossa lista de UI.
-                    val lista = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(Crianca::class.java)?.let {
-                            FilhoPresenca(id = it.id, nome = it.nome)
-                        }
-                    }
-                    _estadoDaTela.value = EstadoDaTela.SUCESSO
-                    _listaFilhos.value = lista.sortedBy { it.nome } // Exibe a lista ordenada por nome.
-                }
+        // Agrupa os resultados pelo responsável para evitar duplicatas na lista principal.
+        val responsaveisEncontrados = resultados.map { it.responsavel }.distinct()
+
+        // Pega o estado de seleção atual antes de criar a nova lista.
+        val selecaoAtual = _listaFilhos.value?.filter { it.selecionado }?.map { it.id } ?: emptyList()
+
+        val listaFinal = listaMestraCriancas.filter { crianca ->
+            crianca.responsavel in responsaveisEncontrados
+        }.map { crianca ->
+            // Recria o objeto, mas agora PRESERVA o estado de 'selecionado'.
+            FilhoPresenca(
+                id = crianca.id,
+                nome = crianca.nome,
+                selecionado = crianca.id in selecaoAtual
+            )
+        }
+        _listaFilhos.value = listaFinal.sortedBy { it.nome }
+        _estadoDaTela.value = if (listaFinal.isEmpty()) EstadoDaTela.VAZIO else EstadoDaTela.SUCESSO
+    }
+
+    // --- FUNÇÃO PARA GERENCIAR O ESTADO ---
+    /**
+     * Chamado pelo Adapter quando um checkbox é clicado.
+     * @param filhoId O ID da criança que foi clicada.
+     * @param isChecked O novo estado do checkbox.
+     */
+    fun onFilhoSelecionado(filhoId: String, isChecked: Boolean) {
+        // Pega a lista atual do LiveData.
+        val listaAtual = _listaFilhos.value ?: return
+
+        // Encontra o item na lista e cria uma CÓPIA do objeto com o estado atualizado.
+        val novaLista = listaAtual.map { filho ->
+            if (filho.id == filhoId) {
+                filho.copy(selecionado = isChecked)
+            } else {
+                filho
             }
-            .addOnFailureListener {
-                Log.e("PresencaViewModel", "Erro ao buscar filhos", it)
-                _estadoDaTela.value = EstadoDaTela.ERRO
-            }
+        }
+        // Publica a nova lista. O ListAdapter vai detectar a mudança e redesenhar o item.
+        _listaFilhos.value = novaLista
     }
 
     /**
-     * Limpa a lista de resultados e reseta o estado da tela.
+     * Limpa a lista de resultados (não o estado da tela, que já está carregado).
      */
     fun limparBusca() {
         _listaFilhos.value = emptyList()
-        _estadoDaTela.value = EstadoDaTela.VAZIO
+        _estadoDaTela.value = EstadoDaTela.SUCESSO // Volta para o estado de sucesso, pois os dados mestres ainda estão lá.
     }
 
     /**
      * Atualiza o campo de presença para uma lista de IDs de crianças.
      */
-    fun marcarPresenca(idsCriancas: List<String>, tipoPresenca: String) {
-        if (idsCriancas.isEmpty()) {
-            _mensagemFeedback.value = "Nenhuma criança selecionada."
+    fun marcarPresenca(tipoPresenca: String) {
+        // MUDANÇA 1: Obtém a lista de IDs a partir do LiveData, que é a fonte da verdade.
+        val idsSelecionados = _listaFilhos.value?.filter { it.selecionado }?.map { it.id } ?: emptyList()
+
+        if (idsSelecionados.isEmpty()) {
+            _mensagemFeedback.value = "Selecione pelo menos uma criança."
             return
         }
 
         val campoParaAtualizar = when (tipoPresenca) {
             "SENHA" -> "retirouSenha"
-            "KIT" -> "retirouSacola" // Confirme se o campo no seu Firestore é 'retirouSacola'
+            "KIT" -> "retirouSacola"
             else -> {
                 _mensagemFeedback.value = "Tipo de presença inválido."
                 return
@@ -153,20 +144,28 @@ class PresencaViewModel : ViewModel() {
 
         viewModelScope.launch {
             val batch = firestore.batch()
-            idsCriancas.forEach { id ->
+            // MUDANÇA 2: Usa a variável 'idsSelecionados' que acabamos de criar.
+            idsSelecionados.forEach { id ->
                 val docRef = firestore.collection("Criancas").document(id)
                 batch.update(docRef, campoParaAtualizar, "Sim")
             }
 
             batch.commit()
                 .addOnSuccessListener {
-                    _mensagemFeedback.value = "${idsCriancas.size} presença(s) marcada(s) com sucesso!"
-                    limparBusca() // Limpa a tela para a próxima busca.
+                    // MUDANÇA 3: Usa 'idsSelecionados.size' para a mensagem de sucesso.
+                    _mensagemFeedback.value = "${idsSelecionados.size} presença(s) marcada(s) com sucesso!"
+                    limparBusca()
                 }
                 .addOnFailureListener {
                     Log.e("PresencaViewModel", "Erro ao marcar presença", it)
                     _mensagemFeedback.value = "Erro ao marcar presença. Tente novamente."
                 }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Remove o listener quando o ViewModel é destruído para evitar vazamentos de memória.
+        eventoSnapshot?.remove()
     }
 }

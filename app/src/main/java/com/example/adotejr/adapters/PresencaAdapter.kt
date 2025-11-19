@@ -8,10 +8,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.adotejr.databinding.ItemFilhoPresencaBinding
 import com.example.adotejr.model.FilhoPresenca
 
-// 1. Herda de ListAdapter, que precisa de dois parâmetros:
-//    - O tipo do dado da lista (FilhoPresenca)
-//    - O ViewHolder que gerencia a view do item (PresencaViewHolder)
-class PresencaAdapter : ListAdapter<FilhoPresenca, PresencaAdapter.PresencaViewHolder>(DiffCallback) {
+// 1. O Adapter precisa de uma função para se comunicar com o ViewModel.
+class PresencaAdapter(
+    private val onCheckboxClicked: (filhoId: String, isChecked: Boolean) -> Unit
+) : ListAdapter<FilhoPresenca, PresencaAdapter.PresencaViewHolder>(DiffCallback) {
+
+    // Criamos uma referência para a lista que o adapter está usando.
+    private val listaInterna: List<FilhoPresenca>
+        get() = currentList
 
     // 2. O ViewHolder: Ele "segura" as views de um item da lista (o TextView e o CheckBox).
     //    Isso evita ter que chamar findViewById toda vez, o que é custoso.
@@ -28,9 +32,10 @@ class PresencaAdapter : ListAdapter<FilhoPresenca, PresencaAdapter.PresencaViewH
             // Define o estado do CheckBox com base no modelo de dados.
             binding.checkboxPresenca.isChecked = filho.selecionado
 
-            // Adiciona um novo listener para atualizar o modelo de dados quando o usuário clica.
+            // 2. Quando o checkbox é clicado, ele não muda o estado diretamente.
+            // Ele CHAMA A FUNÇÃO que foi passada, notificando o ViewModel.
             binding.checkboxPresenca.setOnCheckedChangeListener { _, isChecked ->
-                filho.selecionado = isChecked
+                onCheckboxClicked(filho.id, isChecked)
             }
         }
     }
@@ -51,15 +56,6 @@ class PresencaAdapter : ListAdapter<FilhoPresenca, PresencaAdapter.PresencaViewH
     override fun onBindViewHolder(holder: PresencaViewHolder, position: Int) {
         val filhoAtual = getItem(position) // Pega o item da lista na posição correta.
         holder.bind(filhoAtual) // Chama a função 'bind' do ViewHolder para preencher a view.
-    }
-
-    /**
-     * Função para obter os IDs de todas as crianças que foram selecionadas (marcadas).
-     * O Fragment chamará esta função quando o botão "Marcar Presença" for clicado.
-     */
-    fun getIdsSelecionados(): List<String> {
-        // 'currentList' é uma propriedade do ListAdapter que contém a lista atual.
-        return currentList.filter { it.selecionado }.map { it.id }
     }
 
     // 6. O DiffUtil: É o "cérebro" do ListAdapter. Ele compara a lista antiga com a nova

@@ -63,7 +63,10 @@ class PresencaFragment : Fragment() {
     }
 
     private fun configurarRecyclerView() {
-        presencaAdapter = PresencaAdapter()
+        // 1. Ao criar o adapter, passamos a função do ViewModel como callback.
+        presencaAdapter = PresencaAdapter { filhoId, isChecked ->
+            viewModel.onFilhoSelecionado(filhoId, isChecked)
+        }
         binding.rvFilhosPresenca.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = presencaAdapter
@@ -91,15 +94,12 @@ class PresencaFragment : Fragment() {
         }
 
         binding.btnMarcarPresenca.setOnClickListener {
-            val idsSelecionados = presencaAdapter.getIdsSelecionados()
+            // 1. O Fragment só precisa saber o TIPO de presença (Senha ou Kit).
             val tipoPresenca = getTipoPresenca()
 
-            if (idsSelecionados.isEmpty()) {
-                Toast.makeText(requireContext(), "Selecione pelo menos uma criança.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            viewModel.marcarPresenca(idsSelecionados, tipoPresenca)
+            // 2. O Fragment simplesmente diz ao ViewModel: "Execute a ação de marcar presença".
+            //    Ele não precisa mais passar a lista de IDs. O ViewModel já sabe.
+            viewModel.marcarPresenca(tipoPresenca)
         }
     }
 
