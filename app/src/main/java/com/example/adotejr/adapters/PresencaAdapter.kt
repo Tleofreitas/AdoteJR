@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.adotejr.databinding.ItemFilhoPresencaBinding
 import com.example.adotejr.model.FilhoPresenca
+import android.graphics.Paint
 
 // 1. O Adapter precisa de uma função para se comunicar com o ViewModel.
 class PresencaAdapter(
@@ -25,12 +26,22 @@ class PresencaAdapter(
         // 3. A função 'bind' conecta os dados de um 'FilhoPresenca' específico às views.
         fun bind(filho: FilhoPresenca) {
             binding.textNomeFilho.text = filho.nome
-
             // Remove o listener antigo para evitar comportamento inesperado durante o scroll.
             binding.checkboxPresenca.setOnCheckedChangeListener(null)
-
             // Define o estado do CheckBox com base no modelo de dados.
             binding.checkboxPresenca.isChecked = filho.selecionado
+
+            if (filho.marcadoComSucesso) {
+                // Aplica o efeito de texto riscado
+                binding.textNomeFilho.paintFlags = binding.textNomeFilho.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                // Desabilita o checkbox para não permitir interação
+                binding.checkboxPresenca.isEnabled = false
+            } else {
+                // Garante que o efeito seja removido se o item for reutilizado
+                binding.textNomeFilho.paintFlags = binding.textNomeFilho.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                // Habilita o checkbox
+                binding.checkboxPresenca.isEnabled = true
+            }
 
             // 2. Quando o checkbox é clicado, ele não muda o estado diretamente.
             // Ele CHAMA A FUNÇÃO que foi passada, notificando o ViewModel.

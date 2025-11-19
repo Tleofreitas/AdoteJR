@@ -11,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlinx.coroutines.delay
 
 class PresencaViewModel : ViewModel() {
 
@@ -27,6 +28,11 @@ class PresencaViewModel : ViewModel() {
     val estadoDaTela: LiveData<EstadoDaTela> = _estadoDaTela
     private val _mensagemFeedback = MutableLiveData<String>()
     val mensagemFeedback: LiveData<String> = _mensagemFeedback
+
+    // Variáveis de estado para a busca atual
+    private var textoBuscaAtual: String = ""
+    private var criterioAtual: String = "responsavel"
+    private var tipoPresencaAtual: String = "SENHA"
 
     init {
         // 2. CARGA INICIAL: Carrega todos os dados do ano atual assim que o ViewModel é criado.
@@ -55,18 +61,43 @@ class PresencaViewModel : ViewModel() {
     }
 
     /**
-     * 3. LÓGICA DE BUSCA: Agora filtra a lista em memória.
-     * @param textoBusca O que o usuário digitou.
-     * @param criterio "responsavel" ou "nome".
+     * Função pública para atualizar os parâmetros de busca e acionar a filtragem.
      */
-    fun buscarCadastros(textoBusca: String, criterio: String) {
+    fun atualizarBusca(texto: String? = null, criterio: String? = null, tipo: String? = null) {
+        texto?.let { textoBuscaAtual = it }
+        criterio?.let { criterioAtual = it }
+        tipo?.let { tipoPresencaAtual = it }
+
+        // Só executa a busca se tivermos texto suficiente
+        if (textoBuscaAtual.length < 3) {
+            limparBusca()
+            return
+        }
+
+        filtrarListaMestra()
+    }
+
+    /**
+     * 3. LÓGICA DE BUSCA: Agora filtra a lista em memória.
+     * * @param textoBusca O que o usuário digitou.
+     * * @param criterio "responsavel" ou "nome".
+     * * @param tipoPresenca "SENHA" ou "KIT", vindo do Chip.
+     */
+    fun buscarCadastros(textoBusca: String, criterio: String, tipoPresenca: String) {
         if (textoBusca.length < 3) {
             limparBusca()
             return
         }
 
-        // Filtra a lista mestra com base no critério e no texto.
-        val resultados = listaMestraCriancas.filter { crianca ->
+        // 1. Primeiro, filtra a lista mestra para incluir apenas crianças que AINDA NÃO retiraram.
+        val listaAindaNaoRetirou = listaMestraCriancas.filter { crianca ->
+            val campoASerVerificado = if (tipoPresenca == "SENHA") crianca.retirouSenha else crianca.retirouSacola
+            // Considera "Não", nulo ou em branco como "não retirou".
+            campoASerVerificado.equals("Não", ignoreCase = true) || campoASerVerificado.isNullOrBlank()
+        }
+
+        // 2. Agora, aplica a busca por texto NESSA LISTA JÁ FILTRADA.
+        val resultados = listaAindaNaoRetirou.filter { crianca ->
             val campoParaBuscar = if (criterio == "nome") crianca.nome else crianca.responsavel
             campoParaBuscar.contains(textoBusca, ignoreCase = true)
         }
@@ -87,6 +118,36 @@ class PresencaViewModel : ViewModel() {
                 selecionado = crianca.id in selecaoAtual
             )
         }
+        _listaFilhos.value = listaFinal.sortedBy { it.nome }
+        _estadoDaTela.value = if (listaFinal.isEmpty()) EstadoDaTela.VAZIO else EstadoDaTela.SUCESSO
+    }
+
+    /**
+     * Função privada que contém TODA a lógica de filtragem.
+     */
+    private fun filtrarListaMestra() {
+        // 1. Filtra por TIPO (Senha/Kit)
+        val listaFiltradaPorTipo = listaMestraCriancas.filter { crianca ->
+            val campo = if (tipoPresencaAtual == "SENHA") crianca.retirouSenha else crianca.retirouSacola
+            campo.equals("Não", ignoreCase = true) || campo.isNullOrBlank()
+        }
+
+        // 2. Filtra por TEXTO (Nome/Responsável)
+        val resultados = listaFiltradaPorTipo.filter { crianca ->
+            val campo = if (criterioAtual == "nome") crianca.nome else crianca.responsavel
+            campo.contains(textoBuscaAtual, ignoreCase = true)
+        }
+
+        // 3. Encontra os responsáveis e monta a lista final
+        val responsaveisEncontrados = resultados.map { it.responsavel }.distinct()
+
+        // CORREÇÃO CRÍTICA: Filtra a 'listaFiltradaPorTipo', não a 'listaMestraCriancas'
+        val listaFinal = listaFiltradaPorTipo.filter { crianca ->
+            crianca.responsavel in responsaveisEncontrados
+        }.map { crianca ->
+            FilhoPresenca(id = crianca.id, nome = crianca.nome)
+        }
+
         _listaFilhos.value = listaFinal.sortedBy { it.nome }
         _estadoDaTela.value = if (listaFinal.isEmpty()) EstadoDaTela.VAZIO else EstadoDaTela.SUCESSO
     }
@@ -124,8 +185,8 @@ class PresencaViewModel : ViewModel() {
     /**
      * Atualiza o campo de presença para uma lista de IDs de crianças.
      */
-    fun marcarPresenca(tipoPresenca: String) {
-        // MUDANÇA 1: Obtém a lista de IDs a partir do LiveData, que é a fonte da verdade.
+    fun marcarPresenca() {
+        // Obtém a lista de IDs a partir do LiveData, que é a fonte da verdade.
         val idsSelecionados = _listaFilhos.value?.filter { it.selecionado }?.map { it.id } ?: emptyList()
 
         if (idsSelecionados.isEmpty()) {
@@ -133,7 +194,7 @@ class PresencaViewModel : ViewModel() {
             return
         }
 
-        val campoParaAtualizar = when (tipoPresenca) {
+        val campoParaAtualizar = when (tipoPresencaAtual) {
             "SENHA" -> "retirouSenha"
             "KIT" -> "retirouSacola"
             else -> {
@@ -144,7 +205,7 @@ class PresencaViewModel : ViewModel() {
 
         viewModelScope.launch {
             val batch = firestore.batch()
-            // MUDANÇA 2: Usa a variável 'idsSelecionados' que acabamos de criar.
+            // Usa a variável 'idsSelecionados' que acabamos de criar.
             idsSelecionados.forEach { id ->
                 val docRef = firestore.collection("Criancas").document(id)
                 batch.update(docRef, campoParaAtualizar, "Sim")
@@ -152,9 +213,27 @@ class PresencaViewModel : ViewModel() {
 
             batch.commit()
                 .addOnSuccessListener {
-                    // MUDANÇA 3: Usa 'idsSelecionados.size' para a mensagem de sucesso.
+                    // Usa 'idsSelecionados.size' para a mensagem de sucesso.
                     _mensagemFeedback.value = "${idsSelecionados.size} presença(s) marcada(s) com sucesso!"
-                    limparBusca()
+
+                    // Etapa 1: Atualiza a lista para o estado "marcado com sucesso"
+                    val listaAtual = _listaFilhos.value ?: emptyList()
+                    val listaComFeedback = listaAtual.map { filho ->
+                        if (filho.id in idsSelecionados) {
+                            filho.copy(marcadoComSucesso = true)
+                        } else {
+                            filho
+                        }
+                    }
+                    _listaFilhos.value = listaComFeedback
+
+                    // Etapa 2: Espera 1.5 segundos e então limpa a lista
+                    viewModelScope.launch {
+                        delay(1500) // Atraso de 1.5 segundos
+                        // Pega a lista mais recente e filtra, mantendo apenas os itens que NÃO foram marcados.
+                        val listaRestante = _listaFilhos.value?.filter { !it.marcadoComSucesso }
+                        _listaFilhos.value = listaRestante ?: emptyList()
+                    }
                 }
                 .addOnFailureListener {
                     Log.e("PresencaViewModel", "Erro ao marcar presença", it)

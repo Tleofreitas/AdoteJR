@@ -73,7 +73,7 @@ class PresencaFragment : Fragment() {
         }
     }
 
-    private fun configurarListeners() {
+    /* private fun configurarListeners() {
         binding.radioGroupCriterioBusca.setOnCheckedChangeListener { _, checkedId ->
             binding.inputLayoutBusca.hint = when (checkedId) {
                 R.id.radioBuscaCrianca -> "Buscar por nome da criança..."
@@ -88,9 +88,21 @@ class PresencaFragment : Fragment() {
             searchRunnable = Runnable {
                 val textoBusca = text.toString().trim()
                 val criterio = getCriterioBusca()
-                viewModel.buscarCadastros(textoBusca, criterio)
+                val tipoPresenca = getTipoPresenca()
+                viewModel.buscarCadastros(textoBusca, criterio, tipoPresenca)
             }
             searchHandler.postDelayed(searchRunnable!!, 500)
+        }
+
+        // Adiciona um listener ao ChipGroup de presença para refazer a busca ao trocar de chip.
+        binding.chipGroupPresenca.setOnCheckedStateChangeListener { group, checkedIds ->
+            // Se o campo de busca já tiver texto, refaz a busca com o novo critério de chip.
+            val textoBusca = binding.editTextBusca.text.toString().trim()
+            if (textoBusca.length >= 3) {
+                val criterio = getCriterioBusca()
+                val tipoPresenca = getTipoPresenca()
+                viewModel.buscarCadastros(textoBusca, criterio, tipoPresenca)
+            }
         }
 
         binding.btnMarcarPresenca.setOnClickListener {
@@ -99,7 +111,34 @@ class PresencaFragment : Fragment() {
 
             // 2. O Fragment simplesmente diz ao ViewModel: "Execute a ação de marcar presença".
             //    Ele não precisa mais passar a lista de IDs. O ViewModel já sabe.
-            viewModel.marcarPresenca(tipoPresenca)
+            viewModel.marcarPresenca()
+        }
+    } */
+
+    private fun configurarListeners() {
+        // Listener do RadioGroup
+        binding.radioGroupCriterioBusca.setOnCheckedChangeListener { _, _ ->
+            viewModel.atualizarBusca(criterio = getCriterioBusca())
+        }
+
+        // Listener do campo de texto
+        binding.editTextBusca.addTextChangedListener { text ->
+            searchRunnable?.let { searchHandler.removeCallbacks(it) }
+            searchRunnable = Runnable {
+                viewModel.atualizarBusca(texto = text.toString().trim())
+            }
+            searchHandler.postDelayed(searchRunnable!!, 500)
+        }
+
+        // Listener do ChipGroup de presença
+        binding.chipGroupPresenca.setOnCheckedStateChangeListener { _, _ ->
+            viewModel.atualizarBusca(tipo = getTipoPresenca())
+        }
+
+        // Listener do botão
+        binding.btnMarcarPresenca.setOnClickListener {
+            // A função no ViewModel não precisa mais do parâmetro
+            viewModel.marcarPresenca()
         }
     }
 
