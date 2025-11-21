@@ -115,7 +115,7 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="16dp"
             android:text="Deslogar Conta"
             android:textColor="@color/vermelhoCarmim"
             app:layout_constraintEnd_toEndOf="parent"

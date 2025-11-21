@@ -45,6 +45,8 @@ class LideresFragment : Fragment() {
 
         Log.d("PERMISSAO_DEBUG", "LideresFragment: Nível recebido: '$nivelUsuarioLogado'")
 
+        binding.fabAdicionarLider.isVisible = (nivelUsuarioLogado == "Admin")
+
         configurarRecyclerView()
         configurarObservadores()
         configurarCliqueFab()

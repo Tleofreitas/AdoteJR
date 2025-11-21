@@ -23,39 +23,24 @@ class LideresAdapter(
             binding.textNomeLider.text = lider.nome
 
             // --- LÓGICA DE CONTROLE DE BOTÕES ---
-            /*
             // Verifica se o nome do líder é "Igreja" (ignorando maiúsculas/minúsculas)
             if (lider.nome.equals("Igreja", ignoreCase = true)) {
                 // Se for o líder "Igreja", esconde os botões
                 binding.btnEditarLider.visibility = View.GONE
                 binding.btnExcluirLider.visibility = View.GONE
             } else {
-                // Se for qualquer outro líder, mostra os botões e configura os cliques
-                binding.btnEditarLider.visibility = View.VISIBLE
-                binding.btnExcluirLider.visibility = View.VISIBLE
+                if (nivelUsuarioLogado == "Admin") {
+                    // Se for Admin, mostra os botões para TODOS os líderes da lista.
+                    binding.btnEditarLider.visibility = View.VISIBLE
+                    binding.btnExcluirLider.visibility = View.VISIBLE
 
-                binding.btnEditarLider.setOnClickListener {
-                    onEditarClick(lider)
+                    binding.btnEditarLider.setOnClickListener { onEditarClick(lider) }
+                    binding.btnExcluirLider.setOnClickListener { onExcluirClick(lider) }
+                } else {
+                    // Se não for Admin, esconde os botões para TODOS.
+                    binding.btnEditarLider.visibility = View.GONE
+                    binding.btnExcluirLider.visibility = View.GONE
                 }
-                binding.btnExcluirLider.setOnClickListener {
-                    onExcluirClick(lider)
-                }
-            } */
-
-            // --- LÓGICA DE PERMISSÃO SIMPLIFICADA E CORRETA ---
-
-            // A única regra aqui é: o usuário é Admin?
-            if (nivelUsuarioLogado == "Admin") {
-                // Se for Admin, mostra os botões para TODOS os líderes da lista.
-                binding.btnEditarLider.visibility = View.VISIBLE
-                binding.btnExcluirLider.visibility = View.VISIBLE
-
-                binding.btnEditarLider.setOnClickListener { onEditarClick(lider) }
-                binding.btnExcluirLider.setOnClickListener { onExcluirClick(lider) }
-            } else {
-                // Se não for Admin, esconde os botões para TODOS.
-                binding.btnEditarLider.visibility = View.GONE
-                binding.btnExcluirLider.visibility = View.GONE
             }
         }
     }
