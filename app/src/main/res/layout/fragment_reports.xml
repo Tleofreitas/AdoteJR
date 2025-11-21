@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:visibility="visible"
-                app:constraint_referenced_ids="card_sexo, card_pcd, card_faixa_etaria_geral, card_faixa_etaria_meninos, card_faixa_etaria_meninas, card_apadrinhamento" />
+                app:constraint_referenced_ids="card_sexo, card_pcd, card_faixa_etaria_agrupado" />
 
             <!-- Linha 1: Gráficos de Pizza -->
             <com.google.android.material.card.MaterialCardView

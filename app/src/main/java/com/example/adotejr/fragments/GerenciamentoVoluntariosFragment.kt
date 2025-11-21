@@ -1,6 +1,7 @@
 package com.example.adotejr.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,7 +63,14 @@ private class ViewPagerAdapter(
                     putString("nivelUsuarioLogado", nivelUsuario)
                 }
             }
-            1 -> LideresFragment()  // Posição 1 é a aba "Líderes"
+            // Posição 1 é a aba "Líderes"
+            1 -> LideresFragment().apply {
+                // Passa o mesmo nível para o LideresFragment
+                arguments = Bundle().apply {
+                    putString("nivelUsuarioLogado", nivelUsuario)
+                }
+            }
+
             else -> throw IllegalStateException("Posição de aba inválida")
         }
     }

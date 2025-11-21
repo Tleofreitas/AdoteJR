@@ -10,6 +10,7 @@ import com.example.adotejr.model.Lider
 // O adapter recebe as funções de callback para os cliques,
 // exatamente como o UsuariosAdapter.
 class LideresAdapter(
+    private val nivelUsuarioLogado: String,
     private val onEditarClick: (Lider) -> Unit,
     private val onExcluirClick: (Lider) -> Unit
 ) : RecyclerView.Adapter<LideresAdapter.LiderViewHolder>() {
@@ -22,6 +23,7 @@ class LideresAdapter(
             binding.textNomeLider.text = lider.nome
 
             // --- LÓGICA DE CONTROLE DE BOTÕES ---
+            /*
             // Verifica se o nome do líder é "Igreja" (ignorando maiúsculas/minúsculas)
             if (lider.nome.equals("Igreja", ignoreCase = true)) {
                 // Se for o líder "Igreja", esconde os botões
@@ -38,6 +40,22 @@ class LideresAdapter(
                 binding.btnExcluirLider.setOnClickListener {
                     onExcluirClick(lider)
                 }
+            } */
+
+            // --- LÓGICA DE PERMISSÃO SIMPLIFICADA E CORRETA ---
+
+            // A única regra aqui é: o usuário é Admin?
+            if (nivelUsuarioLogado == "Admin") {
+                // Se for Admin, mostra os botões para TODOS os líderes da lista.
+                binding.btnEditarLider.visibility = View.VISIBLE
+                binding.btnExcluirLider.visibility = View.VISIBLE
+
+                binding.btnEditarLider.setOnClickListener { onEditarClick(lider) }
+                binding.btnExcluirLider.setOnClickListener { onExcluirClick(lider) }
+            } else {
+                // Se não for Admin, esconde os botões para TODOS.
+                binding.btnEditarLider.visibility = View.GONE
+                binding.btnExcluirLider.visibility = View.GONE
             }
         }
     }

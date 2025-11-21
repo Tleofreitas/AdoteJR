@@ -1,10 +1,31 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
 }
 
+// CÓDIGO KOTLIN PARA CARREGAR AS PROPRIEDADES
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties() // Agora 'Properties' é reconhecido por causa do import
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
+}
+
 android {
+    // CRIAR A CONFIGURAÇÃO DE ASSINATURA
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     namespace = "com.example.adotejr"
     compileSdk = 35
 
@@ -19,12 +40,15 @@ android {
     }
 
     buildTypes {
-        release {
+        // CONFIGURAR O BUILD TYPE 'release'
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Associa a configuração de assinatura ao build type
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

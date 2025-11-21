@@ -1,6 +1,7 @@
 package com.example.adotejr.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,8 @@ import com.example.adotejr.viewmodel.LideresViewModel
 
 class LideresFragment : Fragment() {
 
+    private var nivelUsuarioLogado: String = "User"
+
     private lateinit var binding: FragmentLideresBinding
     private lateinit var lideresAdapter: LideresAdapter
 
@@ -36,6 +39,12 @@ class LideresFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        arguments?.let {
+            nivelUsuarioLogado = it.getString("nivelUsuarioLogado") ?: "User"
+        }
+
+        Log.d("PERMISSAO_DEBUG", "LideresFragment: Nível recebido: '$nivelUsuarioLogado'")
+
         configurarRecyclerView()
         configurarObservadores()
         configurarCliqueFab()
@@ -46,6 +55,7 @@ class LideresFragment : Fragment() {
 
     private fun configurarRecyclerView() {
         lideresAdapter = LideresAdapter(
+            nivelUsuarioLogado = nivelUsuarioLogado,
             onEditarClick = { lider ->
                 mostrarDialogoEdicao(lider)
             },
