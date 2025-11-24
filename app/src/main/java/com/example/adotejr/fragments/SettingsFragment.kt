@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentSettingsBinding
 import com.example.adotejr.model.Definicoes
@@ -262,48 +263,6 @@ class SettingsFragment : Fragment() {
             return false
         }
     }
-
-    /*
-    val currentDate = LocalDate.now()
-    val formatterMes = DateTimeFormatter.ofPattern("MM")
-    val formatterDia = DateTimeFormatter.ofPattern("dd")
-    val mes = currentDate.format(formatterMes)
-    val dia = currentDate.format(formatterDia)
-
-    private val senhaAcesso = "$mes$dia@dote";
-    private fun mostrarDialogoPermissao() {
-        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_acesso_restrito, null)
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(view)
-            .create()
-
-        // Acessar o EditText e o TextInputLayout do layout do Dialog
-        val editSenhaRestrita = view.findViewById<EditText>(R.id.editSenhaRestrita)
-        val textInputSenhaRestrita = view.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.textInputSenhaRestrita)
-
-        // Configurar clique no botão do Dialog
-        view.findViewById<Button>(R.id.btnChecarSenhaRestrita).setOnClickListener {
-            val senhaDigitada = editSenhaRestrita.text.toString()
-
-            if (senhaDigitada.isNotEmpty()) {
-                textInputSenhaRestrita.error = null // Remove erro
-                if(senhaDigitada == senhaAcesso) {
-                    editarCampos()
-                    Toast.makeText(requireContext(), "Campos liberados para alteração", Toast.LENGTH_LONG).show()
-                    dialog.dismiss() // Fecha o Dialog
-                } else {
-                    Toast.makeText(requireContext(), "Senha INCORRETA!", Toast.LENGTH_LONG).show()
-                }
-            } else {
-                textInputSenhaRestrita.error = "Preencha a senha" // Mostra erro
-            }
-        }
-
-        view.findViewById<Button>(R.id.btnFecharDialogSenhaRestrita).setOnClickListener {
-            dialog.dismiss() // Fecha o Dialog
-        }
-        dialog.show()
-    } */
 
     override fun onStart() {
         super.onStart()

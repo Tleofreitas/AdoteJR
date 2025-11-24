@@ -24,8 +24,8 @@ class LideresAdapter(
 
             // --- LÓGICA DE CONTROLE DE BOTÕES ---
             // Verifica se o nome do líder é "Igreja" (ignorando maiúsculas/minúsculas)
-            if (lider.nome.equals("Igreja", ignoreCase = true)) {
-                // Se for o líder "Igreja", esconde os botões
+            if ((lider.nome.equals("Igreja", ignoreCase = true)) or (lider.nome.equals("Nenhum dos anteriores", ignoreCase = true))) {
+                // Se for os líderes default, esconde os botões
                 binding.btnEditarLider.visibility = View.GONE
                 binding.btnExcluirLider.visibility = View.GONE
             } else {
