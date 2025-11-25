@@ -40,6 +40,7 @@ class NovoCadastrarFragment : Fragment() {
         observarEstadoDoCadastro()
         configurarListeners()
         FormatadorUtil.formatarCPF(binding.editTextCpf)
+        FormatadorUtil.formatarDataNascimento(binding.editTextDtNascimento) // Adiciona o formatador de data
 
         viewModel.verificarPermissaoDeCadastro()
     }
@@ -60,6 +61,35 @@ class NovoCadastrarFragment : Fragment() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+
+        // Listener para o campo de Data de Nascimento
+        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                notificarViewModelSobreMudancaDeIdade()
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        // Listener para o RadioGroup de PCD
+        binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, _ ->
+            val isPcd = binding.includeDadosPCD.radioButtonPcdSim.isChecked
+            binding.includeDadosPCD.InputDescricaoPcd.isEnabled = isPcd
+            binding.includeDadosPCD.editTextPcd.isEnabled = isPcd
+            if (!isPcd) {
+                binding.includeDadosPCD.editTextPcd.text?.clear()
+            }
+            notificarViewModelSobreMudancaDeIdade()
+        }
+    }
+
+    /**
+     * Função auxiliar para notificar o ViewModel quando qualquer dado relevante para a idade mudar.
+     */
+    private fun notificarViewModelSobreMudancaDeIdade() {
+        val dataNascimento = binding.editTextDtNascimento.text.toString()
+        val isPcd = binding.includeDadosPCD.radioButtonPcdSim.isChecked
+        viewModel.onDadosDeIdadeAlterados(dataNascimento, isPcd)
     }
 
     private fun observarEstadoDoCadastro() {
@@ -126,6 +156,28 @@ class NovoCadastrarFragment : Fragment() {
                     // Bloqueia o formulário, mas libera o CPF para nova tentativa
                     controlarFormulario(habilitarFormulario = false, habilitarCpf = true)
                     Toast.makeText(requireContext(), state.mensagem, Toast.LENGTH_LONG).show()
+                }
+                // --- REAÇÕES AOS ESTADOS DE IDADE ---
+                is CadastroState.IdadeCalculada -> {
+                    binding.editTextIdade.setText(state.idade.toString())
+                    controlarFormulario(habilitarFormulario = true, habilitarCpf = false)
+                }
+                is CadastroState.IdadeInvalida -> {
+                    binding.editTextIdade.setText("0")
+                    binding.InputDtNascimento.error = "Data inválida"
+                }
+                is CadastroState.IdadeAcimaDoLimite -> {
+                    binding.InputDtNascimento.error = "Data excedida!"
+                    Toast.makeText(requireContext(), "Idade acima do limite permitido!", Toast.LENGTH_LONG).show()
+
+                    // --- LÓGICA DE CORREÇÃO ADICIONADA AQUI ---
+                    // Bloqueia o formulário principal, mas deixa os campos de correção habilitados.
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = false)
+
+                    // Permite que o usuário corrija a data de nascimento ou o status de PCD.
+                    binding.editTextDtNascimento.isEnabled = true
+                    binding.includeDadosPCD.radioButtonPcdSim.isEnabled = true
+                    binding.includeDadosPCD.radioButtonPcdNao.isEnabled = true
                 }
             }
         }

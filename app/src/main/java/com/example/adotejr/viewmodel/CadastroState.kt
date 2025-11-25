@@ -20,4 +20,9 @@ sealed class CadastroState {
     object CpfInvalido : CadastroState()
     // --- ESTADO PARA RESET ---
     object FormularioResetado : CadastroState()
+
+    // --- ESTADOS PARA VALIDAÇÃO DE IDADE ---
+    data class IdadeCalculada(val idade: Int) : CadastroState() // Apenas informa a idade calculada.
+    object IdadeInvalida : CadastroState() // A data de nascimento é inválida.
+    object IdadeAcimaDoLimite : CadastroState() // A idade calculada excede o limite permitido.
 }

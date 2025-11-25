@@ -11,6 +11,9 @@ import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.adotejr.utils.FormatadorUtil
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class NovoCadastrarViewModel : ViewModel() {
 
@@ -19,6 +22,10 @@ class NovoCadastrarViewModel : ViewModel() {
     // 1. LiveData para comunicar o estado da tela de cadastro ao Fragment
     private val _cadastroState = MutableLiveData<CadastroState>()
     val cadastroState: LiveData<CadastroState> = _cadastroState
+
+    // 1. Variáveis para armazenar os limites de idade
+    private var limiteIdadeNormal: Int = 12 // Valor padrão
+    private var limiteIdadePCD: Int = 15    // Valor padrão
 
     /**
      * Função principal que verifica se o cadastro está permitido.
@@ -36,6 +43,10 @@ class NovoCadastrarViewModel : ViewModel() {
                     _cadastroState.value = CadastroState.BloqueadoPorFaltaDeDefinicoes
                     return@launch
                 }
+
+                // Armazena os limites de idade quando as definições são carregadas
+                limiteIdadeNormal = definicoesDoc.getString("limiteIdadeNormal")?.toIntOrNull() ?: 12
+                limiteIdadePCD = definicoesDoc.getString("limiteIdadePCD")?.toIntOrNull() ?: 15
 
                 val dataInicial = definicoesDoc.getString("dataInicial") ?: ""
                 val dataFinal = definicoesDoc.getString("dataFinal") ?: ""
@@ -132,5 +143,69 @@ class NovoCadastrarViewModel : ViewModel() {
      */
     fun resetarEstadoDoFormulario() {
         _cadastroState.value = CadastroState.FormularioResetado
+    }
+
+    // --- LÓGICA DE IDADE ---
+    /**
+     * Chamado sempre que a data de nascimento ou o status de PCD muda.
+     * @param dataNascimentoStr A data de nascimento vinda do EditText.
+     * @param isPcd Se o RadioButton "Sim" para PCD está marcado.
+     */
+    fun onDadosDeIdadeAlterados(dataNascimentoStr: String, isPcd: Boolean) {
+        if (dataNascimentoStr.length < 10) {
+            _cadastroState.value = CadastroState.IdadeInvalida // Formato incompleto
+            return
+        }
+
+        if (!isDataValida(dataNascimentoStr)) {
+            _cadastroState.value = CadastroState.IdadeInvalida
+            return
+        }
+
+        val idade = calcularIdade(dataNascimentoStr)
+        val limite = if (isPcd) limiteIdadePCD else limiteIdadeNormal
+
+        if (idade > limite) {
+            _cadastroState.value = CadastroState.IdadeAcimaDoLimite
+        } else {
+            // Se a idade está dentro do limite, apenas informa a idade calculada
+            _cadastroState.value = CadastroState.IdadeCalculada(idade)
+        }
+    }
+
+    /**
+     * Função auxiliar para calcular a idade.
+     */
+    private fun calcularIdade(dataNascimentoString: String): Int {
+        return try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dataNascimento = formato.parse(dataNascimentoString) ?: return -1
+
+            val calendarioNascimento = Calendar.getInstance().apply { time = dataNascimento }
+            val calendarioAtual = Calendar.getInstance()
+
+            var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
+            if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
+                idade--
+            }
+            idade
+        } catch (e: Exception) {
+            -1 // Retorna -1 em caso de erro de parse
+        }
+    }
+
+    /**
+     * Função auxiliar para validar a data.
+     */
+    private fun isDataValida(data: String): Boolean {
+        return try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            formato.isLenient = false
+            val dataParseada = formato.parse(data)
+            val dataAtual = Calendar.getInstance().time
+            dataParseada.before(dataAtual)
+        } catch (e: Exception) {
+            false
+        }
     }
 }
