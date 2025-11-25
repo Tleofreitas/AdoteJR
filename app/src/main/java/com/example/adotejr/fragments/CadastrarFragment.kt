@@ -1,7 +1,7 @@
 package com.example.adotejr.fragments
 
 import android.Manifest
-import android.app.Activity.RESULT_OK
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
@@ -11,1292 +11,568 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.EditText
-import android.widget.RadioButton
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.example.adotejr.R
+import androidx.fragment.app.viewModels
+import com.example.adotejr.R // Garanta que este é o import do seu projeto
 import com.example.adotejr.ValidarCriancaActivity
 import com.example.adotejr.databinding.FragmentCadastrarBinding
-import com.example.adotejr.model.Crianca
-import com.example.adotejr.model.Responsavel
+import com.example.adotejr.model.DadosFormularioCadastro
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
-import com.example.adotejr.utils.NetworkUtils
-import com.google.android.material.imageview.ShapeableImageView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-import java.io.ByteArrayOutputStream
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Locale
+import com.example.adotejr.viewmodel.CadastroState
+import com.example.adotejr.viewmodel.LideresViewModel
+import com.example.adotejr.viewmodel.CadastrarViewModel
 
 class CadastrarFragment : Fragment() {
-    private lateinit var binding: FragmentCadastrarBinding
 
-    // Autenticação
-    private val firebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
+    private var _binding: FragmentCadastrarBinding? = null
+    private val binding get() = _binding!!
 
-    // Armazenamento Storage
-    private val storage by lazy {
-        FirebaseStorage.getInstance()
-    }
+    // ViewModel principal para a lógica de cadastro
+    private val viewModel: CadastrarViewModel by viewModels()
+    // ViewModel secundário para buscar a lista de líderes
+    private val lideresViewModel: LideresViewModel by viewModels()
 
-    // Banco de dados Firestore
-    private val firestore by lazy {
-        FirebaseFirestore.getInstance()
-    }
+    private var isCpfValidadoComSucesso = false
+
+    // Variáveis para gerenciar a imagem
+    private var imagemSelecionadaUri: Uri? = null
+    private var bitmapImagemSelecionada: Bitmap? = null
 
     // Gerenciador de permissões
     private val gerenciadorPermissoes = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissoes ->
         if (permissoes[Manifest.permission.CAMERA] == true) {
-            abrirCamera()
+            mostrarDialogoEscolherImagem()
         } else {
-            Toast.makeText(
-                requireContext(),
-                "Para utilizar estes recursos libere as permissões!", Toast.LENGTH_LONG
-            ).show()
+            Toast.makeText(requireContext(), "Permissão de câmera negada.", Toast.LENGTH_LONG).show()
         }
     }
 
-    // ---------- VARIÁVEIS ----------
-    // Armazenar o URI da imagem
-    var imagemSelecionadaUri: Uri? = null
+    // Gerenciador da câmera
+    private val gerenciadorCamera = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { resultado ->
+        if (resultado.resultCode == Activity.RESULT_OK) {
+            val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                resultado.data?.extras?.getParcelable("data", Bitmap::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                resultado.data?.extras?.getParcelable("data")
+            }
 
-    // Armazenar o Bitmap da imagem
-    var bitmapImagemSelecionada: Bitmap? = null
+            if (bitmap != null) {
+                bitmapImagemSelecionada = bitmap
+                imagemSelecionadaUri = null
+                binding.includeFotoCrianca.imagePerfil.setImageBitmap(bitmap)
+            }
+        }
+    }
 
-    // link da imagem
-    var foto = ""
-    private var idGerado: String = ""
-    private lateinit var editTextCpf: EditText
-    private lateinit var editTextNome: EditText
-    private lateinit var editTextDataNascimento: EditText
-    private lateinit var editTextBlusa: EditText
-    private lateinit var editTextCalca: EditText
-    private lateinit var editTextSapato: EditText
-    private var especial: String = "Não"
-    private lateinit var editTextPcd: EditText
-    private lateinit var editTextGostosPessoais: EditText
-    private lateinit var editTextVinculoFamiliar: EditText
-    private lateinit var editTextNomeResponsavel: EditText
-    private lateinit var editTextVinculo: EditText
-    private lateinit var editTextTelefonePrincipal: EditText
-    private lateinit var editTextTelefone2: EditText
-    private lateinit var editTextCEP: EditText
-    private lateinit var editTextNumero: EditText
-    private lateinit var editTextRua: EditText
-    private lateinit var editTextComplemento: EditText
-    private lateinit var editTextBairro: EditText
-    private lateinit var editTextCidade: EditText
-    private lateinit var selecaoIndicacao: String
-    private lateinit var editTextIdade: EditText
-    private lateinit var LLSexoBtnMasculino: RadioButton
-    private lateinit var LLSexoBtnFeminino: RadioButton
-    private lateinit var pcdBtnSim: RadioButton
-    private lateinit var pcdBtnNao: RadioButton
-    var editTexts: List<EditText>? = null
-    var ano = LocalDate.now().year
-
-    var dataInicial = ""
-    var dataFinal = ""
-    private var quantidadeCriancasTotal = ""
-    var limiteNormal = ""
-    var limitePCD = ""
-    private var qtdCadastrosFeitos: Int = 0
-    private var listaResponsaveisFiltrada = listOf<Responsavel>()
+    // Gerenciador da galeria
+    private val gerenciadorGaleria = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            imagemSelecionadaUri = uri
+            bitmapImagemSelecionada = null
+            binding.includeFotoCrianca.imagePerfil.setImageURI(uri)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentCadastrarBinding.inflate(
-            inflater, container, false
-        )
-
+        _binding = FragmentCadastrarBinding.inflate(inflater, container, false)
         return binding.root
-    }
-
-    override fun onStart() {
-        super.onStart()
-        recuperarQtdCadastros(FirebaseFirestore.getInstance()) { quantidade ->
-            qtdCadastrosFeitos = quantidade
-        }
-        recuperarDadosDefinicoes()
-    }
-
-    private fun recuperarDadosDefinicoes() {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            firestore.collection("Definicoes")
-                .document( ano.toString() )
-                .get()
-                .addOnSuccessListener { documentSnapshot ->
-                    val dadosDefinicoes = documentSnapshot.data
-                    if ( dadosDefinicoes != null ){
-                        dataInicial = dadosDefinicoes["dataInicial"] as String
-                        dataFinal = dadosDefinicoes["dataFinal"] as String
-                        quantidadeCriancasTotal = dadosDefinicoes["quantidadeDeCriancas"] as String
-                        limiteNormal = dadosDefinicoes["limiteIdadeNormal"] as String
-                        limitePCD = dadosDefinicoes["limiteIdadePCD"] as String
-
-                        val estaNoIntervalo = verificarDataNoIntervalo(dataInicial, dataFinal)
-                        // Data de tentativa de cadastro não está no intervalo do settings ?
-                        if(!estaNoIntervalo){
-                            // Desabilita os campos para evitar qualquer tentativa de cadastro
-                            binding.editTextCpf.isEnabled = false
-                            binding.btnChecarCpf.isEnabled = false
-                            alertaDefinicoes("DATA", 0, 0.toString())
-                            // Toast.makeText(requireContext(), "A data vigente está no intervalo? $estaNoIntervalo", Toast.LENGTH_LONG).show()
-                        } else if(qtdCadastrosFeitos >= quantidadeCriancasTotal.toInt()){
-                            // Desabilita os campos para evitar qualquer tentativa de cadastro
-                            binding.editTextCpf.isEnabled = false
-                            binding.btnChecarCpf.isEnabled = false
-                            alertaDefinicoes("LIMITE", 0, 0.toString())
-                        } else if((qtdCadastrosFeitos<quantidadeCriancasTotal.toInt()) &&
-                            (quantidadeCriancasTotal.toInt()-qtdCadastrosFeitos) <= 50 ) {
-                            alertaDefinicoes("CHEGANDOLIMITE",qtdCadastrosFeitos,quantidadeCriancasTotal)
-                        }
-                    } else {
-                        // Desabilita os campos para evitar qualquer tentativa de cadastro
-                        binding.editTextCpf.isEnabled = false
-                        binding.btnChecarCpf.isEnabled = false
-                        alertaDefinicoes("DEF", 0, 0.toString())
-                    }
-                } .addOnFailureListener { exception ->
-                    Log.e("Firestore", "Error getting documents: ", exception)
-                }
-        } else {
-            binding.editTextCpf.isEnabled = false
-            binding.btnChecarCpf.isEnabled = false
-            Toast.makeText(
-                requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
-    private fun recuperarQtdCadastros(firestore: FirebaseFirestore, callback: (Int) -> Unit) {
-        if (NetworkUtils.conectadoInternet(requireContext())) {
-            firestore.collection("Criancas")
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    val quantidade = querySnapshot.size()
-                    callback(quantidade)
-                }
-                .addOnFailureListener { exception ->
-                    Log.e("Firebase", "Erro ao obter documentos: ", exception)
-                    callback(0) // Retorna 0 em caso de falha
-                }
-        } else {
-            binding.editTextCpf.isEnabled = false
-            binding.btnChecarCpf.isEnabled = false
-            Toast.makeText(
-                requireContext(),
-                "Verifique a conexão com a internet e tente novamente!",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
-    private fun verificarDataNoIntervalo(dataInicialStr: String, dataFinalStr: String): Boolean {
-        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Define o formato das datas
-
-        // Obtém a data vigente (hoje) sem horas
-        val hoje = LocalDate.now()
-
-        // Converte as strings para LocalDate
-        val dataInicial = LocalDate.parse(dataInicialStr, formato)
-        val dataFinal = LocalDate.parse(dataFinalStr, formato)
-
-        // Verifica se a data vigente está dentro do intervalo
-        return !hoje.isBefore(dataInicial) && !hoje.isAfter(dataFinal)
-    }
-
-    private fun alertaDefinicoes(
-        tipo: String,
-        qtdCadastrosFeitos: Int,
-        quantidadeCriancasTotal: String
-    ) {
-        val alertBuilder = AlertDialog.Builder(requireContext())
-
-        alertBuilder.setTitle("Cadastros não permitidos!")
-
-        if(tipo == "DEF"){
-            alertBuilder.setMessage("Não há datas liberadas para realização de cadastros." +
-                    "\nAdicione os campos no menu Definições ou fale com a administração do Adote.")
-
-        } else if(tipo == "DATA"){
-            alertBuilder.setMessage("Período de cadastro finalizado." +
-                    "\nDúvidas procurar a administração do Adote.")
-
-        } else if(tipo == "LIMITE") {
-            alertBuilder.setMessage("Cadastro finalizado." +
-                    "\nA quantidade limite de crianças foi atingido." +
-                    "\nDúvidas procurar a administração do Adote.")
-
-        } else if(tipo == "CHEGANDOLIMITE") {
-            alertBuilder.setTitle("Limite quase atingido!")
-            alertBuilder.setMessage("Cadastros realizados: $qtdCadastrosFeitos" +
-                    "\nLimite: $quantidadeCriancasTotal")
-        }
-
-        val customView = LayoutInflater.from(requireContext()).inflate(R.layout.botao_alerta, null)
-        alertBuilder.setView(customView)
-
-        val dialog = alertBuilder.create()
-
-        // Configurar o botão personalizado
-        val btnFechar: Button = customView.findViewById(R.id.btnFechar)
-        btnFechar.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.show()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicialize os EditTexts
-        editTextNome = binding.editTextNome
-        editTextCpf = binding.editTextCpf
-        editTextDataNascimento = binding.editTextDtNascimento
-        editTextIdade = binding.editTextIdade
-        LLSexoBtnMasculino = binding.includeDadosCriancaSacola.radioButtonMasculino
-        LLSexoBtnMasculino.isEnabled = false
-        LLSexoBtnFeminino = binding.includeDadosCriancaSacola.radioButtonFeminino
-        LLSexoBtnFeminino.isEnabled = false
-        editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
-        editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
-        editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
-        pcdBtnSim = binding.includeDadosPCD.radioButtonPcdSim
-        pcdBtnSim.isEnabled = false
-        pcdBtnNao = binding.includeDadosPCD.radioButtonPcdNao
-        pcdBtnNao.isEnabled = false
-        editTextPcd = binding.includeDadosPCD.editTextPcd
-        editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
-        editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
-        editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
-        editTextVinculo = binding.includeDadosResponsavel.editTextVinculo
-        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
-        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
-        editTextCEP = binding.includeEndereco.editTextCep
-        editTextNumero = binding.includeEndereco.editTextNumero
-        editTextRua = binding.includeEndereco.editTextRua
-        editTextComplemento = binding.includeEndereco.editTextComplemento
-        editTextBairro = binding.includeEndereco.editTextBairro
-        editTextCidade = binding.includeEndereco.editTextCidade
-        binding.includeDadosResponsavel.menuIndicacao.isEnabled = false
+        controlarFormulario(habilitarFormulario = false, habilitarCpf = false)
 
-        // Lista com os EditTexts
-        editTexts = listOf(editTextNome, editTextDataNascimento, editTextBlusa, editTextCalca,
-            editTextSapato, editTextGostosPessoais, editTextVinculoFamiliar,
-            editTextNomeResponsavel, editTextVinculo, editTextTelefonePrincipal,
-            editTextTelefone2, editTextCEP, editTextNumero, editTextRua, editTextComplemento,
-            editTextBairro, editTextCidade)
-
-        // Iterar sobre cada um e desativar
-        for (editText in editTexts!!) {
-            editText.isEnabled = false
-        }
-
-        binding.btnCadastrarCrianca.isEnabled = false
-        binding.includeFotoCrianca.fabSelecionar.isEnabled = false
-
-        editTextCpf = binding.editTextCpf
-        FormatadorUtil.formatarCPF(editTextCpf)
-
-        editTextDataNascimento = binding.editTextDtNascimento
-        FormatadorUtil.formatarDataNascimento(editTextDataNascimento)
-
-        // Adiciona um TextWatcher para calcular idade automaticamente
-        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                val dataNascimento = s.toString()
-
-                if (dataNascimento.length == 10) { // Verifica se o formato está completo
-                    if (isDataValida(dataNascimento)) {
-                        binding.InputDtNascimento.error = null // Remove erro
-
-                        val idade = calcularIdadeCompat(dataNascimento)
-
-                        if(especial=="Não"){
-                            if(idade > limiteNormal.toInt()){
-                                Toast.makeText(requireContext(), "Cadastro +$limiteNormal anos não permitido!", Toast.LENGTH_LONG).show()
-                                editarCampos(false)
-                                // Reabilita o botão
-                                binding.btnChecarCpf.isEnabled = true
-                            }
-                        } else {
-                            if(idade > limitePCD.toInt()){
-                                Toast.makeText(requireContext(), "Cadastro +$limitePCD anos não permitido!", Toast.LENGTH_LONG).show()
-                                editarCampos(false)
-                                // Reabilita o botão
-                                binding.btnChecarCpf.isEnabled = true
-                            }
-                        }
-                        binding.editTextIdade.setText(idade.toString()) // Atualiza idade
-                    } else {
-                        binding.editTextIdade.setText("0") // Define idade como 0
-                        binding.InputDtNascimento.error = "Data inválida!" // Exibe mensagem de erro
-                    }
-                } else {
-                    binding.editTextIdade.setText("") // Limpa o campo de idade
-                    binding.InputDtNascimento.error =
-                        "Data incompleta ou inválida." // Mensagem para formato incompleto
-                }
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
+        observarEstadoDoCadastro()
+        configurarListeners()
+        FormatadorUtil.formatarCPF(binding.editTextCpf)
+        FormatadorUtil.formatarDataNascimento(binding.editTextDtNascimento)
+        FormatadorUtil.formatarTelefone(binding.includeDadosResponsavel.editTextTel1)
+        FormatadorUtil.formatarTelefone(binding.includeDadosResponsavel.editTextTel2)
 
         configurarAutoCompleteIndicacao()
 
-        // Adiciona um TextWatcher para preencher dados do responsavel automaticamente
-        binding.includeDadosResponsavel.editTextVinculoFamiliar.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                val cpfResponsavel = s.toString()
+        viewModel.verificarPermissaoDeCadastro()
+    }
 
-                if (cpfResponsavel.trim().length == 11) { // Verifica se o formato está completo
-                    responsavelCadastrado(cpfResponsavel) { cadastrado ->
-                        if (cadastrado) {
-                            // Log.d("DEBUG_Resp", "Responsável encontrado no sistema!")
-                            // Toast.makeText(requireContext(), "$listaResponsaveisFiltrada", Toast.LENGTH_LONG).show()
+    private fun configurarAutoCompleteIndicacao() {
+        lideresViewModel.listaNomesLideres.observe(viewLifecycleOwner) { nomesLideres ->
+            val opcoesComDefault = mutableListOf("-- Selecione --").apply { addAll(nomesLideres) }
+            val adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line, // Caminho completo para o layout
+                opcoesComDefault.distinct()
+            )
+            binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
+        }
+        lideresViewModel.carregarLideres()
+    }
 
-                            // Preenchendo os campos automaticamente
-                            binding.includeDadosResponsavel.editTextNomeResponsavel.setText(
-                                listaResponsaveisFiltrada[0].responsavel)
-                            binding.includeDadosResponsavel.editTextVinculo.setText(
-                                listaResponsaveisFiltrada[0].vinculoResponsavel)
-                            binding.includeDadosResponsavel.editTextTel1.setText(
-                                listaResponsaveisFiltrada[0].telefone1)
-                            binding.includeDadosResponsavel.editTextTel2.setText(
-                                listaResponsaveisFiltrada[0].telefone1)
-                            // Campos de endereço
-                            binding.includeEndereco.editTextCep.setText(
-                                listaResponsaveisFiltrada[0].cep)
-                            binding.includeEndereco.editTextNumero.setText(
-                                listaResponsaveisFiltrada[0].numero)
-                            binding.includeEndereco.editTextRua.setText(
-                                listaResponsaveisFiltrada[0].logradouro)
-                            binding.includeEndereco.editTextComplemento.setText(
-                                listaResponsaveisFiltrada[0].complemento)
-                            binding.includeEndereco.editTextBairro.setText(
-                                listaResponsaveisFiltrada[0].bairro)
-                            binding.includeEndereco.editTextCidade.setText(
-                                listaResponsaveisFiltrada[0].cidade)
+    private fun configurarListeners() {
+        binding.btnChecarCpf.setOnClickListener {
+            binding.InputCPF.error = null
+            val cpf = binding.editTextCpf.text.toString()
+            viewModel.verificarCpf(cpf)
+        }
 
-                            val indicacao = listaResponsaveisFiltrada[0].indicacao
-                            binding.includeDadosResponsavel.autoCompleteIndicacao.setText(indicacao, false)
-
-                        } else {
-                            // Log.d("DEBUG_Resp", "Responsável não encontrado!")
-
-                            // Limpar
-                            // Preenchendo os campos automaticamente
-                            binding.includeDadosResponsavel.editTextNomeResponsavel.setText("")
-                            binding.includeDadosResponsavel.editTextVinculo.setText("")
-                            binding.includeDadosResponsavel.editTextTel1.setText("")
-                            binding.includeDadosResponsavel.editTextTel2.setText("")
-                            // Campos de endereço
-                            binding.includeEndereco.editTextCep.setText("")
-                            binding.includeEndereco.editTextNumero.setText("")
-                            binding.includeEndereco.editTextRua.setText("")
-                            binding.includeEndereco.editTextComplemento.setText("")
-                            binding.includeEndereco.editTextBairro.setText("")
-                            binding.includeEndereco.editTextCidade.setText("")
-
-                            // Limpa o campo de indicação
-                            binding.includeDadosResponsavel.autoCompleteIndicacao.setText("", false)
-                        }
-                    }
-                } else {
-                    // binding.editTextIdade.setText("") // Limpa o campo de idade
-                    binding.includeDadosResponsavel.editTextVinculoFamiliar.error =
-                        "CPF incompleto ou inválido"
+        binding.editTextCpf.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isCpfValidadoComSucesso) {
+                    viewModel.resetarEstadoDoFormulario()
                 }
             }
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
+        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) { notificarViewModelSobreMudancaDeIdade() }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        // Configurando o listener para mudanças no RadioGroup PCD
-        binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
-            // Atualiza a variável "especial"
-            especial =
-                if (checkedId == binding.includeDadosPCD.radioButtonPcdSim.id) "Sim" else "Não"
-
-            // Verifica se o campo deve ser habilitado ou não
-            val habilitarCampo = checkedId == binding.includeDadosPCD.radioButtonPcdSim.id
-
-            // Habilita ou desabilita a descrição com base na seleção
-            binding.includeDadosPCD.InputDescricaoPcd.isEnabled = habilitarCampo
-            binding.includeDadosPCD.editTextPcd.isEnabled = habilitarCampo
-
-            // Se voltar para "Não", limpa o texto
-            if (!habilitarCampo) {
-                binding.includeDadosPCD.editTextPcd.setText("")
-                // Verifica idade novamente
-                val checkIdade = binding.editTextIdade.text.toString()
-                if(checkIdade != ""){
-                    if(checkIdade.toInt() > limiteNormal.toInt()){
-                        Toast.makeText(requireContext(), "Cadastro +$limiteNormal anos não permitido!", Toast.LENGTH_LONG).show()
-                        editarCampos(false)
-                        // Reabilita o botão
-                        binding.btnChecarCpf.isEnabled = true
-                    }
-                }
+        binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, _ ->
+            val isPcd = binding.includeDadosPCD.radioButtonPcdSim.isChecked
+            binding.includeDadosPCD.InputDescricaoPcd.isEnabled = isPcd
+            binding.includeDadosPCD.editTextPcd.isEnabled = isPcd
+            if (!isPcd) {
+                binding.includeDadosPCD.editTextPcd.text?.clear()
             }
+            notificarViewModelSobreMudancaDeIdade()
         }
 
-        editTextTelefonePrincipal = binding.includeDadosResponsavel.editTextTel1
-        FormatadorUtil.formatarTelefone(editTextTelefonePrincipal)
-
-        editTextTelefone2 = binding.includeDadosResponsavel.editTextTel2
-        FormatadorUtil.formatarTelefone(editTextTelefone2)
-
-        inicializarEventosClique()
-    }
-
-    private fun configurarAutoCompleteIndicacao() {
-        val opcoes = resources.getStringArray(R.array.opcoesIndicacao)
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, opcoes)
-        binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
-    }
-
-    private fun verificarCpfNoFirestore(cpf: String) {
-        firestore.collection("Criancas")
-            .whereEqualTo("cpf", cpf)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    // CPF não encontrado
-                    editarCampos(true)
-                    binding.editTextDtNascimento.setText("")
-                    Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()
-                } else {
-                    // Altera o texto do botão para "Aguarde"
-                    binding.btnChecarCpf.text = "Checar"
-
-                    // Desabilita o botão para evitar novos cliques
-                    binding.btnChecarCpf.isEnabled = true
-
-                    // CPF já cadastrado
-                    Toast.makeText(requireContext(), "CPF já está cadastrado!" +
-                            "\nPara alteração dirija-se aos fiscais de cadastro!", Toast.LENGTH_LONG).show()
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.addTextChangedListener(object : TextWatcher {
+            private var searchFor: String = ""
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val cpfLimpo = s.toString().replace(Regex("[^0-9]"), "")
+                if (cpfLimpo.length == 11 && cpfLimpo != searchFor) {
+                    searchFor = cpfLimpo
+                    viewModel.buscarDadosResponsavel(cpfLimpo)
+                } else if (cpfLimpo.length < 11) {
+                    searchFor = ""
                 }
             }
-            .addOnFailureListener { exception ->
-                Log.e("Firestore", "Erro ao verificar CPF: ", exception)
-                Toast.makeText(requireContext(), "Erro ao verificar CPF, tente novamente", Toast.LENGTH_LONG).show()
+        })
+
+        binding.includeEndereco.editTextCep.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val cep = s.toString()
+                if (cep.length == 8 || cep.length == 9) {
+                    viewModel.buscarEnderecoPorCep(cep)
+                } else if (cep.length < 8) {
+                    limparCamposEndereco()
+                }
             }
-    }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
 
-    private fun editarCampos(boolean: Boolean) {
-        // Altera o texto do botão para "Checar"
-        binding.btnChecarCpf.text = "Checar"
-
-        for (editText in editTexts!!) {
-            editText.isEnabled = boolean
-        }
-        binding.includeFotoCrianca.fabSelecionar.isEnabled = boolean
-        LLSexoBtnMasculino.isEnabled = boolean
-        LLSexoBtnFeminino.isEnabled = boolean
-        pcdBtnSim.isEnabled = boolean
-        pcdBtnNao.isEnabled = boolean
-        binding.includeDadosResponsavel.menuIndicacao.isEnabled = boolean
-        binding.btnCadastrarCrianca.isEnabled = boolean
-    }
-
-    private fun inicializarEventosClique() {
-        binding.btnChecarCpf.setOnClickListener {
-            val cpfDigitado = binding.editTextCpf.text.toString()
-
-            if (cpfDigitado.isNotEmpty() && cpfDigitado.length==14) {
-                // Altera o texto do botão para "Aguarde"
-                binding.btnChecarCpf.text = "Aguarde..."
-
-                // Desabilita o botão para evitar novos cliques
-                binding.btnChecarCpf.isEnabled = false
-
-                verificarCpfNoFirestore(cpfDigitado)
+        binding.btnCadastrarCrianca.setOnClickListener {
+            val dadosFormulario = coletarDadosDoFormulario()
+            if (validarCamposObrigatorios(dadosFormulario)) {
+                viewModel.iniciarProcessoDeCadastro(dadosFormulario)
             } else {
-                Toast.makeText(requireContext(), "Preencher o CPF corretamente!", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "Por favor, corrija os campos em vermelho.", Toast.LENGTH_LONG).show()
             }
         }
 
         binding.includeFotoCrianca.fabSelecionar.setOnClickListener {
             verificarPermissoes()
         }
+    }
 
-        binding.btnCadastrarCrianca.setOnClickListener {
-            // Dados de registro
-            var ativo = "Sim"
-            var motivoStatus = "Apto para contemplação"
+    private fun observarEstadoDoCadastro() {
+        viewModel.cadastroState.observe(viewLifecycleOwner) { state ->
+            // Limpa erros antigos da UI
+            binding.InputCPF.error = null
+            binding.InputDtNascimento.error = null
 
-            // CPF
-            var cpfOriginal = editTextCpf.text.toString()
-            // Remove tudo que não for número para criar ID
-            var cpfLimpo = editTextCpf.text.toString().replace("\\D".toRegex(), "")
-
-            // ID ANO + CPF
-            var id = "" + ano + "" + cpfLimpo
-
-            // Nome
-            editTextNome = binding.editTextNome
-            var nome = editTextNome.text.toString()
-
-            // Idade
-            var dataNascimento = editTextDataNascimento.text.toString()
-            var idade = 0
-            if (dataNascimento.length == 10) {
-                idade = calcularIdadeCompat(dataNascimento)
-            }
-
-            // Sexo
-            var sexo = when {
-                binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked -> "Masculino"
-                binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked -> "Feminino"
-                else -> "Nenhum"
-            }
-
-            // Blusa
-            editTextBlusa = binding.includeDadosCriancaSacola.editTextBlusa
-            var blusa = editTextBlusa.text.toString()
-
-            // Calça
-            editTextCalca = binding.includeDadosCriancaSacola.editTextCalca
-            var calca = editTextCalca.text.toString()
-
-            // Sapato
-            editTextSapato = binding.includeDadosCriancaSacola.editTextSapato
-            var sapato = editTextSapato.text.toString()
-
-            // Descrição de PCD se SIM
-            editTextPcd = binding.includeDadosPCD.editTextPcd
-            var descricaoEspecial = editTextPcd.text.toString()
-
-            // Gostos Pessoais
-            editTextGostosPessoais = binding.includeDadosCriancaSacola.editTextGostos
-            var gostosPessoais = editTextGostosPessoais.text.toString()
-
-            // Identificação de crianças da mesma família
-            editTextVinculoFamiliar = binding.includeDadosResponsavel.editTextVinculoFamiliar
-            var vinculoFamiliar = editTextVinculoFamiliar.text.toString()
-
-            // Dados do Responsável
-            editTextNomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel
-            var responsavel = editTextNomeResponsavel.text.toString()
-
-            editTextVinculo = binding.includeDadosResponsavel.editTextVinculo
-            var vinculoResponsavel = editTextVinculo.text.toString()
-
-            var telefone1 = binding.includeDadosResponsavel.editTextTel1.text.toString()
-            var telefone2 = binding.includeDadosResponsavel.editTextTel2.text.toString()
-
-            // Endereço
-            editTextCEP = binding.includeEndereco.editTextCep
-            var cep = editTextCEP.text.toString()
-
-            editTextNumero = binding.includeEndereco.editTextNumero
-            var numero = editTextNumero.text.toString()
-
-            editTextRua = binding.includeEndereco.editTextRua
-            var logradouro = editTextRua.text.toString()
-
-            editTextComplemento = binding.includeEndereco.editTextComplemento
-            var complemento = editTextComplemento.text.toString()
-
-            editTextBairro = binding.includeEndereco.editTextBairro
-            var bairro = editTextBairro.text.toString()
-
-            editTextCidade = binding.includeEndereco.editTextCidade
-            var cidade = editTextCidade.text.toString()
-
-            var uf = "SP"
-
-            val indicacao = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
-
-            // Dados de quem realizou o cadastro
-            var cadastradoPor: String = ""
-            var fotoCadastradoPor: String = ""
-
-            // Dados de quem validou o cadastro
-            var validadoPor: String = ""
-            var fotoValidadoPor: String = ""
-
-            val idUsuario = firebaseAuth.currentUser?.uid
-            if (idUsuario != null){
-                firestore.collection("Usuarios")
-                    .document( idUsuario )
-                    .get()
-                    .addOnSuccessListener { documentSnapshot ->
-                        val dadosUsuario = documentSnapshot.data
-                        if ( dadosUsuario != null ){
-                            val nome = dadosUsuario["nome"] as String
-                            cadastradoPor = nome
-
-                            val foto = dadosUsuario["foto"] as String
-
-                            if (foto.isNotEmpty()) {
-                                fotoCadastradoPor = foto
-                            }
-                        }
-                    } .addOnFailureListener { exception ->
-                        Log.e("Firestore", "Error getting documents: ", exception)
-                    }
-            }
-
-            // Padrinho
-            var padrinho: String = ""
-
-            // Check Black List
-            var retirouSacola: String = "Não"
-            var blackList: String = "Não"
-
-            var retirouSenha: String = "Não"
-            var dataCadastro = obterDataHoraBrasil()
-            var chegouKit: String = "Não"
-
-            // Lista de valores obrigatórios a serem validados
-            val textInputs = listOf(
-                binding.InputCPF,
-                binding.InputNome,
-                binding.includeDadosCriancaSacola.InputBlusa,
-                binding.includeDadosCriancaSacola.InputCalca,
-                binding.includeDadosCriancaSacola.InputSapato,
-                binding.includeDadosCriancaSacola.InputGostos,
-                binding.includeDadosResponsavel.InputNomeResponsavel,
-                binding.includeDadosResponsavel.InputVinculo,
-                binding.includeDadosResponsavel.InputTel1,
-                binding.includeEndereco.InputNumero,
-                binding.includeEndereco.InputRua,
-                binding.includeEndereco.InputBairro,
-                binding.includeEndereco.InputCidade
-            )
-
-            var camposValidos = true
-            for (textInput in textInputs) {
-                val editText = textInput.editText // Obtém o EditText associado
-                if (editText?.text.toString().trim().isEmpty()) {
-                    textInput.error = "Campo obrigatório"
-                    camposValidos = false
-                } else {
-                    textInput.error = null // Remove o erro caso o campo esteja preenchido
+            when (state) {
+                is CadastroState.Carregando -> {
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = false)
                 }
-            }
-
-            if (camposValidos) {
-                if (idade == 0) {
-                    binding.InputDtNascimento.error = "Data inválida!"
-                    Toast.makeText(
-                        requireContext(),
-                        "Data de Nascimento inválida!",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    // Testar se PCD está como SIM e se a descrição está vazia
-                } else if (especial == "Sim" && descricaoEspecial.isEmpty()) {
-                    binding.includeDadosPCD.InputDescricaoPcd.error =
-                        "Descreva as condições especiais..."
-                    Toast.makeText(
-                        requireContext(),
-                        "Descreva as condições especiais...",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                } else if (indicacao == "-- Selecione --") {
-                    Toast.makeText(
-                        requireContext(),
-                        "Selecione quem indicou!",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                } else if (telefone1.length<14) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Telefone Principal inválido...",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    binding.btnCadastrarCrianca.text = "Cadastrar"
-                    binding.btnCadastrarCrianca.isEnabled = true
-
-                } else if (telefone2.isNotEmpty() && telefone2.length<14) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Telefone 2 inválido...",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    binding.btnCadastrarCrianca.text = "Cadastrar"
-                    binding.btnCadastrarCrianca.isEnabled = true
-
-                } else {
-                    binding.InputDtNascimento.error = null
-                    binding.includeDadosPCD.InputDescricaoPcd.error = null
-
-                    if (verificarImagemPadrao(binding.includeFotoCrianca.imagePerfil)) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Nenhuma imegem selecionada",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } else {
-                        // A imagem foi alterada e pode ser inserida no banco de dados
-
-                        if (NetworkUtils.conectadoInternet(requireContext())) {
-                            // Altera o texto do botão para "Aguarde"
-                            binding.btnCadastrarCrianca.text = "Aguarde..."
-
-                            // Desabilita o botão para evitar novos cliques
-                            binding.btnCadastrarCrianca.isEnabled = false
-
-                            /*Toast.makeText(requireContext(), teste, Toast.LENGTH_LONG).show() */
-                            idGerado = id
-
-                            // Identificar tipo de imagem
-                            val tipo = identificarTipoImagem()
-
-                            if (tipo == "Tipo desconhecido") {
-                                // significa que é BITMAP (CAMERA)
-                                uploadImegemCameraStorage(bitmapImagemSelecionada, id, ano) { sucesso ->
-                                    if (sucesso) {
-                                        // GERAR NUM CARTAO
-                                        val db = FirebaseFirestore.getInstance()
-                                        db.runTransaction { transaction ->
-                                            val referencia = db.collection("Definicoes").document(ano.toString())
-                                            referencia.get()
-                                                .addOnSuccessListener { documentSnapshot ->
-                                                    if (documentSnapshot.exists()) {
-                                                        val idCartao = documentSnapshot.getLong("idCartao") ?: 0
-                                                        Log.d("Firestore", "ID do cartão recuperado: $idCartao")
-                                                    } else {
-                                                        Log.d("Firestore", "Documento não encontrado, criando um novo.")
-                                                        referencia.set(mapOf("idCartao" to 1)) // Cria o documento com ID inicial
-                                                    }
-                                                }
-                                                .addOnFailureListener { e ->
-                                                    Log.e("Firestore", "Erro ao recuperar documento", e)
-                                                }
-
-                                            val snapshot = transaction.get(referencia)
-
-                                            val ultimoId = snapshot.getLong("idCartao") ?: 0
-                                            val novoId = ultimoId + 1
-
-                                            // Atualiza o ID no banco de forma segura
-                                            transaction.update(referencia, "idCartao", novoId)
-
-                                            // Atualiza o valor do número do cartão
-                                            var numeroCartao = novoId.toString()
-
-                                            val dadosResponsavel = Responsavel(
-                                                vinculoFamiliar,
-                                                responsavel,
-                                                vinculoResponsavel,
-                                                telefone1,
-                                                telefone2,
-                                                logradouro,
-                                                numero,
-                                                complemento,
-                                                bairro,
-                                                cidade,
-                                                uf,
-                                                cep,
-                                                indicacao
-                                            )
-                                            salvarDadosResponsavel(dadosResponsavel)
-
-                                            val crianca = Crianca(
-                                                id,
-                                                cpfOriginal,
-                                                nome,
-                                                dataNascimento,
-                                                idade,
-                                                sexo,
-                                                blusa,
-                                                calca,
-                                                sapato,
-                                                especial,
-                                                descricaoEspecial,
-                                                gostosPessoais,
-                                                foto,
-                                                responsavel,
-                                                vinculoResponsavel,
-                                                telefone1,
-                                                telefone2,
-                                                logradouro,
-                                                numero,
-                                                complemento,
-                                                bairro,
-                                                cidade,
-                                                uf,
-                                                cep,
-                                                ano,
-                                                ativo,
-                                                motivoStatus,
-                                                indicacao,
-                                                cadastradoPor,
-                                                fotoCadastradoPor,
-                                                padrinho,
-                                                retirouSacola,
-                                                blackList,
-                                                vinculoFamiliar,
-                                                validadoPor,
-                                                fotoValidadoPor,
-                                                retirouSenha,
-                                                numeroCartao,
-                                                dataCadastro,
-                                                chegouKit
-                                            )
-                                            salvarCriancaFirestore(crianca,idGerado)
-
-                                            novoId // Retorna o novo ID gerado
-                                        }.addOnSuccessListener { novoId ->
-                                            Log.d("Firebase", "Cartão gerado com ID: $novoId")
-                                        }.addOnFailureListener {
-                                            // Altera o texto do botão para "Cadastrar"
-                                            binding.btnCadastrarCrianca.text = "Cadastrar"
-
-                                            // Habilita o botão
-                                            binding.btnCadastrarCrianca.isEnabled = true
-                                            Log.e("Firebase", "Erro ao gerar cartão", it)
-
-                                            Toast.makeText(
-                                                requireContext(),
-                                                "Erro ao gerar Num. Cartão. Tente novamente.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    } else {
-                                        // Altera o texto do botão para "Cadastrar"
-                                        binding.btnCadastrarCrianca.text = "Cadastrar"
-
-                                        // Habilita o botão
-                                        binding.btnCadastrarCrianca.isEnabled = true
-
-                                        Toast.makeText(
-                                            requireContext(),
-                                            "Erro ao salvar. Tente novamente.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                            }
-                            else {
-                                // ARMAZENAMENTO
-                                uploadImegemStorage(id) { sucesso ->
-                                    if (sucesso) {
-                                        // GERAR NUM CARTAO
-                                        val db = FirebaseFirestore.getInstance()
-                                        db.runTransaction { transaction ->
-                                            val referencia = db.collection("Definicoes").document(ano.toString())
-                                            referencia.get()
-                                                .addOnSuccessListener { documentSnapshot ->
-                                                    if (documentSnapshot.exists()) {
-                                                        val idCartao = documentSnapshot.getLong("idCartao") ?: 0
-                                                        Log.d("Firestore", "ID do cartão recuperado: $idCartao")
-                                                    } else {
-                                                        Log.d("Firestore", "Documento não encontrado, criando um novo.")
-                                                        referencia.set(mapOf("idCartao" to 1)) // Cria o documento com ID inicial
-                                                    }
-                                                }
-                                                .addOnFailureListener { e ->
-                                                    Log.e("Firestore", "Erro ao recuperar documento", e)
-                                                }
-
-                                            val snapshot = transaction.get(referencia)
-
-                                            val ultimoId = snapshot.getLong("idCartao") ?: 0
-                                            val novoId = ultimoId + 1
-
-                                            // Atualiza o ID no banco de forma segura
-                                            transaction.update(referencia, "idCartao", novoId)
-
-                                            // Atualiza o valor do número do cartão
-                                            var numeroCartao = novoId.toString()
-
-                                            val dadosResponsavel = Responsavel(
-                                                vinculoFamiliar,
-                                                responsavel,
-                                                vinculoResponsavel,
-                                                telefone1,
-                                                telefone2,
-                                                logradouro,
-                                                numero,
-                                                complemento,
-                                                bairro,
-                                                cidade,
-                                                uf,
-                                                cep,
-                                                indicacao
-                                            )
-                                            salvarDadosResponsavel(dadosResponsavel)
-
-                                            val crianca = Crianca(
-                                                id,
-                                                cpfOriginal,
-                                                nome,
-                                                dataNascimento,
-                                                idade,
-                                                sexo,
-                                                blusa,
-                                                calca,
-                                                sapato,
-                                                especial,
-                                                descricaoEspecial,
-                                                gostosPessoais,
-                                                foto,
-                                                responsavel,
-                                                vinculoResponsavel,
-                                                telefone1,
-                                                telefone2,
-                                                logradouro,
-                                                numero,
-                                                complemento,
-                                                bairro,
-                                                cidade,
-                                                uf,
-                                                cep,
-                                                ano,
-                                                ativo,
-                                                motivoStatus,
-                                                indicacao,
-                                                cadastradoPor,
-                                                fotoCadastradoPor,
-                                                padrinho,
-                                                retirouSacola,
-                                                blackList,
-                                                vinculoFamiliar,
-                                                validadoPor,
-                                                fotoValidadoPor,
-                                                retirouSenha,
-                                                numeroCartao,
-                                                dataCadastro,
-                                                chegouKit
-                                            )
-                                            salvarCriancaFirestore(crianca,idGerado)
-
-                                            novoId // Retorna o novo ID gerado
-                                        }.addOnSuccessListener { novoId ->
-                                            Log.d("Firebase", "Cartão gerado com ID: $novoId")
-                                        }.addOnFailureListener {
-                                            // Altera o texto do botão para "Cadastrar"
-                                            binding.btnCadastrarCrianca.text = "Cadastrar"
-
-                                            // Habilita o botão
-                                            binding.btnCadastrarCrianca.isEnabled = true
-                                            Log.e("Firebase", "Erro ao gerar cartão", it)
-
-                                            Toast.makeText(
-                                                requireContext(),
-                                                "Erro ao gerar Num. Cartão. Tente novamente.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    } else {
-                                        Toast.makeText(
-                                            requireContext(),
-                                            "Erro ao salvar. Tente novamente.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                            }
-                        } else {
-                            Toast.makeText(
-                                requireContext(),
-                                "Verifique a conexão com a internet e tente novamente!",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
+                is CadastroState.VerificandoCpf -> {
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = false)
+                    binding.btnChecarCpf.text = "Aguarde..."
+                }
+                is CadastroState.Permitido, is CadastroState.ChegandoNoLimite -> {
+                    isCpfValidadoComSucesso = false
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = true)
+                    if (state is CadastroState.ChegandoNoLimite) {
+                        alertaDefinicoes("CHEGANDOLIMITE", state.cadastrados, state.total.toString())
                     }
+                }
+                is CadastroState.CpfDisponivel -> {
+                    isCpfValidadoComSucesso = true
+                    controlarFormulario(habilitarFormulario = true, habilitarCpf = false)
+                    binding.btnChecarCpf.text = "Checar"
+                    Toast.makeText(requireContext(), "CPF disponível. Preencha os dados.", Toast.LENGTH_SHORT).show()
+                }
+                is CadastroState.CpfInvalido -> {
+                    isCpfValidadoComSucesso = false
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = true)
+                    binding.InputCPF.error = "CPF inválido!"
+                }
+                is CadastroState.CpfJaCadastrado -> {
+                    isCpfValidadoComSucesso = false
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = true)
+                    Toast.makeText(requireContext(), "Este CPF já está cadastrado!", Toast.LENGTH_LONG).show()
+                }
+                is CadastroState.FormularioResetado -> {
+                    isCpfValidadoComSucesso = false
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = true)
+                    Toast.makeText(requireContext(), "CPF alterado. Por favor, cheque novamente.", Toast.LENGTH_SHORT).show()
+                }
+                is CadastroState.BloqueadoPorData,
+                is CadastroState.BloqueadoPorLimite,
+                is CadastroState.BloqueadoPorFaltaDeDefinicoes -> {
+                    isCpfValidadoComSucesso = false
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = false)
+                    val tipoAlerta = when (state) {
+                        is CadastroState.BloqueadoPorData -> "DATA"
+                        is CadastroState.BloqueadoPorLimite -> "LIMITE"
+                        else -> "DEF"
+                    }
+                    alertaDefinicoes(tipoAlerta, 0, "0")
+                }
+                is CadastroState.Erro -> {
+                    isCpfValidadoComSucesso = false
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = true)
+                    Toast.makeText(requireContext(), state.mensagem, Toast.LENGTH_LONG).show()
+                }
+                is CadastroState.IdadeCalculada -> {
+                    binding.editTextIdade.setText(state.idade.toString())
+                    controlarFormulario(habilitarFormulario = true, habilitarCpf = false)
+                }
+                is CadastroState.IdadeInvalida -> {
+                    binding.editTextIdade.setText("0")
+                    binding.InputDtNascimento.error = "Data inválida"
+                }
+                is CadastroState.IdadeAcimaDoLimite -> {
+                    binding.InputDtNascimento.error = "Idade acima do limite!"
+                    Toast.makeText(requireContext(), "Idade acima do limite permitido!", Toast.LENGTH_LONG).show()
+                    controlarFormulario(habilitarFormulario = false, habilitarCpf = false)
+                    binding.editTextDtNascimento.isEnabled = true
+                    binding.includeDadosPCD.radioButtonPcdSim.isEnabled = true
+                    binding.includeDadosPCD.radioButtonPcdNao.isEnabled = true
+                }
+                is CadastroState.BuscandoResponsavel -> {
+                    binding.includeDadosResponsavel.InputNomeResponsavel.helperText = "Buscando..."
+                }
+                is CadastroState.ResponsavelEncontrado -> {
+                    binding.includeDadosResponsavel.InputNomeResponsavel.helperText = null
+                    preencherCamposResponsavel(state.responsavel)
+                }
+                is CadastroState.ResponsavelNaoEncontrado -> {
+                    binding.includeDadosResponsavel.InputNomeResponsavel.helperText = null
+                    limparCamposResponsavel()
+                }
+                is CadastroState.EnderecoEncontrado -> {
+                    val endereco = state.endereco
+                    binding.includeEndereco.editTextRua.setText(endereco.logradouro)
+                    binding.includeEndereco.editTextBairro.setText(endereco.bairro)
+                    binding.includeEndereco.editTextCidade.setText(endereco.cidade)
+                    binding.includeEndereco.editTextNumero.requestFocus()
+                }
+                is CadastroState.CepNaoEncontrado -> {
+                    limparCamposEndereco()
+                    Toast.makeText(requireContext(), "CEP não encontrado.", Toast.LENGTH_SHORT).show()
+                }
+                is CadastroState.Cadastrando -> {
+                    binding.btnCadastrarCrianca.text = "Aguarde..."
+                    binding.btnCadastrarCrianca.isEnabled = false
+                }
+                is CadastroState.CadastroSucesso -> {
+                    Toast.makeText(requireContext(), "Cadastro realizado com sucesso!", Toast.LENGTH_LONG).show()
+                    val intent = Intent(activity, ValidarCriancaActivity::class.java).apply {
+                        putExtra("id", state.idCriancaCadastrada)
+                        putExtra("origem", "cadastro")
+                    }
+                    startActivity(intent)
                 }
             }
         }
     }
 
-    private fun salvarDadosResponsavel(dadosResponsavel: Responsavel) {
-        firestore.collection("Responsaveis")
-            .document(dadosResponsavel.vinculoFamiliar)
-            .set(dadosResponsavel)
-    }
-
-    private fun obterDataHoraBrasil(): String {
-        val zonaBrasil = ZoneId.of("America/Sao_Paulo") // Zona do Brasil
-        val dataHoraAtual = ZonedDateTime.now(zonaBrasil) // Data e hora com fuso horário
-        val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss") // Formato
-        return dataHoraAtual.format(formato) // Retorna a data formatada
-    }
-
-    private fun identificarTipoImagem(): String {
-        return if (imagemSelecionadaUri != null) {
-            "URI"
-        } else {
-            "Tipo desconhecido"
-        }
-    }
-
-    private fun verificarImagemPadrao(imagePerfilCrianca: ShapeableImageView): Boolean {
-        // Obtém o ID do recurso da imagem atualmente configurada no ImageView
-        val imageView = binding.includeFotoCrianca.imagePerfil
-        val idImagemAtual = imageView.drawable.constantState
-        val idImagemPadrao = imageView.context.getDrawable(R.drawable.perfil)?.constantState
-
-        // Compara o estado constante das imagens
-        return idImagemAtual == idImagemPadrao
-    }
-
-    // ---------- SELEÇÃO DE IMAGEM ----------
     private fun verificarPermissoes() {
-        // Verificar se a permissão da câmera já foi concedida
         if (PermissionUtil.temPermissaoCamera(requireContext())) {
             mostrarDialogoEscolherImagem()
         } else {
-            // Solicitar permissão da câmera
             PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes)
         }
     }
 
     private fun mostrarDialogoEscolherImagem() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
-        val dialog = android.app.AlertDialog.Builder(requireContext())
-            .setView(view)
-            .create()
+        val dialog = AlertDialog.Builder(requireContext()).setView(view).create()
 
         view.findViewById<Button>(R.id.button_camera).setOnClickListener {
-            abrirCamera()
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            gerenciadorCamera.launch(intent)
             dialog.dismiss()
         }
 
         view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
-            abrirArmazenamento()
+            gerenciadorGaleria.launch("image/*")
             dialog.dismiss()
         }
 
         dialog.show()
     }
 
-    // --- CAMERA ---
-    private fun abrirCamera() {
-        // Código para abrir a câmera
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        gerenciadorCamera.launch(intent)
+    private fun limparCamposEndereco() {
+        binding.includeEndereco.editTextRua.text?.clear()
+        binding.includeEndereco.editTextBairro.text?.clear()
+        binding.includeEndereco.editTextCidade.text?.clear()
     }
 
-    private val gerenciadorCamera =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultadoActivity ->
-            if (resultadoActivity.resultCode == RESULT_OK) {
-                bitmapImagemSelecionada =
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        resultadoActivity.data?.extras?.getParcelable("data", Bitmap::class.java)
-                    } else {
-                        resultadoActivity.data?.extras?.getParcelable("data")
-                    }
-                binding.includeFotoCrianca.imagePerfil.setImageBitmap(bitmapImagemSelecionada)
-                imagemSelecionadaUri = null
-            } else {
-                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
-                    .show()
-            }
+    private fun notificarViewModelSobreMudancaDeIdade() {
+        val dataNascimento = binding.editTextDtNascimento.text.toString()
+        val isPcd = binding.includeDadosPCD.radioButtonPcdSim.isChecked
+        viewModel.onDadosDeIdadeAlterados(dataNascimento, isPcd)
+    }
+
+    private fun preencherCamposResponsavel(responsavel: com.example.adotejr.model.Responsavel) {
+        binding.includeDadosResponsavel.editTextNomeResponsavel.setText(responsavel.responsavel)
+        binding.includeDadosResponsavel.editTextVinculo.setText(responsavel.vinculoResponsavel)
+        binding.includeDadosResponsavel.editTextTel1.setText(responsavel.telefone1)
+        binding.includeDadosResponsavel.editTextTel2.setText(responsavel.telefone2)
+        binding.includeEndereco.editTextCep.setText(responsavel.cep)
+        binding.includeEndereco.editTextNumero.setText(responsavel.numero)
+        binding.includeEndereco.editTextRua.setText(responsavel.logradouro)
+        binding.includeEndereco.editTextComplemento.setText(responsavel.complemento)
+        binding.includeEndereco.editTextBairro.setText(responsavel.bairro)
+        binding.includeEndereco.editTextCidade.setText(responsavel.cidade)
+    }
+
+    private fun limparCamposResponsavel() {
+        binding.includeDadosResponsavel.editTextNomeResponsavel.text?.clear()
+        binding.includeDadosResponsavel.editTextVinculo.text?.clear()
+        binding.includeDadosResponsavel.editTextTel1.text?.clear()
+        binding.includeDadosResponsavel.editTextTel2.text?.clear()
+        binding.includeEndereco.editTextCep.text?.clear()
+        binding.includeEndereco.editTextNumero.text?.clear()
+        binding.includeEndereco.editTextRua.text?.clear()
+        binding.includeEndereco.editTextComplemento.text?.clear()
+        binding.includeEndereco.editTextBairro.text?.clear()
+        binding.includeEndereco.editTextCidade.text?.clear()
+    }
+
+    private fun controlarFormulario(habilitarFormulario: Boolean, habilitarCpf: Boolean) {
+        binding.editTextCpf.isEnabled = habilitarCpf
+        binding.btnChecarCpf.isEnabled = habilitarCpf
+        binding.editTextNome.isEnabled = habilitarFormulario
+        binding.includeDadosPCD.radioButtonPcdSim.isEnabled = habilitarFormulario
+        binding.includeDadosPCD.radioButtonPcdNao.isEnabled = habilitarFormulario
+        binding.includeDadosPCD.editTextPcd.isEnabled = habilitarFormulario && binding.includeDadosPCD.radioButtonPcdSim.isChecked
+        binding.editTextDtNascimento.isEnabled = habilitarFormulario
+        binding.editTextIdade.isEnabled = false
+        binding.includeDadosCriancaSacola.radioButtonMasculino.isEnabled = habilitarFormulario
+        binding.includeDadosCriancaSacola.radioButtonFeminino.isEnabled = habilitarFormulario
+        binding.includeDadosCriancaSacola.editTextBlusa.isEnabled = habilitarFormulario
+        binding.includeDadosCriancaSacola.editTextCalca.isEnabled = habilitarFormulario
+        binding.includeDadosCriancaSacola.editTextSapato.isEnabled = habilitarFormulario
+        binding.includeDadosCriancaSacola.editTextGostos.isEnabled = habilitarFormulario
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.isEnabled = habilitarFormulario
+        binding.includeDadosResponsavel.editTextNomeResponsavel.isEnabled = habilitarFormulario
+        binding.includeDadosResponsavel.editTextVinculo.isEnabled = habilitarFormulario
+        binding.includeDadosResponsavel.editTextTel1.isEnabled = habilitarFormulario
+        binding.includeDadosResponsavel.editTextTel2.isEnabled = habilitarFormulario
+        binding.includeDadosResponsavel.menuIndicacao.isEnabled = habilitarFormulario
+        binding.includeEndereco.editTextCep.isEnabled = habilitarFormulario
+        binding.includeEndereco.editTextNumero.isEnabled = habilitarFormulario
+        binding.includeEndereco.editTextRua.isEnabled = habilitarFormulario
+        binding.includeEndereco.editTextComplemento.isEnabled = habilitarFormulario
+        binding.includeEndereco.editTextBairro.isEnabled = habilitarFormulario
+        binding.includeEndereco.editTextCidade.isEnabled = habilitarFormulario
+        binding.includeFotoCrianca.fabSelecionar.isEnabled = habilitarFormulario
+        binding.btnCadastrarCrianca.isEnabled = habilitarFormulario
+    }
+
+    private fun alertaDefinicoes(tipo: String, qtdCadastrosFeitos: Int, quantidadeCriancasTotal: String) {
+        val alertBuilder = AlertDialog.Builder(requireContext())
+        alertBuilder.setTitle("Aviso de Cadastro")
+        val mensagem = when(tipo) {
+            "DEF" -> "Não há definições de cadastro para o ano atual. Contate a administração."
+            "DATA" -> "O período de cadastros está encerrado."
+            "LIMITE" -> "O limite de cadastros para este ano foi atingido."
+            "CHEGANDOLIMITE" -> "Atenção: Limite de cadastros quase atingido!\nCadastrados: $qtdCadastrosFeitos\nLimite: $quantidadeCriancasTotal"
+            else -> "Ocorreu um problema."
+        }
+        alertBuilder.setMessage(mensagem)
+        val customView = LayoutInflater.from(requireContext()).inflate(R.layout.botao_alerta, null)
+        alertBuilder.setView(customView)
+        val dialog = alertBuilder.create()
+        customView.findViewById<Button>(R.id.btnFechar).setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    private fun coletarDadosDoFormulario(): DadosFormularioCadastro {
+        val cpf = binding.editTextCpf.text.toString()
+        val nome = binding.editTextNome.text.toString()
+        val dataNascimento = binding.editTextDtNascimento.text.toString()
+        val sexo = when {
+            binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked -> "Masculino"
+            binding.includeDadosCriancaSacola.radioButtonFeminino.isChecked -> "Feminino"
+            else -> ""
+        }
+        val blusa = binding.includeDadosCriancaSacola.editTextBlusa.text.toString()
+        val calca = binding.includeDadosCriancaSacola.editTextCalca.text.toString()
+        val sapato = binding.includeDadosCriancaSacola.editTextSapato.text.toString()
+        val isPcd = binding.includeDadosPCD.radioButtonPcdSim.isChecked
+        val descricaoPcd = binding.includeDadosPCD.editTextPcd.text.toString()
+        val gostos = binding.includeDadosCriancaSacola.editTextGostos.text.toString()
+        val cpfResponsavel = binding.includeDadosResponsavel.editTextVinculoFamiliar.text.toString().replace(Regex("[^0-9]"), "")
+        val nomeResponsavel = binding.includeDadosResponsavel.editTextNomeResponsavel.text.toString()
+        val vinculoResponsavel = binding.includeDadosResponsavel.editTextVinculo.text.toString()
+        val telefone1 = binding.includeDadosResponsavel.editTextTel1.text.toString()
+        val telefone2 = binding.includeDadosResponsavel.editTextTel2.text.toString()
+        val cep = binding.includeEndereco.editTextCep.text.toString()
+        val logradouro = binding.includeEndereco.editTextRua.text.toString()
+        val numero = binding.includeEndereco.editTextNumero.text.toString()
+        val complemento = binding.includeEndereco.editTextComplemento.text.toString()
+        val bairro = binding.includeEndereco.editTextBairro.text.toString()
+        val cidade = binding.includeEndereco.editTextCidade.text.toString()
+        val indicacaoNome = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
+        var indicacaoId = ""
+        lideresViewModel.listaLideres.value?.find { it.nome == indicacaoNome }?.let { liderEncontrado ->
+            indicacaoId = liderEncontrado.id
         }
 
-    // Salvar imagem da camera no storage
-    private fun uploadImegemCameraStorage(
-        bitmapImagemSelecionada: Bitmap?,
-        id: String,
-        ano: Int,
-        callback: (Boolean) -> Unit
-    ) {
-        val outputStream = ByteArrayOutputStream()
-        bitmapImagemSelecionada?.compress(
-            Bitmap.CompressFormat.JPEG,
-            100,
-            outputStream
+        return DadosFormularioCadastro(
+            cpf = cpf,
+            nome = nome,
+            dataNascimento = dataNascimento,
+            sexo = sexo,
+            blusa = blusa,
+            calca = calca,
+            sapato = sapato,
+            isPcd = isPcd,
+            descricaoPcd = descricaoPcd,
+            gostos = gostos,
+            cpfResponsavel = cpfResponsavel,
+            nomeResponsavel = nomeResponsavel,
+            vinculoResponsavel = vinculoResponsavel,
+            telefone1 = telefone1,
+            telefone2 = telefone2,
+            cep = cep,
+            logradouro = logradouro,
+            numero = numero,
+            complemento = complemento,
+            bairro = bairro,
+            cidade = cidade,
+            indicacaoId = indicacaoId,
+            indicacaoNome = indicacaoNome,
+            imagemUri = imagemSelecionadaUri,
+            imagemBitmap = bitmapImagemSelecionada
         )
-        // fotos -> criancas -> id -> perfil.jpg
-        val idCrianca = id
-        val ano = ano
-        storage.getReference("fotos")
-            .child("criancas")
-            .child(ano.toString())
-            .child(idCrianca)
-            .child("perfil.jpg")
-            .putBytes(outputStream.toByteArray())
-            .addOnSuccessListener { taskSnapshot ->
-                taskSnapshot.metadata
-                    ?.reference
-                    ?.downloadUrl
-                    ?.addOnSuccessListener { uriDownload ->
-                        foto = uriDownload.toString()
-                        callback(true) // Notifica sucesso
-                    }
-            }.addOnFailureListener {
-                callback(false) // Notifica falha
+    }
+
+    private fun validarCamposObrigatorios(dados: DadosFormularioCadastro): Boolean {
+        var camposValidos = true
+
+        val validacoes = mapOf(
+            dados.nome to binding.InputNome,
+            dados.blusa to binding.includeDadosCriancaSacola.InputBlusa,
+            dados.calca to binding.includeDadosCriancaSacola.InputCalca,
+            dados.sapato to binding.includeDadosCriancaSacola.InputSapato,
+            dados.gostos to binding.includeDadosCriancaSacola.InputGostos,
+            dados.nomeResponsavel to binding.includeDadosResponsavel.InputNomeResponsavel,
+            dados.vinculoResponsavel to binding.includeDadosResponsavel.InputVinculo,
+            dados.telefone1 to binding.includeDadosResponsavel.InputTel1,
+            dados.logradouro to binding.includeEndereco.InputRua,
+            dados.numero to binding.includeEndereco.InputNumero,
+            dados.bairro to binding.includeEndereco.InputBairro,
+            dados.cidade to binding.includeEndereco.InputCidade
+        )
+
+        validacoes.forEach { (valor, textInputLayout) ->
+            if (valor.isBlank()) {
+                textInputLayout.error = "Campo obrigatório"
+                camposValidos = false
+            } else {
+                textInputLayout.error = null
             }
-    }
+        }
 
-    // ---------- ARMAZENAMENTO ----------
-    private fun abrirArmazenamento() {
-        // Código para abrir o armazenamento
-        gerenciadorGaleria.launch("image/*")
-    }
-
-    // Armazenamento
-    private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
-        if ( uri != null ) {
-            bitmapImagemSelecionada = null
-            imagemSelecionadaUri = uri
-            binding.includeFotoCrianca.imagePerfil.setImageURI( uri )
+        if (dados.dataNascimento.length < 10) {
+            binding.InputDtNascimento.error = "Data inválida"
+            camposValidos = false
         } else {
-            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+            binding.InputDtNascimento.error = null
         }
-    }
 
-    // Salvar imagem do armazenamento no storage
-    private fun uploadImegemStorage(id: String, callback: (Boolean) -> Unit) {
-        var uri = imagemSelecionadaUri
-        // foto -> criancas -> id -> perfil.jpg
-        val idCrianca = id
-        if (uri != null) {
-            storage.getReference("fotos")
-                .child("criancas")
-                .child(ano.toString())
-                .child(idCrianca)
-                .child("perfil.jpg")
-                .putFile( uri )
-                .addOnSuccessListener { taskSnapshot ->
-                    taskSnapshot.metadata
-                        ?.reference
-                        ?.downloadUrl
-                        ?.addOnSuccessListener { uriDownload ->
-                            foto = uriDownload.toString()
-                            callback(true) // Notifica sucesso
-                        }
-                }.addOnFailureListener{
-                    callback(false) // Notifica falha
-                }
+        if (dados.sexo.isBlank()) {
+            Toast.makeText(requireContext(), "Selecione o sexo da criança.", Toast.LENGTH_SHORT).show()
+            camposValidos = false
+        }
+
+        if (dados.isPcd && dados.descricaoPcd.isBlank()) {
+            binding.includeDadosPCD.InputDescricaoPcd.error = "Descreva a condição"
+            camposValidos = false
         } else {
-            callback(false)
+            binding.includeDadosPCD.InputDescricaoPcd.error = null
         }
-    }
 
-    // --- CALCULO DE IDADE ---
-    private fun calcularIdadeCompat(dataNascimentoString: String): Int {
-        return if (isDataValida(dataNascimentoString)) {
-            try {
-                val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                val dataNascimento = formato.parse(dataNascimentoString) ?: return 0
+        if (dados.telefone1.length < 14) {
+            binding.includeDadosResponsavel.InputTel1.error = "Telefone inválido"
+            camposValidos = false
+        }
 
-                val calendarioNascimento = Calendar.getInstance()
-                calendarioNascimento.time = dataNascimento
-
-                val calendarioAtual = Calendar.getInstance()
-
-                var idade =
-                    calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
-                if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
-                    idade--
-                }
-                idade // Retorna idade
-            } catch (e: Exception) {
-                e.printStackTrace()
-                0 // Retorna 0 em caso de erro
-            }
+        if (dados.telefone2.isNotEmpty() && dados.telefone2.length < 14) {
+            binding.includeDadosResponsavel.InputTel2.error = "Telefone inválido"
+            camposValidos = false
         } else {
-            0 // Não calcula para datas inválidas
+            binding.includeDadosResponsavel.InputTel2.error = null
         }
-    }
 
-    // VERIFICAR SE A DATA É VÁLIDA
-    private fun isDataValida(data: String): Boolean {
-        return try {
-            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            formato.isLenient = false // Validação rigorosa
-            val dataParseada = formato.parse(data) // Valida o formato
-            val dataAtual = Calendar.getInstance().time
-
-            // Garantir que a data seja no passado
-            dataParseada.before(dataAtual)
-        } catch (e: Exception) {
-            false // Retorna falso se a data for inválida
+        if (dados.indicacaoNome.isBlank() || dados.indicacaoNome == "-- Selecione --") {
+            binding.includeDadosResponsavel.menuIndicacao.error = "Selecione uma opção"
+            camposValidos = false
+        } else {
+            binding.includeDadosResponsavel.menuIndicacao.error = null
         }
+
+        if (verificarImagemPadrao()) {
+            Toast.makeText(requireContext(), "Selecione uma foto para a criança.", Toast.LENGTH_SHORT).show()
+            camposValidos = false
+        }
+
+        return camposValidos
     }
 
-    private fun responsavelCadastrado(responsavelP: String, callback: (Boolean) -> Unit) {
-        val listaResponsaveis = mutableListOf<Responsavel>()
-
-        firestore.collection("Responsaveis")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                listaResponsaveis.clear()
-                querySnapshot.documents.forEach { documentSnapshot ->
-                    val responsavel = documentSnapshot.toObject(Responsavel::class.java)
-                    if (responsavel != null) {
-                        listaResponsaveis.add(responsavel)
-                    }
-                }
-
-                // Filtra os dados APÓS o carregamento estar completo
-                listaResponsaveisFiltrada = listaResponsaveis.filter { responsavel ->
-                    responsavel.vinculoFamiliar.contains(responsavelP, ignoreCase = true)
-                }
-
-                callback(listaResponsaveisFiltrada.isNotEmpty()) // Retorna o resultado no callback
-            }
-            .addOnFailureListener {
-                callback(false) // Em caso de erro, retorna false
-            }
+    /**
+     * Verifica se a imagem no ImageView ainda é a imagem padrão.
+     */
+    private fun verificarImagemPadrao(): Boolean {
+        val imageView = binding.includeFotoCrianca.imagePerfil
+        val idImagemAtual = imageView.drawable?.constantState
+        val idImagemPadrao = imageView.context.getDrawable(R.drawable.perfil)?.constantState
+        return idImagemAtual == idImagemPadrao
     }
 
-    // --- SALVAR NO BANCO DE DADOS ---
-    private fun salvarCriancaFirestore(crianca: Crianca, idGerado: String) {
-        firestore.collection("Criancas")
-            .document(crianca.id)
-            .set(crianca)
-            .addOnSuccessListener {
-                // Altera o texto do botão para "Cadastrar"
-                binding.btnCadastrarCrianca.text = "Cadastrado"
-
-                Toast.makeText(
-                    requireContext(),
-                    "Cadastro realizado com sucesso",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                val intent = Intent(activity, ValidarCriancaActivity::class.java).apply {
-                    putExtra("id", idGerado)
-                    putExtra("origem", "cadastro")
-                }
-                startActivity(intent)
-
-            }.addOnFailureListener {
-                // Altera o texto do botão para "Cadastrar"
-                binding.btnCadastrarCrianca.text = "Cadastrar"
-
-                // Habilita o botão
-                binding.btnCadastrarCrianca.isEnabled = true
-
-                Toast.makeText(requireContext(), "Erro ao realizar cadastro", Toast.LENGTH_LONG)
-                    .show()
-            }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

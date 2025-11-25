@@ -260,6 +260,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible" />
 
+    <!--
     <Button
         android:id="@+id/btn_abrir_novo_cadastro"
         android:layout_width="wrap_content"
@@ -273,5 +274,6 @@
         app:layout_constraintStart_toEndOf="@+id/btnEditarDefinicoes"
         app:layout_constraintWidth_percent="0.8"
         tools:visibility="visible" />
+    -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

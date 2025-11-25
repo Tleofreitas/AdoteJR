@@ -24,7 +24,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 
-class NovoCadastrarViewModel : ViewModel() {
+class CadastrarViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
 

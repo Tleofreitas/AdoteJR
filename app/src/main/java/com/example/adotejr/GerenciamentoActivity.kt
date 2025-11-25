@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityGerenciamentoBinding
-import com.example.adotejr.fragments.CadastrarFragment
+import com.example.adotejr.fragments.CadastrarFragmentOld
 import com.example.adotejr.fragments.ConsultaFragment
 import com.example.adotejr.fragments.ContaFragment
 import com.example.adotejr.fragments.ReportsFragment
@@ -100,7 +100,7 @@ class GerenciamentoActivity : AppCompatActivity() {
 
                 R.id.navigation_cadastrar -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, CadastrarFragment())
+                        .replace(R.id.fragment_container, CadastrarFragmentOld())
                         .commit()
                 }
                 R.id.navigation_perfil -> {
@@ -110,7 +110,7 @@ class GerenciamentoActivity : AppCompatActivity() {
                 }
                 else -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, CadastrarFragment())
+                        .replace(R.id.fragment_container, CadastrarFragmentOld())
                         .commit()
                 }
             }

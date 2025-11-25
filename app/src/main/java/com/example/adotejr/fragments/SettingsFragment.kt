@@ -46,9 +46,10 @@ class SettingsFragment : Fragment() {
         )
 
         nivelDoUser = arguments?.getString("nivel").toString() // Obtendo o valor passado
+        /*
         if (nivelDoUser == "Admin") {
             binding.btnAbrirNovoCadastro.visibility = View.VISIBLE
-        }
+        }*/
 
         return binding.root
     }
@@ -150,13 +151,14 @@ class SettingsFragment : Fragment() {
             }
         }
 
+        /*
         binding.btnAbrirNovoCadastro.setOnClickListener {
             parentFragmentManager.beginTransaction().apply {
-                replace(R.id.fragment_container, NovoCadastrarFragment()) // Usaremos este nome
+                replace(R.id.fragment_container, CadastrarFragment()) // Usaremos este nome
                 addToBackStack(null)
                 commit()
             }
-        }
+        }*/
     }
 
     private fun validarTodosOsCampos(): Boolean {
@@ -278,14 +280,6 @@ class SettingsFragment : Fragment() {
         super.onStart()
         buscarDadosDasDefinicoes()
     }
-
-    // Recuperar dados das definições
-    private var qtdCriancas: Int? = 0
-    private var limiteIdadeNormal: Int? = 12
-    private var limiteIdadePcd: Int? = 15
-    var ano = LocalDate.now().year
-    // Teste AlertDialog
-    // ano = 2026
 
     private fun buscarDadosDasDefinicoes() {
         // Mostra a ProgressBar ANTES de iniciar a busca
