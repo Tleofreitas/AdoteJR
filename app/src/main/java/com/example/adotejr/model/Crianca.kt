@@ -38,6 +38,7 @@ data class Crianca (
 
     // Indicação
     var indicacao: String = "",
+    var descricaoIndicacao: String = "",
 
     // Dados de quem realizou o cadastro
     var cadastradoPor: String = "",

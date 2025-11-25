@@ -145,7 +145,7 @@ class ExportadorExcelWorker(private val context: Context, params: WorkerParamete
             row.createCell(23).setCellValue(crianca.cidade)
             row.createCell(24).setCellValue(crianca.cep)
             row.createCell(25).setCellValue(crianca.uf)
-            row.createCell(26).setCellValue(crianca.indicacao)
+            row.createCell(26).setCellValue(crianca.descricaoIndicacao)
             row.createCell(27).setCellValue(crianca.dataCadastro)
             row.createCell(28).setCellValue(crianca.cadastradoPor)
             row.createCell(29).setCellValue(crianca.validadoPor)

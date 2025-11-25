@@ -10,7 +10,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentSettingsBinding
 import com.example.adotejr.model.Definicoes

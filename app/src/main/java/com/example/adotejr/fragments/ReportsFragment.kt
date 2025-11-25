@@ -72,13 +72,6 @@ class ReportsFragment : Fragment() {
         val anoAtual = LocalDate.now().year
         viewModel.carregarDadosDoAno(anoAtual)
     }
-    /*
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CREATE_DOCUMENT_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            data?.data?.let { uri -> callbackExcel?.invoke(uri) }
-        }
-    } */
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
