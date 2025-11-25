@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.adotejr.databinding.FragmentNovoCadastrarBinding
+import com.example.adotejr.model.Responsavel
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.viewmodel.CadastroState
 import com.example.adotejr.viewmodel.NovoCadastrarViewModel
@@ -81,6 +82,28 @@ class NovoCadastrarFragment : Fragment() {
             }
             notificarViewModelSobreMudancaDeIdade()
         }
+
+        // --- LISTENER PARA O CPF DO RESPONSÁVEL ---
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.addTextChangedListener(object : TextWatcher {
+            private var searchFor: String = ""
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                // 1. Limpa a string, pegando apenas os dígitos.
+                val cpfLimpo = s.toString().replace(Regex("[^0-9]"), "")
+
+                // 2. A busca só é acionada quando temos 11 dígitos e é um CPF diferente do último buscado.
+                if (cpfLimpo.length == 11 && cpfLimpo != searchFor) {
+                    searchFor = cpfLimpo
+                    viewModel.buscarDadosResponsavel(cpfLimpo) // Envia o CPF já limpo
+                } else if (cpfLimpo.length < 11) {
+                    // Se o usuário está apagando, reseta o "último buscado" para permitir nova busca
+                    searchFor = ""
+                }
+            }
+        })
     }
 
     /**
@@ -179,8 +202,54 @@ class NovoCadastrarFragment : Fragment() {
                     binding.includeDadosPCD.radioButtonPcdSim.isEnabled = true
                     binding.includeDadosPCD.radioButtonPcdNao.isEnabled = true
                 }
+                // --- REAÇÕES AOS ESTADOS DE RESPONSÁVEL ---
+                is CadastroState.BuscandoResponsavel -> {
+                    // Opcional: Mostrar um ícone de loading ou desabilitar campos
+                    binding.includeDadosResponsavel.InputNomeResponsavel.helperText = "Buscando..."
+                }
+                is CadastroState.ResponsavelEncontrado -> {
+                    binding.includeDadosResponsavel.InputNomeResponsavel.helperText = null // Limpa o helper
+                    preencherCamposResponsavel(state.responsavel)
+                }
+                is CadastroState.ResponsavelNaoEncontrado -> {
+                    binding.includeDadosResponsavel.InputNomeResponsavel.helperText = null // Limpa o helper
+                    limparCamposResponsavel()
+                }
             }
         }
+    }
+
+    /**
+     * NOVA FUNÇÃO: Preenche os campos com os dados do responsável encontrado.
+     */
+    private fun preencherCamposResponsavel(responsavel: Responsavel) {
+        binding.includeDadosResponsavel.editTextNomeResponsavel.setText(responsavel.responsavel)
+        binding.includeDadosResponsavel.editTextVinculo.setText(responsavel.vinculoResponsavel)
+        binding.includeDadosResponsavel.editTextTel1.setText(responsavel.telefone1)
+        binding.includeDadosResponsavel.editTextTel2.setText(responsavel.telefone2)
+        binding.includeEndereco.editTextCep.setText(responsavel.cep)
+        binding.includeEndereco.editTextNumero.setText(responsavel.numero)
+        binding.includeEndereco.editTextRua.setText(responsavel.logradouro)
+        binding.includeEndereco.editTextComplemento.setText(responsavel.complemento)
+        binding.includeEndereco.editTextBairro.setText(responsavel.bairro)
+        binding.includeEndereco.editTextCidade.setText(responsavel.cidade)
+        // A lógica para o AutoComplete de indicação será o próximo passo
+    }
+
+    /**
+     * NOVA FUNÇÃO: Limpa os campos do responsável se ele não for encontrado.
+     */
+    private fun limparCamposResponsavel() {
+        binding.includeDadosResponsavel.editTextNomeResponsavel.text?.clear()
+        binding.includeDadosResponsavel.editTextVinculo.text?.clear()
+        binding.includeDadosResponsavel.editTextTel1.text?.clear()
+        binding.includeDadosResponsavel.editTextTel2.text?.clear()
+        binding.includeEndereco.editTextCep.text?.clear()
+        binding.includeEndereco.editTextNumero.text?.clear()
+        binding.includeEndereco.editTextRua.text?.clear()
+        binding.includeEndereco.editTextComplemento.text?.clear()
+        binding.includeEndereco.editTextBairro.text?.clear()
+        binding.includeEndereco.editTextCidade.text?.clear()
     }
 
     /**

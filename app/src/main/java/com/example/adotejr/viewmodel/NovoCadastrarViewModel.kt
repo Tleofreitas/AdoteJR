@@ -14,6 +14,7 @@ import com.example.adotejr.utils.FormatadorUtil
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import com.example.adotejr.model.Responsavel
 
 class NovoCadastrarViewModel : ViewModel() {
 
@@ -206,6 +207,44 @@ class NovoCadastrarViewModel : ViewModel() {
             dataParseada.before(dataAtual)
         } catch (e: Exception) {
             false
+        }
+    }
+
+    /**
+     * Busca os dados de um responsável na coleção 'Responsaveis'
+     * usando o CPF (vinculoFamiliar) como chave.
+     * @param cpfResponsavel O CPF do responsável a ser buscado.
+     */
+    fun buscarDadosResponsavel(cpfResponsavel: String) {
+        // Validação básica do formato
+        if (cpfResponsavel.length != 11 || !cpfResponsavel.all { it.isDigit() }) {
+            _cadastroState.value = CadastroState.ResponsavelNaoEncontrado
+            return
+        }
+
+        viewModelScope.launch {
+            _cadastroState.value = CadastroState.BuscandoResponsavel
+            try {
+                // Query otimizada: busca diretamente pelo documento cujo ID é o CPF do responsável.
+                val documento = firestore.collection("Responsaveis")
+                    .document(cpfResponsavel)
+                    .get()
+                    .await()
+
+                if (documento.exists()) {
+                    val responsavel = documento.toObject(Responsavel::class.java)
+                    if (responsavel != null) {
+                        _cadastroState.value = CadastroState.ResponsavelEncontrado(responsavel)
+                    } else {
+                        _cadastroState.value = CadastroState.ResponsavelNaoEncontrado
+                    }
+                } else {
+                    _cadastroState.value = CadastroState.ResponsavelNaoEncontrado
+                }
+            } catch (e: Exception) {
+                Log.e("NovoCadastrarViewModel", "Erro ao buscar responsável", e)
+                _cadastroState.value = CadastroState.Erro("Falha ao buscar dados do responsável.")
+            }
         }
     }
 }

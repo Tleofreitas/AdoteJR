@@ -1,5 +1,7 @@
 package com.example.adotejr.viewmodel
 
+import com.example.adotejr.model.Responsavel
+
 // Usar uma sealed class é uma prática moderna e segura em Kotlin.
 sealed class CadastroState {
     // --- ESTADOS PARA CHECAGEM DE CADASTRO ---
@@ -25,4 +27,9 @@ sealed class CadastroState {
     data class IdadeCalculada(val idade: Int) : CadastroState() // Apenas informa a idade calculada.
     object IdadeInvalida : CadastroState() // A data de nascimento é inválida.
     object IdadeAcimaDoLimite : CadastroState() // A idade calculada excede o limite permitido.
+
+    // --- NOVOS ESTADOS PARA BUSCA DE RESPONSÁVEL ---
+    object BuscandoResponsavel : CadastroState() // Para mostrar um feedback de carregamento
+    data class ResponsavelEncontrado(val responsavel: Responsavel) : CadastroState()
+    object ResponsavelNaoEncontrado : CadastroState()
 }
