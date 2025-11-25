@@ -104,6 +104,34 @@ class NovoCadastrarFragment : Fragment() {
                 }
             }
         })
+
+        // --- LISTENER PARA O CAMPO DE CEP ---
+        binding.includeEndereco.editTextCep.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val cep = s.toString()
+
+                // A busca é acionada quando o CEP atinge o tamanho correto (8 ou 9 com o traço)
+                if (cep.length == 8 || cep.length == 9) {
+                    viewModel.buscarEnderecoPorCep(cep)
+                }
+                // Se o usuário apagar e o CEP ficar incompleto, limpa os campos de endereço.
+                else if (cep.length < 8) {
+                    limparCamposEndereco()
+                }
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+    }
+
+    /**
+     * NOVA FUNÇÃO AUXILIAR: Limpa apenas os campos de endereço.
+     * Centraliza a lógica de limpeza para ser reutilizada.
+     */
+    private fun limparCamposEndereco() {
+        binding.includeEndereco.editTextRua.text?.clear()
+        binding.includeEndereco.editTextBairro.text?.clear()
+        binding.includeEndereco.editTextCidade.text?.clear()
     }
 
     /**
@@ -214,6 +242,19 @@ class NovoCadastrarFragment : Fragment() {
                 is CadastroState.ResponsavelNaoEncontrado -> {
                     binding.includeDadosResponsavel.InputNomeResponsavel.helperText = null // Limpa o helper
                     limparCamposResponsavel()
+                }
+                // --- REAÇÕES AOS ESTADOS DE CEP ---
+                is CadastroState.EnderecoEncontrado -> {
+                    val endereco = state.endereco
+                    binding.includeEndereco.editTextRua.setText(endereco.logradouro)
+                    binding.includeEndereco.editTextBairro.setText(endereco.bairro)
+                    binding.includeEndereco.editTextCidade.setText(endereco.cidade)
+                    // Opcional: Focar no campo "Número" para o usuário continuar
+                    binding.includeEndereco.editTextNumero.requestFocus()
+                }
+                is CadastroState.CepNaoEncontrado -> {
+                    limparCamposEndereco()
+                    Toast.makeText(requireContext(), "CEP não encontrado.", Toast.LENGTH_SHORT).show()
                 }
             }
         }

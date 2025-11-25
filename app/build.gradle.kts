@@ -101,4 +101,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2") // Versão pode variar
     implementation("androidx.fragment:fragment-ktx:1.6.1") // Ajuda a conectar o Fragment ao ViewModel
 
+    // --- DEPENDÊNCIAS PARA API DE CEP ---
+    // Retrofit para chamadas de rede
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Gson para converter JSON em objetos Kotlin
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

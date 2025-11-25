@@ -1,5 +1,6 @@
 package com.example.adotejr.viewmodel
 
+import com.example.adotejr.model.EnderecoViaCep
 import com.example.adotejr.model.Responsavel
 
 // Usar uma sealed class é uma prática moderna e segura em Kotlin.
@@ -32,4 +33,8 @@ sealed class CadastroState {
     object BuscandoResponsavel : CadastroState() // Para mostrar um feedback de carregamento
     data class ResponsavelEncontrado(val responsavel: Responsavel) : CadastroState()
     object ResponsavelNaoEncontrado : CadastroState()
+
+    // --- ESTADOS PARA BUSCA DE CEP ---
+    data class EnderecoEncontrado(val endereco: EnderecoViaCep) : CadastroState()
+    object CepNaoEncontrado : CadastroState()
 }

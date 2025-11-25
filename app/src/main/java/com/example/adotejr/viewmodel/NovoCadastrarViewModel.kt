@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import com.example.adotejr.model.Responsavel
+import com.example.adotejr.network.ApiClient
 
 class NovoCadastrarViewModel : ViewModel() {
 
@@ -244,6 +245,48 @@ class NovoCadastrarViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("NovoCadastrarViewModel", "Erro ao buscar responsável", e)
                 _cadastroState.value = CadastroState.Erro("Falha ao buscar dados do responsável.")
+            }
+        }
+    }
+
+    // --- NOVA LÓGICA DE BUSCA DE CEP ---
+
+    /**
+     * Busca um endereço usando a API ViaCEP.
+     * @param cep O CEP digitado pelo usuário.
+     */
+    fun buscarEnderecoPorCep(cep: String) {
+        // Limpa o CEP para conter apenas números
+        val cepLimpo = cep.replace(Regex("[^0-9]"), "")
+
+        // A API requer 8 dígitos
+        if (cepLimpo.length != 8) {
+            return // Não faz nada se o CEP estiver incompleto
+        }
+
+        viewModelScope.launch {
+            try {
+                // Chama a API através do nosso ApiClient
+                val response = ApiClient.viaCepService.buscarEndereco(cepLimpo)
+
+                if (response.isSuccessful) {
+                    val endereco = response.body()
+                    // A ViaCEP retorna um campo "erro" se o CEP não existe
+                    if (endereco != null && endereco.erro != true) {
+                        // SUCESSO! Emite um novo estado com o endereço encontrado.
+                        _cadastroState.value = CadastroState.EnderecoEncontrado(endereco)
+                    } else {
+                        // CEP não encontrado pela API.
+                        _cadastroState.value = CadastroState.CepNaoEncontrado
+                    }
+                } else {
+                    // Erro na chamada de rede (ex: 404, 500)
+                    _cadastroState.value = CadastroState.Erro("Falha ao buscar CEP.")
+                }
+            } catch (e: Exception) {
+                // Erro de conexão ou outro problema
+                Log.e("NovoCadastrarViewModel", "Erro na API ViaCEP", e)
+                _cadastroState.value = CadastroState.Erro("Falha de conexão ao buscar CEP.")
             }
         }
     }
