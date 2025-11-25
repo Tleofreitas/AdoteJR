@@ -26,11 +26,15 @@ class LideresViewModel : ViewModel() {
     private val _eventoDeOperacao = MutableLiveData<String?>()
     val eventoDeOperacao: LiveData<String?> = _eventoDeOperacao
 
-    // --- NOVA LÓGICA PARA O AUTOCOMPLETE ---
+    // --- LÓGICA PARA O AUTOCOMPLETE ---
 
     // 1. Novo LiveData para expor apenas a lista de NOMES para o spinner/AutoComplete
     private val _listaNomesLideres = MutableLiveData<List<String>>()
     val listaNomesLideres: LiveData<List<String>> = _listaNomesLideres
+
+    // --- LÓGICA PARA O MAPA DE CONVERSÃO ---
+    private val _mapaNomeParaId = MutableLiveData<Map<String, String>>()
+    val mapaNomeParaId: LiveData<Map<String, String>> = _mapaNomeParaId
 
     // --- OPERAÇÕES CRUD ---
     fun carregarLideres() {
@@ -59,6 +63,10 @@ class LideresViewModel : ViewModel() {
 
                         // Publica a lista de nomes formatada
                         _listaNomesLideres.value = listaCompletaParaAutoComplete
+
+                        // Cria o mapa de conversão Nome -> ID
+                        val mapa = lista.associate { it.nome to it.id }
+                        _mapaNomeParaId.value = mapa
                     }
                 }
                 .addOnFailureListener {

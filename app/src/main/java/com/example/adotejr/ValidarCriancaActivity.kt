@@ -13,6 +13,8 @@ import com.example.adotejr.utils.exibirMensagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
+import androidx.activity.viewModels
+import com.example.adotejr.viewmodel.LideresViewModel
 
 class ValidarCriancaActivity : AppCompatActivity() {
 
@@ -25,6 +27,10 @@ class ValidarCriancaActivity : AppCompatActivity() {
 
     private var idCrianca: String? = null
     private var criancaAtual: Crianca? = null
+
+    // 1. INICIALIZAR O VIEWMODEL E O MAPA
+    private val lideresViewModel: LideresViewModel by viewModels()
+    private var mapaNomeParaIdLideres: Map<String, String> = emptyMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,11 +46,31 @@ class ValidarCriancaActivity : AppCompatActivity() {
         }
 
         inicializarToolbar()
-        configurarAutoCompleteIndicacao()
         configurarLayout(origem)
         inicializarEventosClique()
+        observarViewModel()
+
+        // 2. PEDIR AO VIEWMODEL PARA CARREGAR OS DADOS
+        lideresViewModel.carregarLideres()
 
         buscarDadosDaCrianca()
+    }
+
+    // 3. CRIE A FUNÇÃO PARA OBSERVAR O VIEWMODEL
+    private fun observarViewModel() {
+        // Observa a lista de nomes para popular o AutoComplete
+        lideresViewModel.listaNomesLideres.observe(this) { nomesLideres ->
+            configurarAutoCompleteIndicacao(nomesLideres)
+        }
+        // Observa o mapa de conversão para usar na hora de salvar
+        lideresViewModel.mapaNomeParaId.observe(this) { mapa ->
+            mapaNomeParaIdLideres = mapa
+        }
+    }
+    // 4. MODIFIQUE A FUNÇÃO PARA RECEBER A LISTA DINÂMICA
+    private fun configurarAutoCompleteIndicacao(opcoes: List<String>) {
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, opcoes)
+        binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
     }
 
     // --- Funções de Configuração da UI ---
@@ -55,12 +81,6 @@ class ValidarCriancaActivity : AppCompatActivity() {
             title = "Validar Dados da Criança"
             setDisplayHomeAsUpEnabled(true)
         }
-    }
-
-    private fun configurarAutoCompleteIndicacao() {
-        val opcoes = resources.getStringArray(R.array.opcoesIndicacao)
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, opcoes)
-        binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
     }
 
     private fun configurarLayout(origem: String) {
@@ -137,7 +157,7 @@ class ValidarCriancaActivity : AppCompatActivity() {
         binding.includeDadosResponsavel.editTextVinculo.setText(crianca.vinculoResponsavel)
         binding.includeDadosResponsavel.editTextTel1.setText(crianca.telefone1)
         binding.includeDadosResponsavel.editTextTel2.setText(crianca.telefone2)
-        binding.includeDadosResponsavel.autoCompleteIndicacao.setText(crianca.indicacao, false)
+        binding.includeDadosResponsavel.autoCompleteIndicacao.setText(crianca.descricaoIndicacao, false)
     }
 
     // --- Funções de Eventos de Clique e Validação ---
@@ -211,6 +231,10 @@ class ValidarCriancaActivity : AppCompatActivity() {
     }
 
     private fun atualizarDadosDaCrianca(nomeValidador: String, fotoValidador: String) {
+        val nomeIndicacaoSelecionada = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
+        // Usa o mapa para encontrar o ID correspondente ao nome selecionado
+        val idIndicacaoSelecionada = mapaNomeParaIdLideres[nomeIndicacaoSelecionada] ?: ""
+
         val dadosAtualizados = mapOf(
             "nome" to binding.editTextNome.text.toString(),
             "sexo" to if (binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked) "Masculino" else "Feminino",
@@ -221,6 +245,8 @@ class ValidarCriancaActivity : AppCompatActivity() {
             "telefone1" to binding.includeDadosResponsavel.editTextTel1.text.toString(),
             "telefone2" to binding.includeDadosResponsavel.editTextTel2.text.toString(),
             "indicacao" to binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString(),
+            "indicacao" to idIndicacaoSelecionada,
+            "descricaoIndicacao" to nomeIndicacaoSelecionada,
             "validadoPor" to nomeValidador,
             "fotoValidadoPor" to fotoValidador,
             "status" to "Ativo"
