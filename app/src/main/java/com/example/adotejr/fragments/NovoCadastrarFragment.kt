@@ -1,12 +1,14 @@
 // Em fragments/NovoCadastrarFragment.kt
 package com.example.adotejr.fragments
 
+import android.R
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,6 +17,7 @@ import com.example.adotejr.model.Responsavel
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.viewmodel.CadastroState
 import com.example.adotejr.viewmodel.NovoCadastrarViewModel
+import com.example.adotejr.viewmodel.LideresViewModel
 
 class NovoCadastrarFragment : Fragment() {
 
@@ -22,6 +25,9 @@ class NovoCadastrarFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: NovoCadastrarViewModel by viewModels()
+
+    // ViewModel secundário, apenas para buscar a lista de líderes
+    private val lideresViewModel: LideresViewModel by viewModels()
 
     private var isCpfValidadoComSucesso = false
 
@@ -42,8 +48,38 @@ class NovoCadastrarFragment : Fragment() {
         configurarListeners()
         FormatadorUtil.formatarCPF(binding.editTextCpf)
         FormatadorUtil.formatarDataNascimento(binding.editTextDtNascimento) // Adiciona o formatador de data
+        FormatadorUtil.formatarTelefone(binding.includeDadosResponsavel.editTextTel1)
+        FormatadorUtil.formatarTelefone(binding.includeDadosResponsavel.editTextTel2)
+
+        configurarAutoCompleteIndicacao()
 
         viewModel.verificarPermissaoDeCadastro()
+    }
+
+    /**
+     * NOVA FUNÇÃO: Busca os líderes no ViewModel e popula o AutoCompleteTextView.
+     */
+    private fun configurarAutoCompleteIndicacao() {
+        // 1. Observa a lista de nomes de líderes vinda do LideresViewModel
+        lideresViewModel.listaNomesLideres.observe(viewLifecycleOwner) { nomesLideres ->
+            // Adiciona a opção "-- Selecione --" no início da lista, se ela ainda não existir
+            val opcoesComDefault = mutableListOf("-- Selecione --")
+            opcoesComDefault.addAll(nomesLideres)
+
+            // 2. Cria um ArrayAdapter com a lista de nomes
+            val adapter = ArrayAdapter(
+                requireContext(),
+                R.layout.simple_dropdown_item_1line,
+                opcoesComDefault.distinct() // Usa distinct() para garantir que não haja duplicatas
+            )
+
+            // 3. Define o adapter no AutoCompleteTextView
+            binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
+        }
+
+        // 4. Dispara a busca inicial de líderes no LideresViewModel
+        // (O ViewModel já tem um cache, então isso será rápido se os dados já foram carregados)
+        lideresViewModel.carregarLideres()
     }
 
     private fun configurarListeners() {
