@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import com.example.adotejr.utils.FormatadorUtil
 
 class NovoCadastrarViewModel : ViewModel() {
 
@@ -85,5 +86,51 @@ class NovoCadastrarViewModel : ViewModel() {
         } catch (e: Exception) {
             false
         }
+    }
+
+    /**
+     * Verifica se um CPF já está cadastrado na coleção 'Criancas'.
+     */
+    fun verificarCpf(cpf: String) {
+        // Validação básica de entrada
+        if (cpf.isBlank() || cpf.length < 14) {
+            _cadastroState.value = CadastroState.Erro("Formato de CPF inválido.")
+            return
+        }
+
+        // --- VALIDAÇÃO DE ALGORITMO ---
+        if (!FormatadorUtil.isCpfValido(cpf)) {
+            // Usaremos um novo estado para ser mais específico
+            _cadastroState.value = CadastroState.CpfInvalido
+            return
+        }
+
+        viewModelScope.launch {
+            _cadastroState.value = CadastroState.VerificandoCpf
+            try {
+                val querySnapshot = firestore.collection("Criancas")
+                    .whereEqualTo("cpf", cpf)
+                    .limit(1) // Só precisamos saber se existe 1, não precisamos de todos
+                    .get()
+                    .await()
+
+                if (querySnapshot.isEmpty) {
+                    _cadastroState.value = CadastroState.CpfDisponivel
+                } else {
+                    _cadastroState.value = CadastroState.CpfJaCadastrado
+                }
+            } catch (e: Exception) {
+                Log.e("NovoCadastrarViewModel", "Erro ao verificar CPF", e)
+                _cadastroState.value = CadastroState.Erro("Falha ao verificar CPF. Tente novamente.")
+            }
+        }
+    }
+
+    /**
+     * FUNÇÃO: Reseta o estado para forçar o bloqueio do formulário.
+     * Será chamada pelo TextWatcher no Fragment.
+     */
+    fun resetarEstadoDoFormulario() {
+        _cadastroState.value = CadastroState.FormularioResetado
     }
 }

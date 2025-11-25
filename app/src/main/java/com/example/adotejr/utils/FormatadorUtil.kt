@@ -113,4 +113,47 @@ object FormatadorUtil {
             override fun afterTextChanged(s: Editable?) {}
         })
     }
+
+    /**
+     * FUNÇÃO: Valida um CPF usando o algoritmo de cálculo dos dígitos verificadores.
+     * @param cpf String contendo o CPF, pode ter ou não a formatação.
+     * @return Boolean - true se o CPF for válido, false caso contrário.
+     */
+    fun isCpfValido(cpf: String): Boolean {
+        // Remove caracteres não numéricos
+        val cpfLimpo = cpf.replace(Regex("[^0-9]"), "")
+
+        // 1. Verifica se tem 11 dígitos
+        if (cpfLimpo.length != 11) return false
+
+        // 2. Verifica se todos os dígitos são iguais (ex: 111.111.111-11), o que é inválido
+        if (cpfLimpo.all { it == cpfLimpo[0] }) return false
+
+        try {
+            // 3. Cálculo do primeiro dígito verificador
+            var soma = 0
+            for (i in 0..8) {
+                soma += cpfLimpo[i].toString().toInt() * (10 - i)
+            }
+            var resto = soma % 11
+            val digito1 = if (resto < 2) 0 else 11 - resto
+
+            if (cpfLimpo[9].toString().toInt() != digito1) return false
+
+            // 4. Cálculo do segundo dígito verificador
+            soma = 0
+            for (i in 0..9) {
+                soma += cpfLimpo[i].toString().toInt() * (11 - i)
+            }
+            resto = soma % 11
+            val digito2 = if (resto < 2) 0 else 11 - resto
+
+            if (cpfLimpo[10].toString().toInt() != digito2) return false
+
+            // Se passou por todas as verificações, o CPF é válido
+            return true
+        } catch (e: NumberFormatException) {
+            return false
+        }
+    }
 }
