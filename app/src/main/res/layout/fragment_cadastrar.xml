@@ -25,7 +25,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            android:text="Cadastro NOVO"
+            android:text="Cadastro"
             android:textAlignment="center"
             android:textAppearance="?attr/textAppearanceHeadline6"
             android:textColor="@color/azulEscuro"
