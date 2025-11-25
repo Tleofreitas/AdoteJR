@@ -20,5 +20,6 @@ data class Responsavel (
     var cep: String = "",
 
     // Indicação
-    var indicacao: String = ""
+    var indicacao: String = "", // <-- Este agora guardará o ID do líder
+    var descricaoIndicacao: String = "" // <-- NOVO CAMPO para guardar o NOME do líder
 )
