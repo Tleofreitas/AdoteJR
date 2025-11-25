@@ -46,6 +46,9 @@ class SettingsFragment : Fragment() {
         )
 
         nivelDoUser = arguments?.getString("nivel").toString() // Obtendo o valor passado
+        if (nivelDoUser == "Admin") {
+            binding.btnAbrirNovoCadastro.visibility = View.VISIBLE
+        }
 
         return binding.root
     }
@@ -142,6 +145,14 @@ class SettingsFragment : Fragment() {
             // 3. Inicia a transação, agora com o fragment já configurado
             parentFragmentManager.beginTransaction().apply {
                 replace(R.id.fragment_container, gerenciamentoVoluntariosFragment)
+                addToBackStack(null)
+                commit()
+            }
+        }
+
+        binding.btnAbrirNovoCadastro.setOnClickListener {
+            parentFragmentManager.beginTransaction().apply {
+                replace(R.id.fragment_container, NovoCadastrarFragment()) // Usaremos este nome
                 addToBackStack(null)
                 commit()
             }

@@ -260,4 +260,18 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible" />
 
+    <Button
+        android:id="@+id/btn_abrir_novo_cadastro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/destaque"
+        android:text="Cadastro TESTE"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/btnGerenciarVoluntarios"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnEditarDefinicoes"
+        app:layout_constraintWidth_percent="0.8"
+        tools:visibility="visible" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
