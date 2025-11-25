@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.adotejr.databinding.ActivityDadosCriancaBinding
 import com.example.adotejr.model.Crianca
 import com.example.adotejr.utils.NetworkUtils
 import com.example.adotejr.utils.exibirMensagem
+import com.example.adotejr.viewmodel.LideresViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 
@@ -21,6 +23,9 @@ class DadosCriancaActivity : AppCompatActivity() {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private var idCrianca: String? = null
+
+    // 1. INICIALIZAR O VIEWMODEL
+    private val lideresViewModel: LideresViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,9 +39,13 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
 
         inicializarToolbar()
-        configurarAutoCompleteIndicacao()
         configurarLayoutFixo()
         inicializarEventosClique()
+        observarViewModel() // <-- NOVA FUNÇÃO PARA OBSERVAR O VIEWMODEL
+
+        // 2. PEDIR AO VIEWMODEL PARA CARREGAR OS DADOS DOS LÍDERES
+        lideresViewModel.carregarLideres()
+
 
         buscarEPreencherDados()
     }
@@ -50,8 +59,16 @@ class DadosCriancaActivity : AppCompatActivity() {
         }
     }
 
-    private fun configurarAutoCompleteIndicacao() {
-        val opcoes = resources.getStringArray(R.array.opcoesIndicacao)
+    // 3. FUNÇÃO PARA OBSERVAR O VIEWMODEL
+    private fun observarViewModel() {
+        lideresViewModel.listaNomesLideres.observe(this) { nomesLideres ->
+            // Quando a lista de nomes chegar do Firestore, configure o adapter.
+            configurarAutoCompleteIndicacao(nomesLideres)
+        }
+    }
+
+    // 4. FUNÇÃO PARA RECEBER A LISTA DINÂMICA
+    private fun configurarAutoCompleteIndicacao(opcoes: List<String>) {
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, opcoes)
         binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
     }
@@ -140,7 +157,7 @@ class DadosCriancaActivity : AppCompatActivity() {
         binding.includeEndereco.editTextBairro.setText(crianca.bairro)
         binding.includeEndereco.editTextCidade.setText(crianca.cidade)
         binding.includeRegistro.editTextAno.setText(crianca.ano.toString())
-        binding.includeDadosResponsavel.autoCompleteIndicacao.setText(crianca.indicacao, false)
+        binding.includeDadosResponsavel.autoCompleteIndicacao.setText(crianca.descricaoIndicacao, false)
         binding.includeRegistro.NomePerfilCadastro.text = crianca.cadastradoPor
         if (crianca.fotoCadastradoPor.isNotEmpty()) Picasso.get().load(crianca.fotoCadastradoPor).into(binding.includeRegistro.imgPerfilCadastro)
         binding.includeRegistro.NomePerfilValidacao.text = crianca.validadoPor

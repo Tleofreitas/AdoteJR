@@ -26,6 +26,12 @@ class LideresViewModel : ViewModel() {
     private val _eventoDeOperacao = MutableLiveData<String?>()
     val eventoDeOperacao: LiveData<String?> = _eventoDeOperacao
 
+    // --- NOVA LÓGICA PARA O AUTOCOMPLETE ---
+
+    // 1. Novo LiveData para expor apenas a lista de NOMES para o spinner/AutoComplete
+    private val _listaNomesLideres = MutableLiveData<List<String>>()
+    val listaNomesLideres: LiveData<List<String>> = _listaNomesLideres
+
     // --- OPERAÇÕES CRUD ---
     fun carregarLideres() {
         viewModelScope.launch {
@@ -36,14 +42,29 @@ class LideresViewModel : ViewModel() {
                     if (snapshot.isEmpty) {
                         _estadoDaTela.value = EstadoDaTela.VAZIO
                         _listaLideres.value = emptyList()
+
+                        // 2. Se a lista estiver vazia, ainda precisamos popular o AutoComplete com as opções padrão
+                        _listaNomesLideres.value = listOf("-- Selecione --")
+
                     } else {
+                        // Lógica para a lista de objetos Lider (sem alteração)
                         val lista = snapshot.toObjects(Lider::class.java)
                         _listaLideres.value = lista
                         _estadoDaTela.value = EstadoDaTela.SUCESSO
+
+                        // 3. NOVA LÓGICA: Pega a lista de objetos, extrai os nomes e formata para o AutoComplete
+                        val nomes = lista.map { it.nome }
+                        val listaCompletaParaAutoComplete = mutableListOf("-- Selecione --")
+                        listaCompletaParaAutoComplete.addAll(nomes)
+
+                        // Publica a lista de nomes formatada
+                        _listaNomesLideres.value = listaCompletaParaAutoComplete
                     }
                 }
                 .addOnFailureListener {
                     _estadoDaTela.value = EstadoDaTela.ERRO
+                    // Em caso de falha, podemos popular com o mínimo para a UI não quebrar
+                    _listaNomesLideres.value = listOf("-- Selecione --")
                 }
         }
     }
