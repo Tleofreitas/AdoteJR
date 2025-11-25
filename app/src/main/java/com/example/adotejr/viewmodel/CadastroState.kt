@@ -29,7 +29,7 @@ sealed class CadastroState {
     object IdadeInvalida : CadastroState() // A data de nascimento é inválida.
     object IdadeAcimaDoLimite : CadastroState() // A idade calculada excede o limite permitido.
 
-    // --- NOVOS ESTADOS PARA BUSCA DE RESPONSÁVEL ---
+    // --- ESTADOS PARA BUSCA DE RESPONSÁVEL ---
     object BuscandoResponsavel : CadastroState() // Para mostrar um feedback de carregamento
     data class ResponsavelEncontrado(val responsavel: Responsavel) : CadastroState()
     object ResponsavelNaoEncontrado : CadastroState()
@@ -37,4 +37,8 @@ sealed class CadastroState {
     // --- ESTADOS PARA BUSCA DE CEP ---
     data class EnderecoEncontrado(val endereco: EnderecoViaCep) : CadastroState()
     object CepNaoEncontrado : CadastroState()
+
+    // --- ESTADOS PARA O PROCESSO DE CADASTRO FINAL ---
+    object Cadastrando : CadastroState() // Para mostrar loading e desabilitar o botão
+    data class CadastroSucesso(val idCriancaCadastrada: String) : CadastroState()
 }

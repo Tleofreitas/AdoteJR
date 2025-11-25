@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.adotejr.model.DadosFormularioCadastro
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -16,6 +17,8 @@ import java.util.Calendar
 import java.util.Locale
 import com.example.adotejr.model.Responsavel
 import com.example.adotejr.network.ApiClient
+import com.example.adotejr.util.PermissionUtil
+import com.google.android.material.imageview.ShapeableImageView
 
 class NovoCadastrarViewModel : ViewModel() {
 
@@ -249,7 +252,7 @@ class NovoCadastrarViewModel : ViewModel() {
         }
     }
 
-    // --- NOVA LÓGICA DE BUSCA DE CEP ---
+    // --- LÓGICA DE BUSCA DE CEP ---
 
     /**
      * Busca um endereço usando a API ViaCEP.
@@ -288,6 +291,86 @@ class NovoCadastrarViewModel : ViewModel() {
                 Log.e("NovoCadastrarViewModel", "Erro na API ViaCEP", e)
                 _cadastroState.value = CadastroState.Erro("Falha de conexão ao buscar CEP.")
             }
+        }
+    }
+
+    // --- FUNÇÃO PRINCIPAL DE CADASTRO ---
+
+    /**
+     * Orquestra todo o processo de cadastro a partir dos dados coletados do formulário.
+     * @param dados Um objeto contendo todas as informações da UI.
+     */
+    fun iniciarProcessoDeCadastro(dados: DadosFormularioCadastro) {
+        viewModelScope.launch {
+            _cadastroState.value = CadastroState.Cadastrando
+
+            // --- AQUI ENTRARÁ TODA A LÓGICA DE PERSISTÊNCIA ---
+            // 1. Validação final dos dados recebidos.
+            // 2. Upload da imagem (Bitmap ou Uri) para o Firebase Storage.
+            // 3. Obter a URL de download da imagem.
+            // 4. Executar a transação para obter o número do cartão.
+            // 5. Montar o objeto `Crianca` e `Responsavel`.
+            // 6. Salvar os objetos no Firestore.
+            // 7. Emitir `CadastroSucesso(id)` ou `Erro(mensagem)`.
+
+            // Placeholder por enquanto, para testar o fluxo da UI:
+            try {
+                // Simula um processo demorado de rede
+                kotlinx.coroutines.delay(2000)
+
+                // Emite sucesso com um ID de exemplo para o Fragment poder navegar
+                _cadastroState.value = CadastroState.CadastroSucesso("ID_DE_EXEMPLO_TESTE")
+
+            } catch (e: Exception) {
+                Log.e("NovoCadastrarViewModel", "Erro no processo de cadastro", e)
+                _cadastroState.value = CadastroState.Erro("Falha no cadastro: ${e.message}")
+            }
+        }
+    }
+
+    // --- AÇÃO 1.1: VARIÁVEIS PARA GERENCIAR A IMAGEM ---
+    private var imagemSelecionadaUri: Uri? = null
+    private var bitmapImagemSelecionada: Bitmap? = null
+
+    // --- AÇÃO 1.2: GERENCIADOR DE PERMISSÕES ---
+    private val gerenciadorPermissoes = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissoes ->
+        if (permissoes[Manifest.permission.CAMERA] == true) {
+            mostrarDialogoEscolherImagem()
+        } else {
+            Toast.makeText(requireContext(), "Permissão de câmera negada.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // --- AÇÃO 1.3: GERENCIADOR DA CÂMERA ---
+    private val gerenciadorCamera = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { resultado ->
+        if (resultado.resultCode == Activity.RESULT_OK) {
+            val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                resultado.data?.extras?.getParcelable("data", Bitmap::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                resultado.data?.extras?.getParcelable("data")
+            }
+
+            if (bitmap != null) {
+                bitmapImagemSelecionada = bitmap
+                imagemSelecionadaUri = null // Limpa a outra fonte de imagem
+                binding.includeFotoCrianca.imagePerfil.setImageBitmap(bitmap)
+            }
+        }
+    }
+
+    // --- AÇÃO 1.4: GERENCIADOR DA GALERIA ---
+    private val gerenciadorGaleria = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            imagemSelecionadaUri = uri
+            bitmapImagemSelecionada = null // Limpa a outra fonte de imagem
+            binding.includeFotoCrianca.imagePerfil.setImageURI(uri)
         }
     }
 }
