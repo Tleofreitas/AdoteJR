@@ -344,4 +344,25 @@ class CadastrarViewModel : ViewModel() {
 
     private val storageRepository = StorageRepository()
     private val auth = FirebaseAuth.getInstance()
+
+    // LiveData para a lista de líderes (objetos completos)
+    private val _listaLideres = MutableLiveData<List<com.example.adotejr.model.Lider>>()
+    val listaLideres: LiveData<List<com.example.adotejr.model.Lider>> = _listaLideres
+
+    // LiveData para a lista de NOMES de líderes, para o AutoCompleteTextView
+    private val _listaNomesLideres = MutableLiveData<List<String>>()
+    val listaNomesLideres: LiveData<List<String>> = _listaNomesLideres
+
+    fun carregarLideres() {
+        viewModelScope.launch {
+            try {
+                val snapshot = firestore.collection("Lideres").orderBy("nome").get().await()
+                val lideres = snapshot.toObjects(com.example.adotejr.model.Lider::class.java)
+                _listaLideres.value = lideres
+                _listaNomesLideres.value = lideres.map { it.nome }
+            } catch (e: Exception) {
+                _cadastroState.value = CadastroState.Erro("Falha ao carregar a lista de líderes.")
+            }
+        }
+    }
 }

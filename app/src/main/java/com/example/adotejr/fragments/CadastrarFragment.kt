@@ -27,7 +27,6 @@ import com.example.adotejr.model.DadosFormularioCadastro
 import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
 import com.example.adotejr.viewmodel.CadastroState
-import com.example.adotejr.viewmodel.LideresViewModel
 import com.example.adotejr.viewmodel.CadastrarViewModel
 
 class CadastrarFragment : Fragment() {
@@ -38,7 +37,6 @@ class CadastrarFragment : Fragment() {
     // ViewModel principal para a lógica de cadastro
     private val viewModel: CadastrarViewModel by viewModels()
     // ViewModel secundário para buscar a lista de líderes
-    private val lideresViewModel: LideresViewModel by viewModels()
 
     private var isCpfValidadoComSucesso = false
 
@@ -114,16 +112,15 @@ class CadastrarFragment : Fragment() {
     }
 
     private fun configurarAutoCompleteIndicacao() {
-        lideresViewModel.listaNomesLideres.observe(viewLifecycleOwner) { nomesLideres ->
-            val opcoesComDefault = mutableListOf("-- Selecione --").apply { addAll(nomesLideres) }
+        viewModel.listaNomesLideres.observe(viewLifecycleOwner) { nomesLideres ->
             val adapter = ArrayAdapter(
                 requireContext(),
-                android.R.layout.simple_dropdown_item_1line, // Caminho completo para o layout
-                opcoesComDefault.distinct()
+                android.R.layout.simple_dropdown_item_1line,
+                nomesLideres // Passa a lista diretamente
             )
             binding.includeDadosResponsavel.autoCompleteIndicacao.setAdapter(adapter)
         }
-        lideresViewModel.carregarLideres()
+        viewModel.carregarLideres()
     }
 
     private fun configurarListeners() {
@@ -363,6 +360,19 @@ class CadastrarFragment : Fragment() {
         binding.includeEndereco.editTextComplemento.setText(responsavel.complemento)
         binding.includeEndereco.editTextBairro.setText(responsavel.bairro)
         binding.includeEndereco.editTextCidade.setText(responsavel.cidade)
+
+        val indicacaoDoBanco = responsavel.indicacao
+
+        // CORRIGIDO: Pega a lista do viewModel principal
+        val listaDeLideres = viewModel.listaLideres.value ?: emptyList()
+
+        val liderEncontradoPeloId = listaDeLideres.find { it.id == indicacaoDoBanco }
+
+        if (liderEncontradoPeloId != null) {
+            binding.includeDadosResponsavel.autoCompleteIndicacao.setText(liderEncontradoPeloId.nome, false)
+        } else {
+            binding.includeDadosResponsavel.autoCompleteIndicacao.setText(indicacaoDoBanco, false)
+        }
     }
 
     private fun limparCamposResponsavel() {
@@ -455,7 +465,7 @@ class CadastrarFragment : Fragment() {
         val cidade = binding.includeEndereco.editTextCidade.text.toString()
         val indicacaoNome = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
         var indicacaoId = ""
-        lideresViewModel.listaLideres.value?.find { it.nome == indicacaoNome }?.let { liderEncontrado ->
+        viewModel.listaLideres.value?.find { it.nome == indicacaoNome }?.let { liderEncontrado ->
             indicacaoId = liderEncontrado.id
         }
 
@@ -546,7 +556,7 @@ class CadastrarFragment : Fragment() {
             binding.includeDadosResponsavel.InputTel2.error = null
         }
 
-        if (dados.indicacaoNome.isBlank() || dados.indicacaoNome == "-- Selecione --") {
+        if (dados.indicacaoNome.isBlank()) {
             binding.includeDadosResponsavel.menuIndicacao.error = "Selecione uma opção"
             camposValidos = false
         } else {
