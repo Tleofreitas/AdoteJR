@@ -1,5 +1,9 @@
 package com.example.adotejr.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Crianca (
     // DADOS DA CRIANÇA
     var id: String = "", // ANO + CPF - PARA NÃO CADASTRAR A MESMA CRIANÇA MAIS DE UMA VEZ
@@ -59,4 +63,4 @@ data class Crianca (
     var numeroCartao: String = "",
     var dataCadastro: String = "",
     var chegouKit: String = ""
-)
+) : Parcelable

@@ -16,8 +16,11 @@ import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
+import com.example.adotejr.model.Crianca
+import android.os.Build
 
 class CartaoActivity : AppCompatActivity() {
+
     private val binding by lazy {
         ActivityCartaoBinding.inflate(layoutInflater)
     }
@@ -35,76 +38,7 @@ class CartaoActivity : AppCompatActivity() {
     var ano = LocalDate.now().year
     private var idDetalhar: String? = null
 
-    override fun onStart() {
-        super.onStart()
-        recuperarDadosIdGerado()
-    }
-
-    private fun recuperarDadosIdGerado() {
-        if (NetworkUtils.conectadoInternet(this)) {
-            if (idDetalhar != null){
-                firestore.collection("Criancas")
-                    .document(idDetalhar!!)
-                    .get()
-                    .addOnSuccessListener { documentSnapshot ->
-                        documentSnapshot.data?.let { dadosCrianca ->
-                            preencherDadosCrianca(dadosCrianca)
-                        }
-                    } .addOnFailureListener { exception ->
-                        Log.e("Firestore", "Error getting documents: ", exception)
-                    }
-            }
-        } else {
-            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
-            val intent = Intent(this, DadosCriancaActivity::class.java)
-            intent.putExtra("id", idDetalhar)
-            intent.putExtra("origem", "listagem")
-            startActivity(intent)
-        }
-    }
-
-    private fun preencherDadosCrianca(dados: Map<String, Any>) {
-        var ano = dados["ano"] as? Number ?: 0
-        binding.cartaoAdote.text = "ADOTE $ano"
-
-        var nCartao = dados["numeroCartao"] as? String ?: ""
-
-        binding.numCartao.text = "N°: $nCartao"
-
-        var nome = dados["nome"] as? String ?: ""
-        binding.nomeCartao.text = "$nome"
-
-        var idade = dados["idade"] as? Number ?: 0
-        binding.idadeCartao.text = " Idade: $idade anos"
-
-        var blusa = dados["blusa"] as? String ?: ""
-        binding.blusaCartao.text = " Blusa: $blusa"
-
-        var calca = dados["calca"] as? String ?: ""
-        binding.calcaCartao.text = " Calça: $calca"
-
-        var sapato = dados["sapato"] as? String ?: ""
-        binding.sapatoCartao.text = " Calçado: $sapato"
-
-        var gostosPessoais = dados["gostosPessoais"] as? String ?: ""
-        binding.dicaCartao.text = " $gostosPessoais"
-
-        var obs = dados["descricaoEspecial"] as? String ?: ""
-        if(obs != ""){
-            binding.pcdCartao.text = " PCD - $obs"
-        } else {
-            binding.pcdCartao.text = " PCD - Não"
-        }
-
-        binding.fotoCartao.let {
-            val foto = dados["foto"] as? String
-            if (!foto.isNullOrEmpty()) {
-                Picasso.get().load(foto).into(it)
-            }
-        }
-
-        aguardarLayoutEGerarCartao(nCartao)
-    }
+    private var crianca: Crianca? = null
 
     private fun aguardarLayoutEGerarCartao(nCartao: String) {
         val viewTreeObserver = binding.layoutCartao.viewTreeObserver
@@ -134,6 +68,22 @@ class CartaoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        // LÓGICA DE RECUPERAÇÃO DE DADOS CENTRALIZADA NO ONCREATE
+        recuperarDadosIntent()
+
+        if (crianca != null) {
+            // Se o objeto veio via Intent, preenche os dados diretamente
+            preencherDadosCrianca(crianca!!)
+        } else if (idDetalhar != null) {
+            // Se não veio, mas temos um ID, busca no Firestore (fallback)
+            buscarDadosDoFirestore()
+        } else {
+            // Caso extremo: não temos nem objeto nem ID
+            exibirMensagem("Erro: Não foi possível carregar os dados da criança.")
+            finish()
+        }
+
+        /*
         // Pegar ID passado
         val bundle = intent.extras
         if(bundle != null) {
@@ -141,7 +91,75 @@ class CartaoActivity : AppCompatActivity() {
         } else {
             idDetalhar = "null"
             // idDetalhar = 202544290378846.toString()
+        }*/
+    }
+
+    private fun recuperarDadosIntent() {
+        // Nova forma segura de obter um objeto Parcelable a partir da API 33+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            crianca = intent.getParcelableExtra("crianca_obj", Crianca::class.java)
+        } else {
+            // Forma depreciada, mas necessária para APIs mais antigas
+            @Suppress("DEPRECATION")
+            crianca = intent.getParcelableExtra("crianca_obj")
         }
+
+        // Se o objeto não veio, tentamos pegar o ID (para o fallback)
+        if (crianca == null) {
+            idDetalhar = intent.getStringExtra("id")
+        } else {
+            idDetalhar = crianca?.id // Garante que o idDetalhar também seja preenchido
+        }
+    }
+
+    private fun buscarDadosDoFirestore() {
+        if (!NetworkUtils.conectadoInternet(this)) {
+            exibirMensagem("Verifique a conexão com a internet e tente novamente!")
+            finish()
+            return
+        }
+
+        firestore.collection("Criancas")
+            .document(idDetalhar!!)
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                val criancaDoBanco = documentSnapshot.toObject(Crianca::class.java)
+                if (criancaDoBanco != null) {
+                    preencherDadosCrianca(criancaDoBanco)
+                } else {
+                    exibirMensagem("Criança não encontrada no banco de dados.")
+                    finish()
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Firestore", "Error getting documents: ", exception)
+                exibirMensagem("Erro ao buscar dados da criança.")
+                finish()
+            }
+    }
+
+    // A função de preenchimento agora recebe o objeto Crianca
+    private fun preencherDadosCrianca(crianca: Crianca) {
+        binding.cartaoAdote.text = "ADOTE ${crianca.ano}"
+        binding.numCartao.text = "N°: ${crianca.numeroCartao}"
+        binding.nomeCartao.text = crianca.nome
+        binding.idadeCartao.text = " Idade: ${crianca.idade} anos"
+        binding.blusaCartao.text = " Blusa: ${crianca.blusa}"
+        binding.calcaCartao.text = " Calça: ${crianca.calca}"
+        binding.sapatoCartao.text = " Calçado: ${crianca.sapato}"
+        binding.dicaCartao.text = " ${crianca.gostosPessoais}"
+
+        if (crianca.descricaoEspecial.isNotEmpty()) {
+            binding.pcdCartao.text = " PCD - ${crianca.descricaoEspecial}"
+        } else {
+            binding.pcdCartao.text = " PCD - Não"
+        }
+
+        if (crianca.foto.isNotEmpty()) {
+            Picasso.get().load(crianca.foto).into(binding.fotoCartao)
+        }
+
+        aguardarLayoutEGerarCartao(crianca.numeroCartao)
     }
 
     private fun capturarScreenshot(): Bitmap {
