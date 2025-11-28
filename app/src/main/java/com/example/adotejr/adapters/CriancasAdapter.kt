@@ -27,7 +27,12 @@ class CriancasAdapter(
             binding.textNomeCrianca.text = crianca.nome
             binding.textIdadeCrianca.text = "Idade: ${crianca.idade} anos"
             binding.textNumCartao.text = "Cartão: ${crianca.numeroCartao}"
-            // binding.textCpfCrianca.text = "CPF: "+crianca.cpf
+
+            if (crianca.padrinho.isNotEmpty()) {
+                binding.textPadrinhoCrianca.text = "Padrinho: ${crianca.padrinho}"
+            } else {
+                binding.textPadrinhoCrianca.text = "Padrinho: a definir"
+            }
             Picasso.get()
                 .load( crianca.foto )
                 .into( binding.imgFotoCrianca )
