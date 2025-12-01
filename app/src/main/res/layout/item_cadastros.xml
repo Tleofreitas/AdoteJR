@@ -36,26 +36,39 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca"
-            app:layout_constraintTop_toTopOf="@+id/imgFotoCrianca" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/textIdadeCrianca"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="2dp"
             android:text="Idade: 15 anos"
-            android:textSize="16sp"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca"
+            app:layout_constraintTop_toBottomOf="@+id/textNomeCrianca" />
+
+        <TextView
+            android:id="@+id/textPadrinhoCrianca"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="2dp"
+            android:text="Padrinho: Jesus de Nazaré"
+            android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/imgFotoCrianca"
-            app:layout_constraintTop_toBottomOf="@+id/textNomeCrianca" />
+            app:layout_constraintTop_toBottomOf="@+id/textIdadeCrianca" />
 
         <TextView
             android:id="@+id/textNumCartao"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cartão: 1000"
-            android:textSize="16sp"
+            android:text="CartÃ£o: 1000"
+            android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@+id/textIdadeCrianca"
             app:layout_constraintEnd_toEndOf="parent"

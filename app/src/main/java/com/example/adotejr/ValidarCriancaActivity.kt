@@ -232,10 +232,10 @@ class ValidarCriancaActivity : AppCompatActivity() {
 
     private fun atualizarDadosDaCrianca(nomeValidador: String, fotoValidador: String) {
         val nomeIndicacaoSelecionada = binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString()
-        // Usa o mapa para encontrar o ID correspondente ao nome selecionado
         val idIndicacaoSelecionada = mapaNomeParaIdLideres[nomeIndicacaoSelecionada] ?: ""
 
-        val dadosAtualizados = mapOf(
+        // 1. Crie um mapa apenas com os campos que serão atualizados no Firestore
+        val dadosParaAtualizar = mapOf(
             "nome" to binding.editTextNome.text.toString(),
             "sexo" to if (binding.includeDadosCriancaSacola.radioButtonMasculino.isChecked) "Masculino" else "Feminino",
             "blusa" to binding.includeDadosCriancaSacola.editTextBlusa.text.toString(),
@@ -244,7 +244,6 @@ class ValidarCriancaActivity : AppCompatActivity() {
             "gostosPessoais" to binding.includeDadosCriancaSacola.editTextGostos.text.toString(),
             "telefone1" to binding.includeDadosResponsavel.editTextTel1.text.toString(),
             "telefone2" to binding.includeDadosResponsavel.editTextTel2.text.toString(),
-            "indicacao" to binding.includeDadosResponsavel.autoCompleteIndicacao.text.toString(),
             "indicacao" to idIndicacaoSelecionada,
             "descricaoIndicacao" to nomeIndicacaoSelecionada,
             "validadoPor" to nomeValidador,
@@ -252,13 +251,33 @@ class ValidarCriancaActivity : AppCompatActivity() {
             "status" to "Ativo"
         )
 
-        // SEGUNDA CHAMADA DE REDE: Atualizar os dados da criança
+        // 2. Atualize os dados no Firestore
         firestore.collection("Criancas").document(idCrianca!!)
-            .update(dadosAtualizados)
+            .update(dadosParaAtualizar)
             .addOnSuccessListener {
                 exibirMensagem("Validado com Sucesso.")
+
+                // 3. CRIE O OBJETO CRIANCA ATUALIZADO PARA PASSAR ADIANTE
+                // Usamos os dados que já temos em 'criancaAtual' e sobrepomos com os dados atualizados da tela
+                val criancaAtualizada = criancaAtual?.copy(
+                    nome = dadosParaAtualizar["nome"] as String,
+                    sexo = dadosParaAtualizar["sexo"] as String,
+                    blusa = dadosParaAtualizar["blusa"] as String,
+                    calca = dadosParaAtualizar["calca"] as String,
+                    sapato = dadosParaAtualizar["sapato"] as String,
+                    gostosPessoais = dadosParaAtualizar["gostosPessoais"] as String,
+                    telefone1 = dadosParaAtualizar["telefone1"] as String,
+                    telefone2 = dadosParaAtualizar["telefone2"] as String,
+                    indicacao = dadosParaAtualizar["indicacao"] as String,
+                    descricaoIndicacao = dadosParaAtualizar["descricaoIndicacao"] as String,
+                    validadoPor = nomeValidador,
+                    fotoValidadoPor = fotoValidador,
+                    ativo = "Ativo"
+                )
+
+                // 4. INICIE A CARTAOACTIVITY PASSANDO O OBJETO COMPLETO
                 val intent = Intent(this, CartaoActivity::class.java)
-                intent.putExtra("id", idCrianca)
+                intent.putExtra("crianca_obj", criancaAtualizada) // Passa o objeto Parcelable
                 startActivity(intent)
                 finish()
             }
