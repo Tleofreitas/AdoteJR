@@ -1,25 +1,252 @@
 package com.example.adotejr.fragments
 
+import android.app.AlertDialog
+import android.app.Application
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.adotejr.R
-import com.example.adotejr.databinding.FragmentCadastrarBinding
 import com.example.adotejr.databinding.FragmentCadastrarNovoBinding
+import com.example.adotejr.model.CadastroFormStatus
+import com.example.adotejr.repository.DefinicoesRepository
+import com.example.adotejr.repository.DefinicoesRepositoryImpl
+import com.example.adotejr.viewmodel.CadastrarViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
+
+fun View.setEnabledRecursively(enabled: Boolean) {
+    this.isEnabled = enabled
+    if (this is ViewGroup) {
+        for (i in 0 until childCount) {
+            getChildAt(i).setEnabledRecursively(enabled)
+        }
+    }
+}
 
 class CadastrarFragmentNovo : Fragment() {
-    private lateinit var binding: FragmentCadastrarNovoBinding
+
+    private inner class CadastroViewModelFactory(
+        private val app: Application,
+        private val repository: DefinicoesRepository
+    ) : ViewModelProvider.Factory {
+
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            // Verifica se a classe pedida é a nossa CadastrarViewModel
+            if (modelClass.isAssignableFrom(CadastrarViewModel::class.java)) {
+                // Instancia o ViewModel passando as dependências
+                @Suppress("UNCHECKED_CAST")
+                return CadastrarViewModel(app, repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
+    }
+
+    // ----------------------------------------------------
+    private val firestoreInstance = FirebaseFirestore.getInstance()
+    private val definicoesRepository: DefinicoesRepository by lazy {
+        // Inicializa o Repositório, passando a instância do Firestore
+        DefinicoesRepositoryImpl(firestore = firestoreInstance)
+    }
+
+    // 2. Instância do ViewModel usando o Factory
+    private val viewModel: CadastrarViewModel by viewModels {
+        // Inicializa o Factory, passando a Application e o Repository
+        val app = requireActivity().application
+        CadastroViewModelFactory(app, definicoesRepository)
+    }
+
+    // 1. Variável para o View Binding. O nome é gerado automaticamente (FragmentCadastrarFragmentNovoBinding)
+    private var _binding: FragmentCadastrarNovoBinding? = null
+    // Propriedade para acesso seguro (sem nullability)
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentCadastrarNovoBinding.inflate(
-            inflater, container, false
-        )
-
+    ): View {
+        // 2. Inflar o layout usando View Binding
+        _binding = FragmentCadastrarNovoBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // ** COLETA REATIVA DO ESTADO **
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.formStatus.collect { status ->
+                tratarStatusDoFormulario(status)
+            }
+        }
+    }
+
+    private fun tratarStatusDoFormulario(status: CadastroFormStatus) {
+        when (status) {
+            CadastroFormStatus.LOADING -> {
+                // No início, bloqueia TUDO para garantir que a UI não seja usada antes do resultado
+                desabilitarTudo()
+            }
+
+            CadastroFormStatus.OK -> {
+                // ✅ SUCESSO: Habilita CPF/Checar e DESABILITA o resto do formulário
+                habilitarCpfEChecar()
+            }
+
+            CadastroFormStatus.NEAR_LIMIT -> {
+                // ⚠️ QUASE LIMITE: Habilita CPF/Checar e DESABILITA o resto do formulário
+                habilitarCpfEChecar()
+                viewModel.appDefinicoes?.let { definicoes ->
+                    val limiteInt = definicoes.quantidadeDeCriancas.toIntOrNull() ?: 0
+                    alertaDefinicoes(
+                        "CHEGANDOLIMITE",
+                        viewModel.totalCadastrosFeitos,
+                        limiteInt.toString()
+                    )
+                }
+            }
+
+            // ESTADOS DE BLOQUEIO TOTAL (DEF, DATA, LIMITE, ERRO)
+            CadastroFormStatus.DATA_EXCEEDED,
+            CadastroFormStatus.LIMIT_EXCEEDED,
+            CadastroFormStatus.NO_DEFINITIONS,
+            CadastroFormStatus.NO_INTERNET,
+            CadastroFormStatus.ERROR -> {
+                // ❌ Bloqueia TUDO (o container pai e todos os filhos)
+                desabilitarTudo() // <-- CORREÇÃO AQUI!
+
+                // Chama o alerta (se aplicável)
+                if (status == CadastroFormStatus.DATA_EXCEEDED) alertaDefinicoes("DATA", 0, "0")
+                else if (status == CadastroFormStatus.LIMIT_EXCEEDED) alertaDefinicoes("LIMITE", 0, "0")
+                else if (status == CadastroFormStatus.NO_DEFINITIONS) alertaDefinicoes("DEF", 0, "0")
+                else if (status == CadastroFormStatus.NO_INTERNET) {
+                    Toast.makeText(requireContext(),"Verifique a conexão com a internet e tente novamente!",Toast.LENGTH_LONG).show()
+                } else if (status == CadastroFormStatus.ERROR) {
+                    Toast.makeText(requireContext(),"Erro ao carregar configurações. Tente novamente mais tarde.",Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun alertaDefinicoes(
+        tipo: String,
+        qtdCadastrosFeitos: Int,
+        quantidadeCriancasTotal: String
+    ) {
+        val alertBuilder = AlertDialog.Builder(requireContext())
+        alertBuilder.setTitle("Cadastros não permitidos!")
+
+        if(tipo == "DEF"){
+            alertBuilder.setMessage("Não há datas liberadas para realização de cadastros." +
+                    "\nAdicione os campos no menu Definições ou fale com a administração do Adote.")
+
+        } else if(tipo == "DATA"){
+            alertBuilder.setMessage("Período de cadastro finalizado." +
+                    "\nDúvidas procurar a administração do Adote.")
+
+        } else if(tipo == "LIMITE") {
+            alertBuilder.setMessage("Cadastro finalizado." +
+                    "\nA quantidade limite de crianças foi atingido." +
+                    "\nDúvidas procurar a administração do Adote.")
+
+        } else if(tipo == "CHEGANDOLIMITE") {
+            alertBuilder.setTitle("Limite quase atingido!")
+            alertBuilder.setMessage("Cadastros realizados: $qtdCadastrosFeitos" +
+                    "\nLimite: $quantidadeCriancasTotal")
+        }
+
+        val customView = LayoutInflater.from(requireContext()).inflate(R.layout.botao_alerta, null)
+        alertBuilder.setView(customView)
+
+        val dialog = alertBuilder.create()
+
+        val btnFechar: Button = customView.findViewById(R.id.btnFechar)
+        btnFechar.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // 4. Liberar a referência do binding para evitar memory leaks
+        _binding = null
+    }
+
+    // 1. Função auxiliar para acessar o container principal
+    private fun getMainContainer(): ViewGroup {
+        // O ScrollView é a raiz do binding, o ConstraintLayout é seu primeiro filho.
+        return binding.root.getChildAt(0) as ViewGroup
+    }
+
+    // 2. Função de Extensão para Desabilitar (Mantenha esta)
+    fun View.setEnabledRecursively(enabled: Boolean) {
+        this.isEnabled = enabled
+        if (this is ViewGroup) {
+            for (i in 0 until childCount) {
+                getChildAt(i).setEnabledRecursively(enabled)
+            }
+        }
+    }
+
+    // 3. Função para Desabilitar TUDO (Usada em casos de erro/data/limite)
+    private fun desabilitarTudo() {
+        getMainContainer().setEnabledRecursively(false)
+        binding.btnCadastrarCrianca.isEnabled = false
+    }
+
+    // 4. Função para Desabilitar o RESTO (Usada no estado OK)
+    // Garante que só CPF/Checar fiquem ativos.
+    private fun desabilitarRestoDoFormulario() {
+        // ⚠️ Desabilita tudo que vem DEPOIS do CPF/Checar
+        binding.InputNome.isEnabled = false
+        binding.includeDadosPCD.radioButtonPcdSim.isEnabled = false
+        binding.includeDadosPCD.radioButtonPcdNao.isEnabled = false
+        binding.includeDadosPCD.editTextPcd.isEnabled = false
+        binding.InputDtNascimento.isEnabled = false
+        binding.InputIdade.isEnabled = false
+        binding.includeDadosCriancaSacola.radioButtonMasculino.isEnabled = false
+        binding.includeDadosCriancaSacola.radioButtonFeminino.isEnabled = false
+        binding.includeDadosCriancaSacola.editTextBlusa.isEnabled = false
+        binding.includeDadosCriancaSacola.editTextCalca.isEnabled = false
+        binding.includeDadosCriancaSacola.editTextSapato.isEnabled = false
+        binding.includeDadosCriancaSacola.editTextGostos.isEnabled = false
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.isEnabled = false
+        binding.includeDadosResponsavel.editTextNomeResponsavel.isEnabled = false
+        binding.includeDadosResponsavel.editTextVinculo.isEnabled = false
+        binding.includeDadosResponsavel.editTextTel1.isEnabled = false
+        binding.includeDadosResponsavel.editTextTel2.isEnabled = false
+        binding.includeDadosResponsavel.menuIndicacao.isEnabled = false
+        binding.includeEndereco.editTextCep.isEnabled = false
+        binding.includeEndereco.editTextNumero.isEnabled = false
+        binding.includeEndereco.editTextRua.isEnabled = false
+        binding.includeEndereco.editTextComplemento.isEnabled = false
+        binding.includeEndereco.editTextBairro.isEnabled = false
+        binding.includeEndereco.editTextCidade.isEnabled = false
+        binding.includeFotoCrianca.fabSelecionar.isEnabled = false
+        binding.btnCadastrarCrianca.isEnabled = false
+    }
+
+    // 5. Função para Habilitar SOMENTE CPF/Checar (Chamada para OK/NEAR_LIMIT)
+    // Simplificamos a função para não ter o parâmetro 'habilitar: Boolean'
+    private fun habilitarCpfEChecar() {
+        // ⚠️ PASSO CRÍTICO: Reverte o bloqueio total do container principal
+        getMainContainer().isEnabled = true
+
+        // 1. HABILITA os campos de CPF/Checar
+        binding.InputCPF.isEnabled = true
+        binding.editTextCpf.isEnabled = true
+        binding.btnChecarCpf.isEnabled = true
+
+        // 2. Desabilita o restante do formulário (o que funciona agora que o pai está ativo)
+        desabilitarRestoDoFormulario()
     }
 }
