@@ -232,6 +232,20 @@
         tools:visibility="visible" />
 
     <Button
+        android:id="@+id/btnNovoCadastroTeste"
+        style="@style/Widget.App.Button"
+        android:layout_width="379dp"
+        android:layout_height="wrap_content"
+        android:text="Cadastro em teste"
+        android:textColor="@color/azulEscuro"
+        app:iconTint="@color/azulEscuro"
+        app:layout_constraintBottom_toTopOf="@+id/btnGerenciarVoluntarios"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnEditarDefinicoes" />
+
+    <Button
         android:id="@+id/btnGerenciarVoluntarios"
         style="@style/Widget.App.Button"
         android:layout_width="0dp"
