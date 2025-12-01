@@ -94,8 +94,36 @@ class GeradorCartaoWorker(appContext: Context, workerParams: WorkerParameters) :
         val documentosEncontrados: List<com.google.firebase.firestore.DocumentSnapshot>
 
         if (!numerosCartao.isNullOrEmpty()) {
-            // MODO ESPECÍFICO
-            val listaDeNumeros = numerosCartao.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            // --- INÍCIO DA NOVA LÓGICA ---
+            val listaDeNumeros: List<String>
+
+            if (numerosCartao.contains("-")) {
+                // MODO INTERVALO (ex: "1-50")
+                Log.d("GeradorWorker", "Modo de geração por intervalo detectado: $numerosCartao")
+                try {
+                    val partes = numerosCartao.split("-").map { it.trim() }
+                    val inicio = partes[0].toInt()
+                    val fim = partes[1].toInt()
+
+                    // Garante que o intervalo seja válido (início <= fim)
+                    if (inicio > fim) {
+                        Log.w("GeradorWorker", "Intervalo inválido. O número inicial ($inicio) é maior que o final ($fim).")
+                        return emptyList()
+                    }
+
+                    // Gera a lista de números como strings
+                    listaDeNumeros = (inicio..fim).map { it.toString() }
+                    Log.d("GeradorWorker", "Intervalo expandido para ${listaDeNumeros.size} números.")
+
+                } catch (e: Exception) {
+                    // Captura erros de formatação (ex: "1-abc", "5-", etc.)
+                    Log.e("GeradorWorker", "Formato de intervalo inválido: $numerosCartao", e)
+                    return emptyList()
+                }
+            } else {
+                // MODO VÍRGULA (lógica original)
+                listaDeNumeros = numerosCartao.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            }
 
             if (listaDeNumeros.isEmpty()) {
                 return emptyList() // Retorna lista vazia se a entrada for inválida (ex: ",, ,")
@@ -104,6 +132,7 @@ class GeradorCartaoWorker(appContext: Context, workerParams: WorkerParameters) :
             Log.d("GeradorWorker", "Modo de geração múltipla para os cartões: $listaDeNumeros")
 
             // O Firestore limita a cláusula 'in' a 30 itens. Processamos em lotes.
+            // Esta parte do código agora funciona para ambos os modos (intervalo e vírgula).
             val documentosEmLotes = mutableListOf<com.google.firebase.firestore.DocumentSnapshot>()
             listaDeNumeros.chunked(30).forEach { lote ->
                 val snapshot = query.whereIn("numeroCartao", lote).get().await()
@@ -118,7 +147,7 @@ class GeradorCartaoWorker(appContext: Context, workerParams: WorkerParameters) :
             documentosEncontrados = snapshot.documents
         }
 
-        // A ordenação no cliente acontece no final, para ambos os casos
+        // A ordenação no cliente acontece no final, para todos os casos
         return documentosEncontrados.sortedWith(compareBy { document ->
             document.getString("numeroCartao")?.toIntOrNull() ?: Int.MAX_VALUE
         })

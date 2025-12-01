@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Digite os números a serem gerados em PDF.\nDeixe em branco para gerar todos os cartões."
+        android:text="Para gerar um único cartão, digite seu número.\nExemplo: 1\n\nPara gerar mais de um, específicos, separe por vírgula.\nExemplo: 1,5\n\nPara gerar uma sequência, separe por traço.\nExemplo, baixar do 01 ao 10: 1-10\n\nPara gerar todos, deixe em branco."
         android:textSize="16sp" />
 
     <com.google.android.material.textfield.TextInputLayout
