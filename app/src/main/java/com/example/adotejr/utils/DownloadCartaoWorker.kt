@@ -108,20 +108,28 @@ class DownloadCartaoWorker(private val context: Context, params: WorkerParameter
         }
     }
 
-    // FUNÇÃO DE PARSING CORRIGIDA - EXATAMENTE A VERSÃO DO SEU VIEWMODEL
     private fun processarInputParaNumeros(numerosInput: String): List<String> {
         val inputNormalizado = numerosInput.trim()
         val listaNumeros = mutableListOf<String>()
 
+        // Função auxiliar para adicionar o número formatado
+        fun adicionarNumero(num: Int) {
+            listaNumeros.add(num.toString().padStart(4, '0'))
+        }
+
         when {
+            // Se estiver vazio, retorna a lista vazia
+            inputNormalizado.isEmpty() -> {
+                return emptyList()
+            }
+            // Se contém vírgula, processa cada parte
             inputNormalizado.contains(",") -> {
                 val partes = inputNormalizado.split(",").map { it.trim() }
                 partes.forEach { numeroStr ->
-                    if (numeroStr.isNotEmpty()) {
-                        listaNumeros.add(numeroStr)
-                    }
+                    numeroStr.toIntOrNull()?.let { adicionarNumero(it) }
                 }
             }
+            // Se contém hífen, processa o intervalo
             inputNormalizado.contains("-") -> {
                 val partes = inputNormalizado.split("-").map { it.trim() }
                 val inicio = partes.getOrNull(0)?.toIntOrNull()
@@ -129,16 +137,16 @@ class DownloadCartaoWorker(private val context: Context, params: WorkerParameter
 
                 if (inicio != null && fim != null && inicio <= fim) {
                     for (i in inicio..fim) {
-                        listaNumeros.add(i.toString())
+                        adicionarNumero(i)
                     }
                 } else {
-                    if (inputNormalizado.isNotEmpty()) {
-                        listaNumeros.add(inputNormalizado)
-                    }
+                    // Se o intervalo for inválido, mas não vazio, tenta tratar como número único
+                    inputNormalizado.toIntOrNull()?.let { adicionarNumero(it) }
                 }
             }
-            inputNormalizado.isNotEmpty() -> {
-                listaNumeros.add(inputNormalizado)
+            // Se for apenas um número
+            else -> {
+                inputNormalizado.toIntOrNull()?.let { adicionarNumero(it) }
             }
         }
         return listaNumeros

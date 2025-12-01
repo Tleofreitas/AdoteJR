@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Para baixar um único cartão, digite seu número.\nExemplo: 0001\n\nPara baixar mais de um, específicos, separe por vírgula.\nExemplo: 0001,0005\n\nPara baixar uma sequência, separe por traço.\nExemplo, baixar do 01 ao 10: 0001-0010\n\nPara bixa todos, deixe em branco."
+        android:text="Para baixar um único cartão, digite seu número.\nExemplo: 1\n\nPara baixar mais de um, específicos, separe por vírgula.\nExemplo: 1,5\n\nPara baixar uma sequência, separe por traço.\nExemplo, baixar do 1 ao 10: 1-10\n\nPara bixa todos, deixe em branco."
         android:textSize="16sp" />
 
     <com.google.android.material.textfield.TextInputLayout
