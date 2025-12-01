@@ -1,5 +1,6 @@
 package com.example.adotejr.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,11 +9,13 @@ import com.example.adotejr.model.Lider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LideresViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val lideresCollection = firestore.collection("Lideres")
+    private val criancasCollection = firestore.collection("Criancas")
 
     // LiveData para a lista de líderes
     private val _listaLideres = MutableLiveData<List<Lider>>()
@@ -92,17 +95,71 @@ class LideresViewModel : ViewModel() {
         }
     }
 
-    fun atualizarNomeLider(liderId: String, novoNome: String) {
+    /* fun atualizarNomeLider(liderId: String, nomeAntigo: String, novoNome: String) {
         viewModelScope.launch {
-            lideresCollection.document(liderId)
-                .update("nome", novoNome)
-                .addOnSuccessListener {
-                    _eventoDeOperacao.value = "Nome atualizado com sucesso!"
-                    carregarLideres() // Recarrega a lista para mostrar a alteração
-                }
-                .addOnFailureListener {
-                    _eventoDeOperacao.value = "Erro ao atualizar nome."
-                }
+            _estadoDaTela.value = EstadoDaTela.CARREGANDO
+            try {
+                // Inicia uma gravação em lote (Batch Write)
+                firestore.runBatch { batch ->
+                    // 1. Atualiza o documento do próprio líder
+                    val liderRef = lideresCollection.document(liderId)
+                    batch.update(liderRef, "nome", novoNome)
+
+                    // 2. Busca todas as crianças que foram indicadas pelo nome antigo do líder
+                    val criancasParaAtualizarQuery = criancasCollection
+                        .whereEqualTo("descricaoIndicacao", nomeAntigo)
+                        .get()
+                        .await() // Usa await() para esperar o resultado da busca
+
+                    // 3. Para cada criança encontrada, adiciona uma operação de atualização ao lote
+                    for (documentoCrianca in criancasParaAtualizarQuery.documents) {
+                        batch.update(documentoCrianca.reference, "descricaoIndicacao", novoNome)
+                    }
+                }.await() // Envia o lote inteiro para o Firestore e espera a conclusão
+
+                _eventoDeOperacao.value = "Líder e indicações atualizados com sucesso!"
+                carregarLideres() // Recarrega a lista para refletir a mudança
+
+            } catch (e: Exception) {
+                _eventoDeOperacao.value = "Erro ao atualizar: ${e.message}"
+                _estadoDaTela.value = EstadoDaTela.SUCESSO // Volta ao estado normal mesmo com erro
+            }
+        }
+    } */
+
+    fun atualizarNomeLider(liderId: String, nomeAntigo: String, novoNome: String) {
+        viewModelScope.launch {
+            _estadoDaTela.value = EstadoDaTela.CARREGANDO
+            try {
+                // --- FASE 1: LEITURA (READ) ---
+                // Busca, de forma assíncrona, a lista de documentos de crianças a serem atualizados.
+                // Isso acontece ANTES de iniciar o batch.
+                val criancasParaAtualizarQuery = criancasCollection
+                    .whereEqualTo("descricaoIndicacao", nomeAntigo)
+                    .get()
+                    .await()
+
+                // --- FASE 2: ESCRITA (WRITE) ---
+                // Agora que temos a lista, iniciamos o batch para realizar todas as escritas.
+                firestore.runBatch { batch ->
+                    // 1. Atualiza o documento do próprio líder.
+                    val liderRef = lideresCollection.document(liderId)
+                    batch.update(liderRef, "nome", novoNome)
+
+                    // 2. Itera sobre os documentos encontrados na FASE 1 e adiciona as atualizações ao batch.
+                    for (documentoCrianca in criancasParaAtualizarQuery.documents) {
+                        batch.update(documentoCrianca.reference, "descricaoIndicacao", novoNome)
+                    }
+                }.await() // Envia o lote de escritas para o Firestore.
+
+                _eventoDeOperacao.value = "Líder e indicações atualizados com sucesso!"
+                carregarLideres() // Recarrega a lista para refletir a mudança
+
+            } catch (e: Exception) {
+                _eventoDeOperacao.value = "Erro ao atualizar: ${e.message}"
+                Log.e("LideresViewModel", "Falha na atualização em lote", e)
+                _estadoDaTela.value = EstadoDaTela.SUCESSO // Volta ao estado normal mesmo com erro
+            }
         }
     }
 

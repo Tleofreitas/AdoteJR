@@ -121,6 +121,7 @@ class LideresFragment : Fragment() {
             .show()
     }
 
+    /*
     private fun mostrarDialogoEdicao(lider: Lider) {
         val editText = EditText(requireContext()).apply {
             setText(lider.nome)
@@ -134,6 +135,28 @@ class LideresFragment : Fragment() {
                 val novoNome = editText.text.toString().trim()
                 if (novoNome.isNotEmpty() && novoNome != lider.nome) {
                     viewModel.atualizarNomeLider(lider.id, novoNome)
+                } else if (novoNome.isEmpty()) {
+                    Toast.makeText(requireContext(), "O nome não pode ser vazio.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    } */
+
+    private fun mostrarDialogoEdicao(lider: Lider) {
+        val editText = EditText(requireContext()).apply {
+            setText(lider.nome)
+            hint = "Novo nome"
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Editar Nome")
+            .setMessage("Atenção: Alterar o nome do líder também atualizará todas as crianças indicadas por ele.") // Mensagem de aviso
+            .setView(editText)
+            .setPositiveButton("Salvar") { _, _ ->
+                val novoNome = editText.text.toString().trim()
+                if (novoNome.isNotEmpty() && novoNome != lider.nome) {
+                    viewModel.atualizarNomeLider(lider.id, lider.nome, novoNome)
                 } else if (novoNome.isEmpty()) {
                     Toast.makeText(requireContext(), "O nome não pode ser vazio.", Toast.LENGTH_SHORT).show()
                 }
