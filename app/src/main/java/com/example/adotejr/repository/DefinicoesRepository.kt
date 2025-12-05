@@ -10,9 +10,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 interface DefinicoesRepository {
     fun getDefinicoesAndCounts(ano: Int, context: Context): Flow<DefinicoesResult>
+
+    // Checa se o CPF já está na coleção "Criancas"
+    suspend fun isCpfCadastrado(cpf: String): Boolean
 }
 
 class DefinicoesRepositoryImpl(
@@ -66,4 +70,23 @@ class DefinicoesRepositoryImpl(
             emit(DefinicoesResult(null, 0, true, e))
         }
     }.flowOn(Dispatchers.IO)
+
+    // Implementação da checagem de CPF
+    override suspend fun isCpfCadastrado(cpf: String): Boolean {
+        // Corre para o Dispatchers.IO automaticamente pois é uma função 'suspend'
+        return withContext(Dispatchers.IO) {
+            try {
+                val querySnapshot = firestore.collection("Criancas")
+                    .whereEqualTo("cpf", cpf)
+                    .get()
+                    .await()
+
+                // Retorna true se encontrar algum documento
+                !querySnapshot.isEmpty
+            } catch (e: Exception) {
+                // Em caso de erro (ex: internet), lança a exceção para ser tratada no ViewModel
+                throw e
+            }
+        }
+    }
 }

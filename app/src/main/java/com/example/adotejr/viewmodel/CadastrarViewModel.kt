@@ -2,11 +2,14 @@ package com.example.adotejr.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.adotejr.model.CadastroFormStatus
+import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.model.Definicoes
 import com.example.adotejr.repository.DefinicoesRepository
+import com.example.adotejr.utils.FormatadorUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +41,10 @@ class CadastrarViewModel(
     init {
         recuperarDefinicoes()
     }
+
+    // Estado para gerenciar a checagem do CPF
+    private val _cpfStatus = MutableStateFlow<CpfStatus>(CpfStatus.IDLE)
+    val cpfStatus: StateFlow<CpfStatus> = _cpfStatus.asStateFlow()
 
     fun recuperarDefinicoes() {
         val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
@@ -98,6 +105,44 @@ class CadastrarViewModel(
                     _formStatus.value = CadastroFormStatus.OK
                 }
         }
+    }
+
+    // Função que realiza a checagem de CPF (chamada pelo Fragment)
+    fun checarCpf(cpf: String) {
+        if (cpf.length != 11) {
+            // Se o Fragment não filtrou, o CPF está incompleto
+            _cpfStatus.value = CpfStatus.INVALID_FORMAT
+            return
+        }
+
+        // VERIFICAÇÃO ESTRUTURAL (Algoritmo do CPF)
+        // Se falhar aqui, o processo deve PARAR e o status é INVALID_FORMAT.
+        if (!FormatadorUtil.isCpfValido(cpf)) {
+            _cpfStatus.value = CpfStatus.INVALID_FORMAT
+            return // O processo PARA aqui. O Firestore não é consultado.
+        }
+
+        // Se passou na validação estrutural, checa no Firestore...
+        viewModelScope.launch {
+            _cpfStatus.value = CpfStatus.LOADING
+
+            try {
+                val isCadastrado = definicoesRepository.isCpfCadastrado(cpf)
+
+                if (isCadastrado) {
+                    _cpfStatus.value = CpfStatus.ALREADY_REGISTERED
+                } else {
+                    _cpfStatus.value = CpfStatus.READY_TO_REGISTER
+                }
+            } catch (e: Exception) {
+                Log.e("CadastrarViewModel", "Erro ao checar CPF: ", e)
+                _cpfStatus.value = CpfStatus.ERROR
+            }
+        }
+    }
+
+    fun resetCpfStatus() {
+        _cpfStatus.value = CpfStatus.IDLE
     }
 
     /**

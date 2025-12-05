@@ -41,6 +41,39 @@ object FormatadorUtil {
         })
     }
 
+    // A FUNÇÃO DE VALIDAÇÃO NUMÉRICA DO CPF
+    fun isCpfValido(cpf: String): Boolean {
+        // Remove a máscara, garantindo que só fiquem os 11 dígitos
+        val cpfLimpo = cpf.replace("[^0-9]".toRegex(), "")
+
+        if (cpfLimpo.length != 11) return false
+
+        // Evita CPFs inválidos óbvios, como 111.111.111-11
+        if (cpfLimpo.all { it == cpfLimpo.first() }) return false
+
+        try {
+            // Lógica de cálculo dos dígitos verificadores (DV1 e DV2)
+            val dv1 = calcularDigito(cpfLimpo.substring(0, 9))
+            val dv2 = calcularDigito(cpfLimpo.substring(0, 9) + dv1)
+
+            // Compara os dígitos calculados com os dígitos fornecidos
+            return cpfLimpo.takeLast(2) == (dv1.toString() + dv2.toString())
+        } catch (e: Exception) {
+            return false
+        }
+    }
+
+    private fun calcularDigito(str: String): Int {
+        var soma = 0
+        var peso = str.length + 1
+        for (i in str.indices) {
+            soma += Character.getNumericValue(str[i]) * peso
+            peso--
+        }
+        val resto = soma % 11
+        return if (resto < 2) 0 else 11 - resto
+    }
+
     // MÁSCARA DE FORMATAÇÃO DATA
     fun formatarDataNascimento(editText: EditText) {
         editText.addTextChangedListener(object : TextWatcher {

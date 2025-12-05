@@ -21,6 +21,10 @@ import com.example.adotejr.repository.DefinicoesRepositoryImpl
 import com.example.adotejr.viewmodel.CadastrarViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import android.text.Editable
+import android.text.TextWatcher
+import com.example.adotejr.model.CpfStatus
+import com.example.adotejr.utils.FormatadorUtil
 
 fun View.setEnabledRecursively(enabled: Boolean) {
     this.isEnabled = enabled
@@ -80,12 +84,119 @@ class CadastrarFragmentNovo : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // ** CONFIGURAÇÃO DE INPUTS **
+        configurarCpfInput() // Chamada para formatar o CPF
+
+        // ** CONFIGURAÇÃO DE LISTENERS **
+        binding.btnChecarCpf.setOnClickListener {
+            handleChecarCpfClick() // Função que chama o ViewModel
+        }
+
         // ** COLETA REATIVA DO ESTADO **
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.formStatus.collect { status ->
                 tratarStatusDoFormulario(status)
             }
         }
+
+        // Coleção do status do CPF
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.cpfStatus.collect { status ->
+                tratarStatusDoCpf(status)
+            }
+        }
+    }
+
+    private fun configurarCpfInput() {
+        FormatadorUtil.formatarCPF(binding.editTextCpf)
+    }
+
+    // Ação do botão
+    private fun handleChecarCpfClick() {
+        val cpfComMascara = binding.editTextCpf.text.toString()
+        val cpfSemMascara = cpfComMascara.replace("[^0-9]".toRegex(), "")
+
+        binding.InputCPF.isEnabled = true
+        viewModel.resetCpfStatus()
+
+        if (cpfSemMascara.length != 11) {
+            binding.InputCPF.error = "CPF deve conter 11 dígitos."
+            return
+        }
+
+        // Limpa qualquer erro anterior e chama o ViewModel
+        binding.InputCPF.error = null
+        viewModel.checarCpf(cpfSemMascara)
+    }
+
+    // Função para tratar o estado de checagem do CPF
+    private fun tratarStatusDoCpf(status: CpfStatus) {
+        when (status) {
+            CpfStatus.IDLE, CpfStatus.INVALID_FORMAT, CpfStatus.ERROR -> {
+                habilitarCpfEChecar()
+                // Caso de erro ou inicial: libera CPF/Checar e bloqueia o resto
+                if (status == CpfStatus.INVALID_FORMAT) {
+                    binding.InputCPF.error = "CPF inválido ou incompleto. Verifique os dígitos."
+                } else if (status == CpfStatus.ERROR) {
+                    Toast.makeText(requireContext(), "Erro ao checar CPF. Tente novamente.", Toast.LENGTH_LONG).show()
+                }
+            }
+            CpfStatus.LOADING -> {
+                binding.InputCPF.error = null
+                // Mostra o loading (pode ser um Toast, ProgressBar ou mudando o texto do botão)
+                binding.btnChecarCpf.text = "Aguarde..."
+                binding.btnChecarCpf.isEnabled = false // Desabilita para evitar cliques múltiplos
+                binding.editTextCpf.isEnabled = false
+            }
+            CpfStatus.ALREADY_REGISTERED -> {
+                // 2.1) CPF já cadastrado -> MENSAGEM EXPLICATIVA
+                binding.btnChecarCpf.text = "Checar" // Volta o texto normal
+                Toast.makeText(requireContext(), "CPF já está cadastrado!\nPara alteração dirija-se aos fiscais de cadastro!", Toast.LENGTH_LONG).show()
+                // Mantém os campos bloqueados (habilitarCpfEChecar cuida de liberar o resto)
+                habilitarCpfEChecar()
+            }
+            CpfStatus.READY_TO_REGISTER -> {
+                // 2.2) CPF não cadastrado
+                // 2.2.1) Bloqueia campo de cpf e botão checar
+                binding.InputCPF.isEnabled = false
+                binding.btnChecarCpf.isEnabled = false
+                binding.btnChecarCpf.text = "Checado"
+
+                // 2.2.2) Libera todos os outros campos (reverte desabilitarRestoDoFormulario)
+                habilitarRestoDoFormulario()
+                Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // Função para HABILITAR o resto do formulário (Inverte a desabilitarRestoDoFormulario)
+    private fun habilitarRestoDoFormulario() {
+        binding.InputNome.isEnabled = true
+        binding.includeDadosPCD.radioButtonPcdSim.isEnabled = true
+        binding.includeDadosPCD.radioButtonPcdNao.isEnabled = true
+        binding.includeDadosPCD.editTextPcd.isEnabled = true
+        binding.InputDtNascimento.isEnabled = true
+        binding.InputIdade.isEnabled = true
+        binding.includeDadosCriancaSacola.radioButtonMasculino.isEnabled = true
+        binding.includeDadosCriancaSacola.radioButtonFeminino.isEnabled = true
+        binding.includeDadosCriancaSacola.editTextBlusa.isEnabled = true
+        binding.includeDadosCriancaSacola.editTextCalca.isEnabled = true
+        binding.includeDadosCriancaSacola.editTextSapato.isEnabled = true
+        binding.includeDadosCriancaSacola.editTextGostos.isEnabled = true
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.isEnabled = true
+        binding.includeDadosResponsavel.editTextNomeResponsavel.isEnabled = true
+        binding.includeDadosResponsavel.editTextVinculo.isEnabled = true
+        binding.includeDadosResponsavel.editTextTel1.isEnabled = true
+        binding.includeDadosResponsavel.editTextTel2.isEnabled = true
+        binding.includeDadosResponsavel.menuIndicacao.isEnabled = true
+        binding.includeEndereco.editTextCep.isEnabled = true
+        binding.includeEndereco.editTextNumero.isEnabled = true
+        binding.includeEndereco.editTextRua.isEnabled = true
+        binding.includeEndereco.editTextComplemento.isEnabled = true
+        binding.includeEndereco.editTextBairro.isEnabled = true
+        binding.includeEndereco.editTextCidade.isEnabled = true
+        binding.includeFotoCrianca.fabSelecionar.isEnabled = true
+        binding.btnCadastrarCrianca.isEnabled = true
     }
 
     private fun tratarStatusDoFormulario(status: CadastroFormStatus) {
