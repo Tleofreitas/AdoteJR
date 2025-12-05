@@ -87,6 +87,9 @@ class CadastrarFragmentNovo : Fragment() {
         // ** CONFIGURAÇÃO DE INPUTS **
         configurarCpfInput() // Chamada para formatar o CPF
 
+        // Configurar Radio Group PCD
+        configurarPcdRadio()
+
         // ** CONFIGURAÇÃO DE LISTENERS **
         binding.btnChecarCpf.setOnClickListener {
             handleChecarCpfClick() // Função que chama o ViewModel
@@ -169,32 +172,105 @@ class CadastrarFragmentNovo : Fragment() {
         }
     }
 
+    /**
+     * Bloqueia e limpa o campo de descrição PCD (quando a opção "Não" é selecionada).
+     */
+    private fun desabilitarPcdDescricao() {
+        // 3.1) Se NÃO, campo descrição de pcd BLOQUEADO
+        binding.includeDadosPCD.InputDescricaoPcd.isEnabled = false
+        binding.includeDadosPCD.editTextPcd.isEnabled = false
+        binding.includeDadosPCD.InputDescricaoPcd.error = null
+        binding.includeDadosPCD.editTextPcd.text?.clear()
+    }
+
+    /**
+     * Desbloqueia o campo de descrição PCD (quando a opção "Sim" é selecionada).
+     */
+    private fun habilitarPcdDescricao() {
+        // 3.2) Se Sim, campo descrição DESBLOQUEADO
+        binding.includeDadosPCD.InputDescricaoPcd.isEnabled = true
+        binding.includeDadosPCD.editTextPcd.isEnabled = true
+    }
+
+    private fun configurarPcdRadio() {
+        binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.radioButtonPcdSim -> {
+                    habilitarPcdDescricao()
+                    // ➡️ Notifica o ViewModel sobre a mudança de regra de idade para PCD
+                    viewModel.setPcdStatus(true)
+                }
+                R.id.radioButtonPcdNao -> {
+                    desabilitarPcdDescricao()
+                    // ➡️ Notifica o ViewModel sobre a mudança de regra de idade para Normal
+                    viewModel.setPcdStatus(false)
+                }
+            }
+        }
+
+        // Define o estado inicial como "Não" (regra 3.1)
+        binding.includeDadosPCD.radioButtonPcdNao.isChecked = true
+    }
+
     // Função para HABILITAR o resto do formulário (Inverte a desabilitarRestoDoFormulario)
     private fun habilitarRestoDoFormulario() {
         binding.InputNome.isEnabled = true
+        binding.includeDadosPCD.textTituloPcd.isEnabled = true
         binding.includeDadosPCD.radioButtonPcdSim.isEnabled = true
         binding.includeDadosPCD.radioButtonPcdNao.isEnabled = true
-        binding.includeDadosPCD.editTextPcd.isEnabled = true
         binding.InputDtNascimento.isEnabled = true
         binding.InputIdade.isEnabled = true
+        binding.includeDadosCriancaSacola.textTituloSexo.isEnabled = true
         binding.includeDadosCriancaSacola.radioButtonMasculino.isEnabled = true
         binding.includeDadosCriancaSacola.radioButtonFeminino.isEnabled = true
+
+        binding.includeDadosCriancaSacola.InputBlusa.isEnabled = true
         binding.includeDadosCriancaSacola.editTextBlusa.isEnabled = true
+
+        binding.includeDadosCriancaSacola.InputCalca.isEnabled = true
         binding.includeDadosCriancaSacola.editTextCalca.isEnabled = true
+
+        binding.includeDadosCriancaSacola.InputSapato.isEnabled = true
         binding.includeDadosCriancaSacola.editTextSapato.isEnabled = true
+
+        binding.includeDadosCriancaSacola.InputGostos.isEnabled = true
         binding.includeDadosCriancaSacola.editTextGostos.isEnabled = true
+
+        binding.includeDadosResponsavel.InputVinculoFamiliar.isEnabled = true
         binding.includeDadosResponsavel.editTextVinculoFamiliar.isEnabled = true
+
+        binding.includeDadosResponsavel.InputNomeResponsavel.isEnabled = true
         binding.includeDadosResponsavel.editTextNomeResponsavel.isEnabled = true
+
+        binding.includeDadosResponsavel.InputVinculo.isEnabled = true
         binding.includeDadosResponsavel.editTextVinculo.isEnabled = true
+
+        binding.includeDadosResponsavel.InputTel1.isEnabled = true
         binding.includeDadosResponsavel.editTextTel1.isEnabled = true
+
+        binding.includeDadosResponsavel.InputTel2.isEnabled = true
         binding.includeDadosResponsavel.editTextTel2.isEnabled = true
+
         binding.includeDadosResponsavel.menuIndicacao.isEnabled = true
+
+        binding.includeEndereco.InputCep.isEnabled = true
         binding.includeEndereco.editTextCep.isEnabled = true
+
+        binding.includeEndereco.InputNumero.isEnabled = true
         binding.includeEndereco.editTextNumero.isEnabled = true
+
+        binding.includeEndereco.InputRua.isEnabled = true
         binding.includeEndereco.editTextRua.isEnabled = true
+
+        binding.includeEndereco.InputComplemento.isEnabled = true
         binding.includeEndereco.editTextComplemento.isEnabled = true
+
+        binding.includeEndereco.InputBairro.isEnabled = true
         binding.includeEndereco.editTextBairro.isEnabled = true
+
+        binding.includeEndereco.InputCidade.isEnabled = true
         binding.includeEndereco.editTextCidade.isEnabled = true
+
         binding.includeFotoCrianca.fabSelecionar.isEnabled = true
         binding.btnCadastrarCrianca.isEnabled = true
     }

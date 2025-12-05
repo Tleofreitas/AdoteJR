@@ -168,4 +168,13 @@ class CadastrarViewModel(
             false
         }
     }
+
+    // Estado para armazenar se a criança é PCD ou não
+    private val _isPcd = MutableStateFlow(false)
+    val isPcd: StateFlow<Boolean> = _isPcd.asStateFlow() // Não é usado no Fragment, mas armazena o estado
+
+    // Função para atualizar o estado PCD (chamada pelo Fragment)
+    fun setPcdStatus(isPcd: Boolean) {
+        _isPcd.value = isPcd
+    }
 }
