@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.adotejr.model.AgeStatus
 import com.example.adotejr.model.CadastroFormStatus
 import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.model.Definicoes
@@ -176,5 +177,38 @@ class CadastrarViewModel(
     // Função para atualizar o estado PCD (chamada pelo Fragment)
     fun setPcdStatus(isPcd: Boolean) {
         _isPcd.value = isPcd
+    }
+
+    // Estado para gerenciar a validação de idade
+    private val _ageStatus = MutableStateFlow<AgeStatus>(AgeStatus.OK)
+    val ageStatus: StateFlow<AgeStatus> = _ageStatus.asStateFlow()
+
+    fun validarIdade(dataNascimentoString: String) {
+        // 1. Limpa status anterior
+        _ageStatus.value = AgeStatus.OK
+
+        // 2. Validações preliminares
+        if (dataNascimentoString.length != 10 || !FormatadorUtil.isDataValida(dataNascimentoString)) {
+            return // Ignora se estiver incompleto/inválido
+        }
+
+        // 3. Obter limites e idade atual em anos
+        val idadeEmAnos = FormatadorUtil.calcularIdadeEmAnos(dataNascimentoString)
+        val definicoes = appDefinicoes ?: return // Não pode validar sem definições
+
+        val isPcd = _isPcd.value // Pega o status do radio button
+
+        // Obtém o limite baseado no status PCD
+        val limiteStr = if (isPcd) definicoes.limiteIdadePCD else definicoes.limiteIdadeNormal
+        val limiteInt = limiteStr.toIntOrNull() ?: 0
+
+        if (limiteInt == 0) return // Sem limite válido, ignora a checagem
+
+        // 4. Lógica de Limite (Regra 4.2)
+        if (idadeEmAnos > limiteInt) {
+            _ageStatus.value = AgeStatus.EXCEEDED(limiteInt) // Emite o status de excedido
+        } else {
+            _ageStatus.value = AgeStatus.OK
+        }
     }
 }

@@ -159,7 +159,7 @@ tools:context=".fragments.CadastrarFragmentNovo">
             android:enabled="false"
             android:hint="Idade"
             android:inputType="number"
-            android:maxLength="2"
+            android:maxLength="3"
             android:text="0" />
     </com.google.android.material.textfield.TextInputLayout>
 

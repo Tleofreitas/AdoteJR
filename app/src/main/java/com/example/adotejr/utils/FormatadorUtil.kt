@@ -3,6 +3,10 @@ package com.example.adotejr.utils
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 object FormatadorUtil {
     // MÁSCARA DE FORMATAÇÃO CPF
@@ -145,5 +149,94 @@ object FormatadorUtil {
 
             override fun afterTextChanged(s: Editable?) {}
         })
+    }
+
+    // VERIFICAR SE A DATA É VÁLIDA
+    fun isDataValida(data: String): Boolean {
+        return try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            formato.isLenient = false // Validação rigorosa
+            val dataParseada = formato.parse(data) // Valida o formato
+            val dataAtual = Date() // Obtém a data e hora atual
+
+            // Garantir que a data seja no passado (não pode ser no futuro)
+            dataParseada != null && dataParseada.before(dataAtual)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // CÁLCULO DE IDADE (com lógica de meses/anos - Regras 4.0 e 4.1)
+    fun calcularIdade(dataNascimentoString: String): String {
+        if (!isDataValida(dataNascimentoString)) return ""
+
+        try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dataNascimento = formato.parse(dataNascimentoString) ?: return ""
+
+            val calendarioNascimento = Calendar.getInstance().apply { time = dataNascimento }
+            val calendarioAtual = Calendar.getInstance()
+
+            // -----------------------------------------------------
+            // CÁLCULO DE DIFERENÇA EM MESES
+            // -----------------------------------------------------
+            var diffAnos = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
+            var diffMeses = calendarioAtual.get(Calendar.MONTH) - calendarioNascimento.get(Calendar.MONTH)
+
+            // Ajusta se o mês atual for menor que o mês de nascimento
+            if (diffMeses < 0 || (diffMeses == 0 && calendarioAtual.get(Calendar.DAY_OF_MONTH) < calendarioNascimento.get(Calendar.DAY_OF_MONTH))) {
+                diffAnos--
+                diffMeses += 12
+            }
+
+            // Se a diferença de meses for negativa após ajuste de ano (erro na lógica), ou o dia ainda não chegou
+            if (calendarioAtual.get(Calendar.DAY_OF_MONTH) < calendarioNascimento.get(Calendar.DAY_OF_MONTH)) {
+                // Se diffMeses > 0, decrementa para ajustar a contagem de meses
+                if (diffMeses > 0) diffMeses--
+                // Se diffMeses == 0 e diffAnos > 0, o dia do ano ainda não chegou, então considera 11 meses (o que foi feito acima, então ignoramos)
+            }
+
+            val idadeTotalMeses = diffAnos * 12 + diffMeses
+
+            // -----------------------------------------------------
+            // APLICAÇÃO DA REGRA 4.1: MESES vs. ANOS
+            // -----------------------------------------------------
+            return if (idadeTotalMeses < 12) {
+                // Menores de um ano: gravar como 0.X (onde X é o número de meses)
+                // Ex: 4 meses -> 0.4
+                // Usamos String.format para garantir o formato de uma casa decimal
+                String.format(Locale.getDefault(), "0.%d", idadeTotalMeses)
+            } else {
+                // Maiores de um ano: gravar como inteiro de anos
+                diffAnos.toString()
+            }
+
+        } catch (e: Exception) {
+            return ""
+        }
+    }
+
+    // CÁLCULO DE IDADE EM ANOS (Função auxiliar para a VALIDAÇÃO do ViewModel)
+    fun calcularIdadeEmAnos(dataNascimentoString: String): Int {
+        if (!isDataValida(dataNascimentoString)) return 0
+
+        try {
+            val formato = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dataNascimento = formato.parse(dataNascimentoString) ?: return 0
+
+            val calendarioNascimento = Calendar.getInstance().apply { time = dataNascimento }
+            val calendarioAtual = Calendar.getInstance()
+
+            var idade = calendarioAtual.get(Calendar.YEAR) - calendarioNascimento.get(Calendar.YEAR)
+
+            // Se o aniversário ainda não passou neste ano, decrementa a idade
+            if (calendarioAtual.get(Calendar.DAY_OF_YEAR) < calendarioNascimento.get(Calendar.DAY_OF_YEAR)) {
+                idade--
+            }
+
+            return idade
+        } catch (e: Exception) {
+            return 0
+        }
     }
 }

@@ -23,6 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import android.text.Editable
 import android.text.TextWatcher
+import com.example.adotejr.model.AgeStatus
 import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.utils.FormatadorUtil
 
@@ -108,6 +109,15 @@ class CadastrarFragmentNovo : Fragment() {
                 tratarStatusDoCpf(status)
             }
         }
+
+        // Configurações para o campo Data de Nascimento
+        configurarDtNascimentoInput()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.ageStatus.collect { status ->
+                tratarStatusIdade(status)
+            }
+        }
     }
 
     private fun configurarCpfInput() {
@@ -136,8 +146,9 @@ class CadastrarFragmentNovo : Fragment() {
     private fun tratarStatusDoCpf(status: CpfStatus) {
         when (status) {
             CpfStatus.IDLE, CpfStatus.INVALID_FORMAT, CpfStatus.ERROR -> {
-                habilitarCpfEChecar()
                 // Caso de erro ou inicial: libera CPF/Checar e bloqueia o resto
+                habilitarCpfEChecar()
+
                 if (status == CpfStatus.INVALID_FORMAT) {
                     binding.InputCPF.error = "CPF inválido ou incompleto. Verifique os dígitos."
                 } else if (status == CpfStatus.ERROR) {
@@ -151,21 +162,28 @@ class CadastrarFragmentNovo : Fragment() {
                 binding.btnChecarCpf.isEnabled = false // Desabilita para evitar cliques múltiplos
                 binding.editTextCpf.isEnabled = false
             }
+
+            // ➡️ RAMO CORRIGIDO: TRATAMENTO PARA CPF JÁ CADASTRADO
             CpfStatus.ALREADY_REGISTERED -> {
                 // 2.1) CPF já cadastrado -> MENSAGEM EXPLICATIVA
                 binding.btnChecarCpf.text = "Checar" // Volta o texto normal
                 Toast.makeText(requireContext(), "CPF já está cadastrado!\nPara alteração dirija-se aos fiscais de cadastro!", Toast.LENGTH_LONG).show()
-                // Mantém os campos bloqueados (habilitarCpfEChecar cuida de liberar o resto)
+                // Mantém os campos CPF/Checar ativos para que o usuário possa corrigir ou tentar outro
                 habilitarCpfEChecar()
             }
+
             CpfStatus.READY_TO_REGISTER -> {
-                // 2.2) CPF não cadastrado
-                // 2.2.1) Bloqueia campo de cpf e botão checar
+                // 2.2) CPF válido e não cadastrado
+                // 1. Bloqueia campo de cpf e botão checar
                 binding.InputCPF.isEnabled = false
                 binding.btnChecarCpf.isEnabled = false
                 binding.btnChecarCpf.text = "Checado"
 
-                // 2.2.2) Libera todos os outros campos (reverte desabilitarRestoDoFormulario)
+                // 2. HABILITA a data de nascimento
+                binding.InputDtNascimento.isEnabled = true
+                binding.editTextDtNascimento.isEnabled = true
+
+                // 3. Libera todos os outros campos (reverte desabilitarRestoDoFormulario)
                 habilitarRestoDoFormulario()
                 Toast.makeText(requireContext(), "Não há registro, realize o cadastro...", Toast.LENGTH_LONG).show()
             }
@@ -219,7 +237,6 @@ class CadastrarFragmentNovo : Fragment() {
         binding.includeDadosPCD.radioButtonPcdSim.isEnabled = true
         binding.includeDadosPCD.radioButtonPcdNao.isEnabled = true
         binding.InputDtNascimento.isEnabled = true
-        binding.InputIdade.isEnabled = true
         binding.includeDadosCriancaSacola.textTituloSexo.isEnabled = true
         binding.includeDadosCriancaSacola.radioButtonMasculino.isEnabled = true
         binding.includeDadosCriancaSacola.radioButtonFeminino.isEnabled = true
@@ -398,8 +415,7 @@ class CadastrarFragmentNovo : Fragment() {
         binding.includeDadosPCD.radioButtonPcdSim.isEnabled = false
         binding.includeDadosPCD.radioButtonPcdNao.isEnabled = false
         binding.includeDadosPCD.editTextPcd.isEnabled = false
-        binding.InputDtNascimento.isEnabled = false
-        binding.InputIdade.isEnabled = false
+        // binding.InputDtNascimento.isEnabled = false
         binding.includeDadosCriancaSacola.radioButtonMasculino.isEnabled = false
         binding.includeDadosCriancaSacola.radioButtonFeminino.isEnabled = false
         binding.includeDadosCriancaSacola.editTextBlusa.isEnabled = false
@@ -433,7 +449,94 @@ class CadastrarFragmentNovo : Fragment() {
         binding.editTextCpf.isEnabled = true
         binding.btnChecarCpf.isEnabled = true
 
-        // 2. Desabilita o restante do formulário (o que funciona agora que o pai está ativo)
+        // 2. Desabilita o restante do formulário, incluindo a Data de Nascimento inicialmente
         desabilitarRestoDoFormulario()
+
+        // 3. BLOQUEIA explicitamente o InputDtNascimento e Idade
+        binding.InputDtNascimento.isEnabled = false // Deve estar bloqueada inicialmente
+        binding.editTextDtNascimento.isEnabled = false
+        binding.editTextIdade.isEnabled = false
+    }
+
+    private fun configurarDtNascimentoInput() {
+        // 1. Adiciona a máscara de data
+        FormatadorUtil.formatarDataNascimento(binding.editTextDtNascimento)
+
+        // 2. Adiciona o listener para cálculo e validação
+        binding.editTextDtNascimento.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val dataNascimento = s.toString()
+
+                // 1. OBRIGA a máscara a ter o tamanho completo (dd/MM/yyyy)
+                if (dataNascimento.length == 10) {
+
+                    // 1a. Validação de Data (existe no calendário e não é futura)
+                    if (FormatadorUtil.isDataValida(dataNascimento)) {
+                        binding.InputDtNascimento.error = null
+
+                        val idadeFormatada = FormatadorUtil.calcularIdade(dataNascimento)
+                        binding.editTextIdade.setText(idadeFormatada)
+
+                        // 1b. Validação de Limite de Idade
+                        viewModel.validarIdade(dataNascimento)
+                    } else {
+                        // Data com 10 dígitos, mas inválida (ex: 30/02/2000)
+                        binding.editTextIdade.setText("")
+                        binding.InputDtNascimento.error = "Data inválida ou futura!"
+
+                        // BLOQUEIA o formulário forçando o status EXCEEDED (Regra 4.2)
+                        tratarStatusIdade(AgeStatus.EXCEEDED(0))
+                    }
+                } else {
+                    // 2. Data INCOMPLETA ou apagada (Tamanho < 10)
+                    binding.editTextIdade.setText("")
+                    binding.InputDtNascimento.error = null
+
+                    // REVERTE o bloqueio para permitir digitação (se o formStatus for OK)
+                    if (viewModel.formStatus.value == CadastroFormStatus.OK) {
+                        tratarStatusIdade(AgeStatus.OK)
+                    }
+                }
+            }
+        })
+    }
+
+    // Função para tratar o status da idade (Regra 4.2)
+    private fun tratarStatusIdade(status: AgeStatus) {
+        when (status) {
+            AgeStatus.OK -> {
+                // Se a idade estiver OK, reabilita o formulário.
+                if (viewModel.formStatus.value == CadastroFormStatus.OK &&
+                    viewModel.cpfStatus.value == CpfStatus.READY_TO_REGISTER) {
+
+                    // Reabilita o resto do formulário (caso tenha sido bloqueado antes)
+                    habilitarRestoDoFormulario()
+
+                    // ➡️ O campo Dt Nascimento deve estar habilitado para reedição se precisar
+                    binding.InputDtNascimento.isEnabled = true
+                    binding.editTextDtNascimento.isEnabled = true
+                }
+            }
+            is AgeStatus.EXCEEDED -> {
+                // Se a idade exceder o limite (Regra 4.2)
+                // 1. Bloquear todo o formulário (inibir burlagem)
+                desabilitarTudo()
+
+                // 2. Mensagem
+                val limite = status.limite
+                val tipoLimite = if (limite == 0) "idade" else "$limite anos"
+                Toast.makeText(
+                    requireContext(),
+                    "Cadastro para idade superior a $tipoLimite não permitido!",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                // 3. Reabilita apenas o CPF/Checar para uma nova tentativa de cadastro
+                habilitarCpfEChecar()
+            }
+        }
     }
 }
