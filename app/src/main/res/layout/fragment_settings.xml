@@ -231,6 +231,7 @@
         app:layout_constraintTop_toBottomOf="@+id/InputDataInical"
         tools:visibility="visible" />
 
+    <!--
     <Button
         android:id="@+id/btnNovoCadastroTeste"
         style="@style/Widget.App.Button"
@@ -244,6 +245,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnEditarDefinicoes" />
+    -->
 
     <Button
         android:id="@+id/btnGerenciarVoluntarios"

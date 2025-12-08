@@ -146,21 +146,6 @@ class SettingsFragment : Fragment() {
                 commit()
             }
         }
-
-        binding.btnNovoCadastroTeste.setOnClickListener {
-            val cadastroTeste = CadastrarFragmentNovo()
-            /*
-            cadastroTeste.arguments = Bundle().apply {
-                // Coloca o nível do usuário, que este fragment já conhece, no pacote
-                putString("nivel", nivelDoUser)
-            }
-            */
-            parentFragmentManager.beginTransaction().apply {
-                replace(R.id.fragment_container, cadastroTeste)
-                addToBackStack(null)
-                commit()
-            }
-        }
     }
 
     private fun validarTodosOsCampos(): Boolean {
