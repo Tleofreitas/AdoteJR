@@ -25,6 +25,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import com.example.adotejr.model.AgeStatus
 import com.example.adotejr.model.CpfStatus
+import com.example.adotejr.model.Responsavel
+import com.example.adotejr.model.ResponsavelStatus
 import com.example.adotejr.utils.FormatadorUtil
 
 fun View.setEnabledRecursively(enabled: Boolean) {
@@ -116,6 +118,16 @@ class CadastrarFragmentNovo : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.ageStatus.collect { status ->
                 tratarStatusIdade(status)
+            }
+        }
+
+        // Configurar Input do Responsável
+        configurarCpfResponsavelInput()
+
+        // Coleção do status do Responsável
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.responsavelStatus.collect { status ->
+                tratarStatusResponsavel(status)
             }
         }
     }
@@ -551,5 +563,98 @@ class CadastrarFragmentNovo : Fragment() {
                 habilitarCpfEChecar()
             }
         }
+    }
+
+    private fun configurarCpfResponsavelInput() {
+        // Listener para o CPF do Responsável
+        binding.includeDadosResponsavel.editTextVinculoFamiliar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val cpf = s.toString()
+
+                // Checa se há 11 dígitos, ignorando o tamanho da máscara (14)
+                if (cpf.trim().length == 11) {
+                    viewModel.checarCpfResponsavel(cpf)
+                } else {
+                    // ... (reseta o status)
+                    viewModel.resetResponsavelStatus()
+                    tratarStatusResponsavel(ResponsavelStatus.INVALID_FORMAT)
+                }
+            }
+        })
+
+        // Configurar máscara de Telefone
+        FormatadorUtil.formatarTelefone(binding.includeDadosResponsavel.editTextTel1)
+        FormatadorUtil.formatarTelefone(binding.includeDadosResponsavel.editTextTel2)
+    }
+
+    // Função para tratar o status do Responsável
+    private fun tratarStatusResponsavel(status: ResponsavelStatus) {
+        val inputCpfResponsavel = binding.includeDadosResponsavel.InputVinculoFamiliar
+
+        when (status) {
+            ResponsavelStatus.IDLE -> {
+                inputCpfResponsavel.error = null
+                limparCamposResponsavelEEndereco()
+            }
+            ResponsavelStatus.LOADING -> {
+                inputCpfResponsavel.error = null
+            }
+            ResponsavelStatus.INVALID_FORMAT -> {
+                inputCpfResponsavel.error = "CPF Responsável incompleto (11 dígitos)."
+                limparCamposResponsavelEEndereco()
+            }
+            ResponsavelStatus.NOT_FOUND -> {
+                inputCpfResponsavel.error = null // Sucesso na checagem, mas não encontrado
+                Toast.makeText(requireContext(), "Responsável não encontrado. Preencha os campos.", Toast.LENGTH_SHORT).show()
+                limparCamposResponsavelEEndereco()
+            }
+            is ResponsavelStatus.FOUND -> {
+                // ➡️ Regra 5.2: Preencher todos os campos
+                inputCpfResponsavel.error = null
+                preencherCamposResponsavelEEndereco(status.responsavel)
+                Toast.makeText(requireContext(), "Dados do responsável preenchidos!", Toast.LENGTH_SHORT).show()
+            }
+            ResponsavelStatus.ERROR -> {
+                inputCpfResponsavel.error = "Erro ao buscar Responsável. Tente novamente."
+                limparCamposResponsavelEEndereco()
+            }
+        }
+    }
+
+    private fun preencherCamposResponsavelEEndereco(responsavel: Responsavel) {
+        // ➡️ Campos do Responsável
+        binding.includeDadosResponsavel.editTextNomeResponsavel.setText(responsavel.responsavel)
+        binding.includeDadosResponsavel.editTextVinculo.setText(responsavel.vinculoResponsavel)
+        binding.includeDadosResponsavel.editTextTel1.setText(responsavel.telefone1)
+        binding.includeDadosResponsavel.editTextTel2.setText(responsavel.telefone2) // Assumindo campo telefone2
+        binding.includeDadosResponsavel.autoCompleteIndicacao.setText(responsavel.indicacao ?: "", false)
+
+        // ➡️ Campos de Endereço
+        binding.includeEndereco.editTextCep.setText(responsavel.cep)
+        binding.includeEndereco.editTextNumero.setText(responsavel.numero)
+        binding.includeEndereco.editTextRua.setText(responsavel.logradouro)
+        binding.includeEndereco.editTextComplemento.setText(responsavel.complemento)
+        binding.includeEndereco.editTextBairro.setText(responsavel.bairro)
+        binding.includeEndereco.editTextCidade.setText(responsavel.cidade)
+    }
+
+    private fun limparCamposResponsavelEEndereco() {
+        // ➡️ Campos do Responsável
+        binding.includeDadosResponsavel.editTextNomeResponsavel.text?.clear()
+        binding.includeDadosResponsavel.editTextVinculo.text?.clear()
+        binding.includeDadosResponsavel.editTextTel1.text?.clear()
+        binding.includeDadosResponsavel.editTextTel2.text?.clear()
+        binding.includeDadosResponsavel.autoCompleteIndicacao.setText("", false)
+
+        // ➡️ Campos de Endereço
+        binding.includeEndereco.editTextCep.text?.clear()
+        binding.includeEndereco.editTextNumero.text?.clear()
+        binding.includeEndereco.editTextRua.text?.clear()
+        binding.includeEndereco.editTextComplemento.text?.clear()
+        binding.includeEndereco.editTextBairro.text?.clear()
+        binding.includeEndereco.editTextCidade.text?.clear()
     }
 }

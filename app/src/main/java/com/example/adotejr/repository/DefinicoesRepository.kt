@@ -3,6 +3,7 @@ package com.example.adotejr.repository
 import android.content.Context
 import android.util.Log
 import com.example.adotejr.model.Definicoes
+import com.example.adotejr.model.Responsavel
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,8 @@ interface DefinicoesRepository {
 
     // Checa se o CPF já está na coleção "Criancas"
     suspend fun isCpfCadastrado(cpf: String): Boolean
+
+    suspend fun getResponsavelByCpf(cpf: String): Responsavel?
 }
 
 class DefinicoesRepositoryImpl(
@@ -87,6 +90,22 @@ class DefinicoesRepositoryImpl(
                 // Em caso de erro (ex: internet), lança a exceção para ser tratada no ViewModel
                 throw e
             }
+        }
+    }
+
+    override suspend fun getResponsavelByCpf(cpf: String): Responsavel? {
+        // O CPF é usado como identificador único. A busca deve ser exata.
+        return try {
+            val querySnapshot = firestore.collection("Responsaveis")
+                .whereEqualTo("vinculoFamiliar", cpf)
+                .limit(1)
+                .get()
+                .await() // Usa a extensão de coroutine
+
+            querySnapshot.documents.firstOrNull()?.toObject(Responsavel::class.java)
+        } catch (e: Exception) {
+            // Log de erro
+            null
         }
     }
 }

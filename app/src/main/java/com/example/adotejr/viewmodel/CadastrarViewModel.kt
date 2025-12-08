@@ -9,6 +9,7 @@ import com.example.adotejr.model.AgeStatus
 import com.example.adotejr.model.CadastroFormStatus
 import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.model.Definicoes
+import com.example.adotejr.model.ResponsavelStatus
 import com.example.adotejr.repository.DefinicoesRepository
 import com.example.adotejr.utils.FormatadorUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -210,5 +211,43 @@ class CadastrarViewModel(
         } else {
             _ageStatus.value = AgeStatus.OK
         }
+    }
+
+    // Estado para gerenciar a checagem do CPF do Responsável
+    private val _responsavelStatus = MutableStateFlow<ResponsavelStatus>(ResponsavelStatus.IDLE)
+    val responsavelStatus: StateFlow<ResponsavelStatus> = _responsavelStatus.asStateFlow()
+
+    // Função para checar o CPF do Responsável
+    fun checarCpfResponsavel(cpf: String) {
+        // 1. Limpa o status
+        _responsavelStatus.value = ResponsavelStatus.IDLE
+
+        // 2. Validação Estrutural (11 dígitos)
+        // Assumimos que o CPF já chegou limpo (sem máscara)
+        if (cpf.length != 11) {
+            _responsavelStatus.value = ResponsavelStatus.INVALID_FORMAT
+            return
+        }
+
+        viewModelScope.launch {
+            _responsavelStatus.value = ResponsavelStatus.LOADING
+
+            try {
+                // Busca no Repositório
+                val responsavel = definicoesRepository.getResponsavelByCpf(cpf)
+
+                if (responsavel != null) {
+                    _responsavelStatus.value = ResponsavelStatus.FOUND(responsavel)
+                } else {
+                    _responsavelStatus.value = ResponsavelStatus.NOT_FOUND
+                }
+            } catch (e: Exception) {
+                _responsavelStatus.value = ResponsavelStatus.ERROR
+            }
+        }
+    }
+
+    fun resetResponsavelStatus() {
+        _responsavelStatus.value = ResponsavelStatus.IDLE
     }
 }
