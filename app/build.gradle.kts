@@ -102,4 +102,13 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2") // Versão pode variar
     implementation("androidx.fragment:fragment-ktx:1.6.1") // Ajuda a conectar o Fragment ao ViewModel
 
+    // Retrofit (HTTP client)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Converter o JSON do ViaCEP para a data class Endereco
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Coroutines Adapter (para usar suspend functions)
+    implementation("com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2")
+    // OkHttp (Para Logging - Opcional, mas útil para debug)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
 }

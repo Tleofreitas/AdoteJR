@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.adotejr.model.AgeStatus
 import com.example.adotejr.model.CadastroFormStatus
+import com.example.adotejr.model.CepStatus
 import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.model.Definicoes
 import com.example.adotejr.model.ResponsavelStatus
@@ -249,5 +250,39 @@ class CadastrarViewModel(
 
     fun resetResponsavelStatus() {
         _responsavelStatus.value = ResponsavelStatus.IDLE
+    }
+
+    private val _cepStatus = MutableStateFlow<CepStatus>(CepStatus.Idle)
+    val cepStatus: StateFlow<CepStatus> = _cepStatus.asStateFlow()
+
+    fun buscarEnderecoPorCep(cep: String) {
+        if (cep.length != 8) {
+            _cepStatus.value = CepStatus.InvalidFormat
+            return
+        }
+
+        // Coroutine para fazer a chamada de rede
+        viewModelScope.launch {
+            try {
+                // Supondo que você tem uma função no seu repositório para a busca
+                // Limpa o CEP (se vier com máscara)
+                val cepLimpo = cep.replace("[^0-9]".toRegex(), "")
+                val endereco = definicoesRepository.buscarEnderecoViaCep(cepLimpo)
+
+                if (endereco != null) {
+                    _cepStatus.value = CepStatus.Success(endereco)
+                } else {
+                    _cepStatus.value = CepStatus.NotFound(
+                        "Endereço não encontrado, preencha manualmente."
+                    )
+                }
+            } catch (e: Exception) {
+                _cepStatus.value = CepStatus.Error("Erro ao buscar CEP: ${e.message}")
+            }
+        }
+    }
+
+    fun resetCepStatus() {
+        _cepStatus.value = CepStatus.Idle
     }
 }

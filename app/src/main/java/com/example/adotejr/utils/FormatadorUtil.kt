@@ -239,4 +239,41 @@ object FormatadorUtil {
             return 0
         }
     }
+
+    // MÁSCARA DE FORMATAÇÃO CEP
+    fun formatarCEP(editText: EditText) {
+        editText.addTextChangedListener(object : TextWatcher {
+            private var isUpdating = false
+            // ➡️ Máscara para CEP: 5 dígitos + hífen + 3 dígitos
+            private val mask = "#####-###"
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (isUpdating) {
+                    isUpdating = false
+                    return
+                }
+
+                val unmasked = s.toString().replace("[^\\d]".toRegex(), "") // Remove tudo que não for número
+                val masked = StringBuilder()
+
+                var i = 0
+                for (char in mask.toCharArray()) {
+                    if (char == '#' && i < unmasked.length) {
+                        masked.append(unmasked[i])
+                        i++
+                    } else if (char != '#' && i < unmasked.length) {
+                        masked.append(char)
+                    }
+                }
+
+                isUpdating = true
+                editText.setText(masked)
+                editText.setSelection(masked.length) // Move o cursor para o final
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
 }

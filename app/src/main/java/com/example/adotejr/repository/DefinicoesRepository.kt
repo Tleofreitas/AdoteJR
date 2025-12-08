@@ -3,6 +3,7 @@ package com.example.adotejr.repository
 import android.content.Context
 import android.util.Log
 import com.example.adotejr.model.Definicoes
+import com.example.adotejr.model.Endereco
 import com.example.adotejr.model.Responsavel
 import com.example.adotejr.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
@@ -12,6 +13,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import com.example.adotejr.repository.CepService
+import com.example.adotejr.service.RetrofitClient
 
 interface DefinicoesRepository {
     fun getDefinicoesAndCounts(ano: Int, context: Context): Flow<DefinicoesResult>
@@ -19,7 +22,11 @@ interface DefinicoesRepository {
     // Checa se o CPF já está na coleção "Criancas"
     suspend fun isCpfCadastrado(cpf: String): Boolean
 
+    // Checa se o Responsável já está na coleção "Responsaveis"
     suspend fun getResponsavelByCpf(cpf: String): Responsavel?
+
+    // Método para buscar Endereço por CEP
+    suspend fun buscarEnderecoViaCep(cep: String): Endereco?
 }
 
 class DefinicoesRepositoryImpl(
@@ -106,6 +113,31 @@ class DefinicoesRepositoryImpl(
         } catch (e: Exception) {
             // Log de erro
             null
+        }
+    }
+
+    // ➡️ SINGLETON RETROFIT CLIENT
+    private val cepService = RetrofitClient.cepService
+
+    override suspend fun buscarEnderecoViaCep(cep: String): Endereco? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = cepService.buscarEndereco(cep) // Faz a chamada HTTP
+
+                if (response.isSuccessful) {
+                    val endereco = response.body()
+
+                    // O ViaCEP retorna um JSON com campo 'erro: true' se o CEP não existir
+                    // Assumimos que a data class Endereco tem um campo "erro: Boolean?"
+                    if (endereco != null && endereco.logradouro != null && endereco.localidade != null) {
+                        return@withContext endereco
+                    }
+                }
+                return@withContext null // Falha na resposta ou CEP não encontrado
+            } catch (e: Exception) {
+                Log.e("ViaCEP", "Erro ao buscar CEP $cep: ${e.message}", e)
+                return@withContext null
+            }
         }
     }
 }

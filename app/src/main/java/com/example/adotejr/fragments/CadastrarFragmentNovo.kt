@@ -28,6 +28,7 @@ import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.model.Responsavel
 import com.example.adotejr.model.ResponsavelStatus
 import com.example.adotejr.utils.FormatadorUtil
+import com.example.adotejr.model.CepStatus
 
 fun View.setEnabledRecursively(enabled: Boolean) {
     this.isEnabled = enabled
@@ -128,6 +129,16 @@ class CadastrarFragmentNovo : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.responsavelStatus.collect { status ->
                 tratarStatusResponsavel(status)
+            }
+        }
+
+        // Configurar Input e Máscara do CEP
+        configurarCepInput()
+
+        // Coleção do status do CEP (O Observer que estava faltando!)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.cepStatus.collect { status ->
+                tratarStatusCep(status)
             }
         }
     }
@@ -654,6 +665,105 @@ class CadastrarFragmentNovo : Fragment() {
         binding.includeEndereco.editTextNumero.text?.clear()
         binding.includeEndereco.editTextRua.text?.clear()
         binding.includeEndereco.editTextComplemento.text?.clear()
+        binding.includeEndereco.editTextBairro.text?.clear()
+        binding.includeEndereco.editTextCidade.text?.clear()
+    }
+
+    private fun configurarCepInput() {
+        val cepEditText = binding.includeEndereco.editTextCep
+
+        // Pegar a referência ao TextInputLayout para definir o erro
+        val inputCep = binding.includeEndereco.InputCep
+
+        // 1. Aplica a máscara de CEP (ex: 5 digitos + hífen + 3 dígitos)
+        FormatadorUtil.formatarCEP(cepEditText)
+
+        cepEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val cepComMascara = s.toString()
+                val cepSemMascara = cepComMascara.replace("[^0-9]".toRegex(), "")
+
+                if (cepSemMascara.length == 8) {
+                    // 2. COMPLETO (8 dígitos): Chama a busca
+                    inputCep.error = null // Limpa erro se estava incompleto
+                    viewModel.buscarEnderecoPorCep(cepSemMascara)
+                } else {
+                    // 3. INCOMPLETO OU VAZIO: Limpa campos e avisa
+
+                    // Reseta o status no ViewModel (limpa o estado de sucesso anterior)
+                    viewModel.resetCepStatus()
+
+                    // Limpa os campos visuais preenchidos
+                    limparCamposEnderecoViaCep()
+
+                    if (cepSemMascara.isNotEmpty()) {
+                        // CEP INCOMPLETO (Ex: 09170): Marcar caixa em vermelho e avisar
+                        inputCep.error = "CEP incompleto. Digite 8 dígitos para buscar."
+                    } else {
+                        // CEP VAZIO: Apenas limpar o aviso e os campos
+                        inputCep.error = null
+                    }
+                }
+            }
+        })
+    }
+
+    private fun tratarStatusCep(status: CepStatus) {
+        val inputCep = binding.includeEndereco.InputCep
+
+        when (status) {
+            CepStatus.Idle -> {
+                // Estado inicial/reset. Limpa erros.
+                inputCep.error = null
+            }
+            CepStatus.InvalidFormat -> {
+                // Não deve acontecer, pois a checagem é feita no TextWatcher, mas é bom garantir.
+                inputCep.error = "CEP inválido ou incompleto (8 dígitos)."
+            }
+            is CepStatus.Success -> {
+                // ✅ SUCESSO: Preenche os campos de Endereço
+                val endereco = status.endereco
+
+                // Preenche os campos que vieram do ViaCEP
+                binding.includeEndereco.editTextRua.setText(endereco.logradouro)
+                binding.includeEndereco.editTextBairro.setText(endereco.bairro)
+                binding.includeEndereco.editTextCidade.setText(endereco.localidade)
+
+                // O campo 'Número' e 'Complemento' geralmente são editáveis e não são preenchidos
+                // automaticamente pelo ViaCEP, por isso não são alterados aqui.
+
+                inputCep.error = null
+                Toast.makeText(requireContext(), "Endereço preenchido!", Toast.LENGTH_SHORT).show()
+            }
+            is CepStatus.NotFound -> {
+                // ❌ NÃO ENCONTRADO: Exibir mensagem e limpar os campos preenchíveis
+                binding.includeEndereco.editTextRua.text?.clear()
+                binding.includeEndereco.editTextBairro.text?.clear()
+                binding.includeEndereco.editTextCidade.text?.clear()
+
+                inputCep.error = "Endereço não encontrado. Preencha manualmente."
+                Toast.makeText(
+                    requireContext(),
+                    "Endereço não encontrado, preencha manualmente",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            is CepStatus.Error -> {
+                // ❌ ERRO DE COMUNICAÇÃO
+                inputCep.error = "Erro na busca do CEP. Tente novamente."
+                Toast.makeText(requireContext(), "Falha ao buscar CEP. ${status.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * Limpa apenas os campos de endereço que são preenchidos automaticamente pelo ViaCEP.
+     */
+    private fun limparCamposEnderecoViaCep() {
+        binding.includeEndereco.editTextRua.text?.clear()
         binding.includeEndereco.editTextBairro.text?.clear()
         binding.includeEndereco.editTextCidade.text?.clear()
     }
