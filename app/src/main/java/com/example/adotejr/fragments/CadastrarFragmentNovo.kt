@@ -149,6 +149,9 @@ class CadastrarFragmentNovo : Fragment() {
                 // Caso de erro ou inicial: libera CPF/Checar e bloqueia o resto
                 habilitarCpfEChecar()
 
+                // Limpar os campos ao resetar o formulário
+                binding.editTextDtNascimento.text?.clear()
+
                 if (status == CpfStatus.INVALID_FORMAT) {
                     binding.InputCPF.error = "CPF inválido ou incompleto. Verifique os dígitos."
                 } else if (status == CpfStatus.ERROR) {
@@ -163,7 +166,7 @@ class CadastrarFragmentNovo : Fragment() {
                 binding.editTextCpf.isEnabled = false
             }
 
-            // ➡️ RAMO CORRIGIDO: TRATAMENTO PARA CPF JÁ CADASTRADO
+            // TRATAMENTO PARA CPF JÁ CADASTRADO
             CpfStatus.ALREADY_REGISTERED -> {
                 // 2.1) CPF já cadastrado -> MENSAGEM EXPLICATIVA
                 binding.btnChecarCpf.text = "Checar" // Volta o texto normal
@@ -212,17 +215,26 @@ class CadastrarFragmentNovo : Fragment() {
 
     private fun configurarPcdRadio() {
         binding.includeDadosPCD.radioGroupPcd.setOnCheckedChangeListener { _, checkedId ->
-            when (checkedId) {
-                R.id.radioButtonPcdSim -> {
-                    habilitarPcdDescricao()
-                    // ➡️ Notifica o ViewModel sobre a mudança de regra de idade para PCD
-                    viewModel.setPcdStatus(true)
-                }
-                R.id.radioButtonPcdNao -> {
-                    desabilitarPcdDescricao()
-                    // ➡️ Notifica o ViewModel sobre a mudança de regra de idade para Normal
-                    viewModel.setPcdStatus(false)
-                }
+            val isPcd = checkedId == R.id.radioButtonPcdSim
+
+            if (isPcd) {
+                habilitarPcdDescricao()
+            } else {
+                desabilitarPcdDescricao()
+            }
+
+            // Notifica o ViewModel sobre a mudança de regra de idade (limite PCD ou Normal)
+            viewModel.setPcdStatus(isPcd)
+
+            // REAVALIAR O LIMITE DE IDADE SE A DATA ESTIVER COMPLETA
+            val dataNascimento = binding.editTextDtNascimento.text.toString()
+            if (dataNascimento.length == 10 && FormatadorUtil.isDataValida(dataNascimento)) {
+                // Revalida a idade usando o NOVO limite (PCD ou Normal)
+                viewModel.validarIdade(dataNascimento)
+            } else {
+                // Se a data estiver incompleta/vazia, garantimos que o form está OK para edição
+                // (Assumindo que o CPF já foi checado)
+                tratarStatusIdade(AgeStatus.OK)
             }
         }
 
@@ -535,6 +547,7 @@ class CadastrarFragmentNovo : Fragment() {
                 ).show()
 
                 // 3. Reabilita apenas o CPF/Checar para uma nova tentativa de cadastro
+                binding.btnChecarCpf.text = "Checar"
                 habilitarCpfEChecar()
             }
         }
