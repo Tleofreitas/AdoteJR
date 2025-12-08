@@ -99,8 +99,17 @@ class GerenciamentoActivity : AppCompatActivity() {
                 }
 
                 R.id.navigation_cadastrar -> {
+                    // 1. Cria a instância do Fragmento
+                    val cadastrarFragment = CadastrarFragment()
+
+                    // 2. Empacota o 'nivelDoUser' no Bundle
+                    cadastrarFragment.arguments = Bundle().apply {
+                        putString("nivel", nivelDoUser)
+                    }
+
+                    // 3. Substitui o Fragmento com os argumentos
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, CadastrarFragment())
+                        .replace(R.id.fragment_container, cadastrarFragment)
                         .commit()
                 }
                 R.id.navigation_perfil -> {
@@ -109,8 +118,12 @@ class GerenciamentoActivity : AppCompatActivity() {
                         .commit()
                 }
                 else -> {
+                    val cadastrarFragment = CadastrarFragment()
+                    cadastrarFragment.arguments = Bundle().apply {
+                        putString("nivel", nivelDoUser)
+                    }
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, CadastrarFragment())
+                        .replace(R.id.fragment_container, cadastrarFragment)
                         .commit()
                 }
             }

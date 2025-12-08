@@ -34,7 +34,7 @@ object PermissionUtil {
     // Função para solicitar permissões
     fun solicitarPermissoes(
         context: Context,
-        gerenciadorPermissoes: ActivityResultLauncher<Array<String>>
+        gerenciadorPermissoes: ActivityResultLauncher<Array<String>>,
     ) {
         val permissoesNegadas = mutableListOf<String>()
         if (!temPermissaoCamera(context)) {
@@ -45,6 +45,23 @@ object PermissionUtil {
         }
         if (permissoesNegadas.isNotEmpty()) {
             gerenciadorPermissoes.launch(permissoesNegadas.toTypedArray())
+        }
+    }
+
+    // ➡️ 2. NOVA FUNÇÃO SOBRECARREGADA (Para uso no CadastrarFragmentNovo)
+    // Aceita o Array de permissões como argumento, conforme sua necessidade
+    fun solicitarPermissoes(
+        context: Context,
+        gerenciadorPermissoes: ActivityResultLauncher<Array<String>>,
+        permissoes: Array<String> // ⬅️ Este é o novo parâmetro
+    ) {
+        // Filtra as permissões que ainda não foram concedidas
+        val permissoesParaSolicitar = permissoes.filter {
+            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (permissoesParaSolicitar.isNotEmpty()) {
+            gerenciadorPermissoes.launch(permissoesParaSolicitar.toTypedArray())
         }
     }
 }

@@ -1,13 +1,24 @@
 package com.example.adotejr.fragments
 
+import android.app.Activity.RESULT_OK
 import android.app.AlertDialog
 import android.app.Application
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -15,20 +26,19 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.adotejr.R
 import com.example.adotejr.databinding.FragmentCadastrarNovoBinding
-import com.example.adotejr.model.CadastroFormStatus
-import com.example.adotejr.repository.DefinicoesRepository
-import com.example.adotejr.repository.DefinicoesRepositoryImpl
-import com.example.adotejr.viewmodel.CadastrarViewModel
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import android.text.Editable
-import android.text.TextWatcher
 import com.example.adotejr.model.AgeStatus
+import com.example.adotejr.model.CadastroFormStatus
+import com.example.adotejr.model.CepStatus
 import com.example.adotejr.model.CpfStatus
 import com.example.adotejr.model.Responsavel
 import com.example.adotejr.model.ResponsavelStatus
+import com.example.adotejr.repository.DefinicoesRepository
+import com.example.adotejr.repository.DefinicoesRepositoryImpl
+import com.example.adotejr.util.PermissionUtil
 import com.example.adotejr.utils.FormatadorUtil
-import com.example.adotejr.model.CepStatus
+import com.example.adotejr.viewmodel.CadastrarViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 fun View.setEnabledRecursively(enabled: Boolean) {
     this.isEnabled = enabled
@@ -63,6 +73,21 @@ class CadastrarFragmentNovo : Fragment() {
         // Inicializa o Repositório, passando a instância do Firestore
         DefinicoesRepositoryImpl(firestore = firestoreInstance)
     }
+
+    private var nivelUsuario: String = ""
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // ➡️ Recupera o argumento passado pela Activity
+        arguments?.let {
+            nivelUsuario = it.getString("nivel", "")
+        }
+    }
+    // Armazenar o URI da imagem
+    var imagemSelecionadaUri: Uri? = null
+
+    // Armazenar o Bitmap da imagem
+    var bitmapImagemSelecionada: Bitmap? = null
 
     // 2. Instância do ViewModel usando o Factory
     private val viewModel: CadastrarViewModel by viewModels {
@@ -140,6 +165,11 @@ class CadastrarFragmentNovo : Fragment() {
             viewModel.cepStatus.collect { status ->
                 tratarStatusCep(status)
             }
+        }
+
+        // ** CONFIGURAÇÃO DO BOTÃO DE FOTO **
+        binding.includeFotoCrianca.fabSelecionar.setOnClickListener {
+            verificarPermissoes()
         }
     }
 
@@ -767,4 +797,130 @@ class CadastrarFragmentNovo : Fragment() {
         binding.includeEndereco.editTextBairro.text?.clear()
         binding.includeEndereco.editTextCidade.text?.clear()
     }
+
+    // Permissões que serão checadas (Câmera + Galeria)
+    private fun getPermissoesNecessarias(): Array<String> {
+        val permissoes = mutableListOf(android.Manifest.permission.CAMERA)
+
+        // Lógica para permissão de Galeria/Armazenamento dependendo da API
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // API 33 (Android 13) e superior: Permissão específica para Imagens
+            permissoes.add(android.Manifest.permission.READ_MEDIA_IMAGES)
+        } else {
+            // API < 33: Permissão de leitura de armazenamento
+            permissoes.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        return permissoes.toTypedArray()
+    }
+
+    private fun verificarPermissoes() {
+        val permissoes = getPermissoesNecessarias()
+
+        // Verifica se TODAS as permissões necessárias já foram concedidas
+        val todasConcedidas = permissoes.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (todasConcedidas) {
+            // Todas concedidas: Avança para a lógica de Nível de Usuário
+            avancarParaFluxoDeImagem()
+        } else {
+            // Solicita as permissões, e a resposta será tratada no gerenciadorPermissoes
+            PermissionUtil.solicitarPermissoes(requireContext(), gerenciadorPermissoes, permissoes)
+        }
+    }
+
+    // FUNÇÃO: Centraliza a lógica Admin vs. User
+    private fun avancarParaFluxoDeImagem() {
+        val nivel = nivelUsuario
+
+        // Se for ADMIN, pode escolher entre Galeria ou Câmera
+        if(nivel == "Admin") {
+            mostrarDialogoEscolherImagem() // Mantém a função original
+        } else if(nivel == "User") {
+            // Se for USER, abre a Câmera diretamente
+            abrirCamera()
+        } else {
+            // Outros casos ou caso inicial
+            abrirCamera() // Padrão: abrir câmera
+        }
+    }
+
+    private fun mostrarDialogoEscolherImagem() {
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_imagem, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setView(view)
+            .create()
+
+        view.findViewById<Button>(R.id.button_camera).setOnClickListener {
+            abrirCamera()
+            dialog.dismiss()
+        }
+
+        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
+            abrirArmazenamento()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    // --- CAMERA ---
+    private fun abrirCamera() {
+        // Código para abrir a câmera
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        gerenciadorCamera.launch(intent)
+    }
+
+    private val gerenciadorCamera =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultadoActivity ->
+            if (resultadoActivity.resultCode == RESULT_OK) {
+                bitmapImagemSelecionada =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        resultadoActivity.data?.extras?.getParcelable("data", Bitmap::class.java)
+                    } else {
+                        resultadoActivity.data?.extras?.getParcelable("data")
+                    }
+                binding.includeFotoCrianca.imagePerfil.setImageBitmap(bitmapImagemSelecionada)
+                imagemSelecionadaUri = null
+            } else {
+                Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG)
+                    .show()
+            }
+        }
+
+    // ---------- ARMAZENAMENTO ----------
+    private fun abrirArmazenamento() {
+        // Código para abrir o armazenamento
+        gerenciadorGaleria.launch("image/*")
+    }
+
+    // Armazenamento
+    private val gerenciadorGaleria = registerForActivityResult( ActivityResultContracts.GetContent() ) { uri ->
+        if ( uri != null ) {
+            bitmapImagemSelecionada = null
+            imagemSelecionadaUri = uri
+            binding.includeFotoCrianca.imagePerfil.setImageURI( uri )
+        } else {
+            Toast.makeText(requireContext(), "Nenhuma imegem selecionada", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val gerenciadorPermissoes =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissoesConcedidas ->
+            // Verifica se todas as permissões necessárias foram concedidas
+            val todasConcedidas = permissoesConcedidas.entries.all { it.value }
+
+            if (todasConcedidas) {
+                // Permissões concedidas, avança para o fluxo de Admin/User
+                avancarParaFluxoDeImagem()
+            } else {
+                // Permissões negadas. Mostrar Toast de aviso.
+                Toast.makeText(
+                    requireContext(),
+                    "Permissão de Câmera/Galeria negada. Não é possível avançar.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 }
